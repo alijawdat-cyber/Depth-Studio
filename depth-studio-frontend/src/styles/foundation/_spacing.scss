@@ -1,0 +1,356 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - نظام المسافات المعياري
+ * 8pt Grid Spacing System
+ * ==============================================
+ */
+
+@use "sass:map";
+
+// === النظام الأساسي للمسافات (8pt Grid) ===
+$base-spacing-unit: 8px !default;
+
+// === مقياس المسافات الأساسي ===
+$spacing-scale: (
+  "0": 0,
+  "1": #{$base-spacing-unit * 0.5},      // 4px
+  "2": #{$base-spacing-unit * 1},        // 8px  
+  "3": #{$base-spacing-unit * 1.5},      // 12px
+  "4": #{$base-spacing-unit * 2},        // 16px
+  "5": #{$base-spacing-unit * 2.5},      // 20px
+  "6": #{$base-spacing-unit * 3},        // 24px
+  "8": #{$base-spacing-unit * 4},        // 32px
+  "10": #{$base-spacing-unit * 5},       // 40px
+  "12": #{$base-spacing-unit * 6},       // 48px
+  "16": #{$base-spacing-unit * 8},       // 64px
+  "20": #{$base-spacing-unit * 10},      // 80px
+  "24": #{$base-spacing-unit * 12},      // 96px
+  "32": #{$base-spacing-unit * 16},      // 128px
+  "40": #{$base-spacing-unit * 20},      // 160px
+  "48": #{$base-spacing-unit * 24},      // 192px
+  "56": #{$base-spacing-unit * 28},      // 224px
+  "64": #{$base-spacing-unit * 32}       // 256px
+) !default;
+
+// === المسافات المتجاوبة ===
+$spacing-responsive: (
+  "mobile": (
+    "xs": map.get($spacing-scale, "1"),    // 4px
+    "sm": map.get($spacing-scale, "2"),    // 8px
+    "md": map.get($spacing-scale, "4"),    // 16px
+    "lg": map.get($spacing-scale, "6"),    // 24px
+    "xl": map.get($spacing-scale, "8"),    // 32px
+    "2xl": map.get($spacing-scale, "10")   // 40px
+  ),
+  "tablet": (
+    "xs": map.get($spacing-scale, "2"),    // 8px
+    "sm": map.get($spacing-scale, "3"),    // 12px
+    "md": map.get($spacing-scale, "5"),    // 20px
+    "lg": map.get($spacing-scale, "8"),    // 32px
+    "xl": map.get($spacing-scale, "12"),   // 48px
+    "2xl": map.get($spacing-scale, "16")   // 64px
+  ),
+  "desktop": (
+    "xs": map.get($spacing-scale, "2"),    // 8px
+    "sm": map.get($spacing-scale, "4"),    // 16px
+    "md": map.get($spacing-scale, "6"),    // 24px
+    "lg": map.get($spacing-scale, "10"),   // 40px
+    "xl": map.get($spacing-scale, "16"),   // 64px
+    "2xl": map.get($spacing-scale, "24")   // 96px
+  )
+) !default;
+
+// === مسافات مخصصة للمكونات ===
+$component-spacing: (
+  // مسافات الحاويات
+  "container-padding": (
+    "mobile": map.get($spacing-scale, "4"),     // 16px
+    "tablet": map.get($spacing-scale, "6"),     // 24px
+    "desktop": map.get($spacing-scale, "8")     // 32px
+  ),
+  
+  // مسافات البطاقات
+  "card-padding": (
+    "small": map.get($spacing-scale, "4"),      // 16px
+    "medium": map.get($spacing-scale, "6"),     // 24px
+    "large": map.get($spacing-scale, "8")       // 32px
+  ),
+  
+  // مسافات الأزرار
+  "button-padding": (
+    "x-small": (
+      "x": map.get($spacing-scale, "2"),        // 8px
+      "y": map.get($spacing-scale, "1")         // 4px
+    ),
+    "small": (
+      "x": map.get($spacing-scale, "3"),        // 12px
+      "y": map.get($spacing-scale, "2")         // 8px
+    ),
+    "medium": (
+      "x": map.get($spacing-scale, "4"),        // 16px
+      "y": map.get($spacing-scale, "3")         // 12px
+    ),
+    "large": (
+      "x": map.get($spacing-scale, "5"),        // 20px
+      "y": map.get($spacing-scale, "4")         // 16px
+    ),
+    "x-large": (
+      "x": map.get($spacing-scale, "6"),        // 24px
+      "y": map.get($spacing-scale, "5")         // 20px
+    )
+  ),
+  
+  // مسافات النماذج
+  "form-spacing": (
+    "field-gap": map.get($spacing-scale, "4"),  // 16px
+    "label-gap": map.get($spacing-scale, "2"),  // 8px
+    "section-gap": map.get($spacing-scale, "8") // 32px
+  ),
+  
+  // مسافات الجداول
+  "table-spacing": (
+    "cell-padding": (
+      "x": map.get($spacing-scale, "3"),        // 12px
+      "y": map.get($spacing-scale, "2")         // 8px
+    ),
+    "header-padding": (
+      "x": map.get($spacing-scale, "3"),        // 12px
+      "y": map.get($spacing-scale, "3")         // 12px
+    )
+  ),
+  
+  // مسافات التنقل
+  "navigation-spacing": (
+    "sidebar-padding": map.get($spacing-scale, "4"),    // 16px
+    "menu-item-padding": (
+      "x": map.get($spacing-scale, "4"),                // 16px
+      "y": map.get($spacing-scale, "2")                 // 8px
+    ),
+    "topbar-padding": (
+      "x": map.get($spacing-scale, "6"),                // 24px
+      "y": map.get($spacing-scale, "3")                 // 12px
+    )
+  ),
+  
+  // مسافات الـ Layout
+  "layout-spacing": (
+    "section-gap": (
+      "mobile": map.get($spacing-scale, "8"),           // 32px
+      "tablet": map.get($spacing-scale, "12"),          // 48px
+      "desktop": map.get($spacing-scale, "16")          // 64px
+    ),
+    "content-gap": (
+      "mobile": map.get($spacing-scale, "6"),           // 24px
+      "tablet": map.get($spacing-scale, "8"),           // 32px
+      "desktop": map.get($spacing-scale, "10")          // 40px
+    )
+  )
+) !default;
+
+// === CSS Custom Properties للمسافات ===
+:root {
+  // المقياس الأساسي
+  @each $name, $value in $spacing-scale {
+    --spacing-#{$name}: #{$value};
+  }
+  
+  // المسافات الدلالية (Semantic)
+  --spacing-xs: #{map.get($spacing-scale, "1")};       // 4px
+  --spacing-sm: #{map.get($spacing-scale, "2")};       // 8px
+  --spacing-md: #{map.get($spacing-scale, "4")};       // 16px
+  --spacing-lg: #{map.get($spacing-scale, "6")};       // 24px
+  --spacing-xl: #{map.get($spacing-scale, "8")};       // 32px
+  --spacing-2xl: #{map.get($spacing-scale, "12")};     // 48px
+  --spacing-3xl: #{map.get($spacing-scale, "16")};     // 64px
+  
+  // مسافات التخطيط
+  --container-padding: #{map.get(map.get($component-spacing, "container-padding"), "mobile")};
+  --card-padding: #{map.get(map.get($component-spacing, "card-padding"), "medium")};
+  --form-field-gap: #{map.get(map.get($component-spacing, "form-spacing"), "field-gap")};
+  --section-gap: #{map.get(map.get($component-spacing, "layout-spacing"), "section-gap", "mobile")};
+}
+
+// === استجابة المسافات للشاشات ===
+@media (min-width: 768px) {
+  :root {
+    --container-padding: #{map.get(map.get($component-spacing, "container-padding"), "tablet")};
+    --section-gap: #{map.get(map.get($component-spacing, "layout-spacing"), "section-gap", "tablet")};
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: #{map.get(map.get($component-spacing, "container-padding"), "desktop")};
+    --section-gap: #{map.get(map.get($component-spacing, "layout-spacing"), "section-gap", "desktop")};
+  }
+}
+
+// === Utility Classes للمسافات ===
+@each $name, $value in $spacing-scale {
+  // Margin
+  .m-#{$name} { margin: #{$value} !important; }
+  .mt-#{$name} { margin-top: #{$value} !important; }
+  .mr-#{$name} { margin-right: #{$value} !important; }
+  .mb-#{$name} { margin-bottom: #{$value} !important; }
+  .ml-#{$name} { margin-left: #{$value} !important; }
+  .mx-#{$name} { margin-left: #{$value} !important; margin-right: #{$value} !important; }
+  .my-#{$name} { margin-top: #{$value} !important; margin-bottom: #{$value} !important; }
+  
+  // Padding
+  .p-#{$name} { padding: #{$value} !important; }
+  .pt-#{$name} { padding-top: #{$value} !important; }
+  .pr-#{$name} { padding-right: #{$value} !important; }
+  .pb-#{$name} { padding-bottom: #{$value} !important; }
+  .pl-#{$name} { padding-left: #{$value} !important; }
+  .px-#{$name} { padding-left: #{$value} !important; padding-right: #{$value} !important; }
+  .py-#{$name} { padding-top: #{$value} !important; padding-bottom: #{$value} !important; }
+  
+  // Gap (للـ Flexbox & Grid)
+  .gap-#{$name} { gap: #{$value} !important; }
+  .gap-x-#{$name} { column-gap: #{$value} !important; }
+  .gap-y-#{$name} { row-gap: #{$value} !important; }
+}
+
+// === مسافات خاصة للعربية (RTL) ===
+[dir="rtl"] {
+  .mr-auto { margin-right: auto !important; margin-left: 0 !important; }
+  .ml-auto { margin-left: auto !important; margin-right: 0 !important; }
+  .pr-0 { padding-right: 0 !important; }
+  .pl-0 { padding-left: 0 !important; }
+}
+
+// === مسافات سلبية (Negative Margins) ===
+@each $name, $value in $spacing-scale {
+  @if $name != "0" {
+    .-m-#{$name} { margin: -#{$value} !important; }
+    .-mt-#{$name} { margin-top: -#{$value} !important; }
+    .-mr-#{$name} { margin-right: -#{$value} !important; }
+    .-mb-#{$name} { margin-bottom: -#{$value} !important; }
+    .-ml-#{$name} { margin-left: -#{$value} !important; }
+    .-mx-#{$name} { margin-left: -#{$value} !important; margin-right: -#{$value} !important; }
+    .-my-#{$name} { margin-top: -#{$value} !important; margin-bottom: -#{$value} !important; }
+  }
+}
+
+// === مسافات ذات الأسماء الدلالية ===
+$spacing-named: (
+  "xs": map.get($spacing-scale, "1"),    // 4px
+  "sm": map.get($spacing-scale, "2"),    // 8px
+  "md": map.get($spacing-scale, "4"),    // 16px
+  "lg": map.get($spacing-scale, "6"),    // 24px
+  "xl": map.get($spacing-scale, "8"),    // 32px
+  "2xl": map.get($spacing-scale, "12"),  // 48px
+  "3xl": map.get($spacing-scale, "16"),  // 64px
+  "4xl": map.get($spacing-scale, "20"),  // 80px
+  "5xl": map.get($spacing-scale, "24"),  // 96px
+  "6xl": map.get($spacing-scale, "32")   // 128px
+);
+
+// === دمج الخرائط ===
+$spacing: map.merge($spacing-scale, $spacing-named);
+
+// === تصدير المتغيرات CSS ===
+:root {
+  // المسافات الأساسية
+  --spacing-0: #{map.get($spacing, "0")};
+  --spacing-1: #{map.get($spacing, "1")};
+  --spacing-2: #{map.get($spacing, "2")};
+  --spacing-3: #{map.get($spacing, "3")};
+  --spacing-4: #{map.get($spacing, "4")};
+  --spacing-5: #{map.get($spacing, "5")};
+  --spacing-6: #{map.get($spacing, "6")};
+  --spacing-7: #{map.get($spacing, "7")};
+  --spacing-8: #{map.get($spacing, "8")};
+  --spacing-9: #{map.get($spacing, "9")};
+  --spacing-10: #{map.get($spacing, "10")};
+  --spacing-11: #{map.get($spacing, "11")};
+  --spacing-12: #{map.get($spacing, "12")};
+  --spacing-14: #{map.get($spacing, "14")};
+  --spacing-16: #{map.get($spacing, "16")};
+  --spacing-20: #{map.get($spacing, "20")};
+  --spacing-24: #{map.get($spacing, "24")};
+  --spacing-28: #{map.get($spacing, "28")};
+  --spacing-32: #{map.get($spacing, "32")};
+  
+  // المسافات ذات الأسماء الدلالية
+  --spacing-xs: #{map.get($spacing, "xs")};
+  --spacing-sm: #{map.get($spacing, "sm")};
+  --spacing-md: #{map.get($spacing, "md")};
+  --spacing-lg: #{map.get($spacing, "lg")};
+  --spacing-xl: #{map.get($spacing, "xl")};
+  --spacing-2xl: #{map.get($spacing, "2xl")};
+  --spacing-3xl: #{map.get($spacing, "3xl")};
+  --spacing-4xl: #{map.get($spacing, "4xl")};
+  --spacing-5xl: #{map.get($spacing, "5xl")};
+  --spacing-6xl: #{map.get($spacing, "6xl")};
+  
+  // مسافات خاصة للتخطيط
+  --container-padding: var(--spacing-md);
+  --section-gap: var(--spacing-2xl);
+  --component-gap: var(--spacing-lg);
+  --element-gap: var(--spacing-md);
+  --item-gap: var(--spacing-sm);
+  
+  // مسافات للاستجابة
+  @media (min-width: 768px) {
+    --container-padding: var(--spacing-lg);
+    --section-gap: var(--spacing-3xl);
+  }
+  
+  @media (min-width: 1024px) {
+    --container-padding: var(--spacing-xl);
+    --section-gap: var(--spacing-4xl);
+  }
+}
+
+// === دالة للحصول على المسافة ===
+@function spacing($key) {
+  @return map.get($spacing, $key);
+}
+
+// === مخالطة لتطبيق المسافات ===
+@mixin spacing($property, $value) {
+  #{$property}: spacing($value);
+}
+
+// === مخالطات للمسافات الشائعة ===
+@mixin padding($top: null, $right: null, $bottom: null, $left: null) {
+  @if $top and not $right and not $bottom and not $left {
+    padding: spacing($top);
+  } @else {
+    @if $top { padding-top: spacing($top); }
+    @if $right { padding-right: spacing($right); }
+    @if $bottom { padding-bottom: spacing($bottom); }
+    @if $left { padding-left: spacing($left); }
+  }
+}
+
+@mixin margin($top: null, $right: null, $bottom: null, $left: null) {
+  @if $top and not $right and not $bottom and not $left {
+    margin: spacing($top);
+  } @else {
+    @if $top { margin-top: spacing($top); }
+    @if $right { margin-right: spacing($right); }
+    @if $bottom { margin-bottom: spacing($bottom); }
+    @if $left { margin-left: spacing($left); }
+  }
+}
+
+// === مخالطات للتخطيط ===
+@mixin container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+@mixin section {
+  padding: var(--section-gap) 0;
+}
+
+@mixin component-spacing {
+  margin-bottom: var(--component-gap);
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+} 

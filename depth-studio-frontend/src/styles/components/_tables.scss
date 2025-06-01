@@ -1,0 +1,658 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - أنماط الجداول
+ * Tables Styles
+ * ==============================================
+ */
+
+@use "sass:map";
+@use "sass:list";
+@use '../foundation/_variables' as vars;
+@use '../foundation/_colors' as colors;
+@use '../foundation/_spacing' as spacing;
+@use '../foundation/_typography' as typo;
+@use '../foundation/_breakpoints' as breakpoints;
+@use '../utilities/_mixins' as mixins;
+
+// === قيم الشفافية ===
+$opacity: (
+  "0": 0,
+  "5": 0.05,
+  "10": 0.1,
+  "20": 0.2,
+  "25": 0.25,
+  "30": 0.3,
+  "40": 0.4,
+  "50": 0.5,
+  "60": 0.6,
+  "70": 0.7,
+  "75": 0.75,
+  "80": 0.8,
+  "90": 0.9,
+  "95": 0.95,
+  "100": 1
+);
+
+// ===============================
+// 🏗️ TABLE WRAPPER
+// ===============================
+
+.table-wrapper {
+  // الأساسيات
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background-color: var(--color-surface);
+  @include mixins.border-radius("lg");
+  overflow: hidden;
+  @include mixins.transition(all, "base");
+  
+  // ===============================
+  // 🎨 VARIANTS - الأنواع
+  // ===============================
+  
+  &--outlined {
+    border: 2px solid var(--color-border);
+  }
+  
+  &--elevated {
+    @include mixins.elevation(2);
+    border: 1px solid var(--color-border);
+  }
+  
+  &--flat {
+    border: none;
+    background-color: transparent;
+  }
+  
+  // ===============================
+  // 📏 SIZES - الأحجام
+  // ===============================
+  
+  &--sm {
+    .table__toolbar {
+      padding: var(--spacing-sm);
+      gap: var(--spacing-sm);
+    }
+    
+    .table__footer {
+      padding: var(--spacing-sm);
+    }
+  }
+  
+  &--md {
+    .table__toolbar {
+      padding: var(--spacing-md);
+      gap: var(--spacing-md);
+    }
+    
+    .table__footer {
+      padding: var(--spacing-md);
+    }
+  }
+  
+  &--lg {
+    .table__toolbar {
+      padding: var(--spacing-lg);
+      gap: var(--spacing-lg);
+    }
+    
+    .table__footer {
+      padding: var(--spacing-lg);
+    }
+  }
+  
+  // ===============================
+  // 📊 DENSITY - الكثافة
+  // ===============================
+  
+  &--compact {
+    .table__cell {
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+  }
+  
+  &--comfortable {
+    .table__cell {
+      padding: var(--spacing-sm) var(--spacing-md);
+    }
+  }
+  
+  &--spacious {
+    .table__cell {
+      padding: var(--spacing-md) var(--spacing-lg);
+    }
+  }
+  
+  // ===============================
+  // 🔄 STATES - الحالات
+  // ===============================
+  
+  &--loading {
+    pointer-events: none;
+    opacity: map.get(vars.$opacity, "80");
+  }
+  
+  &--disabled {
+    @include mixins.disabled-effect;
+  }
+  
+  &--responsive {
+    @include breakpoints.mobile-layout {
+      .table__container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  }
+  
+  &--sticky {
+    .table__head {
+      position: sticky;
+      top: 0;
+      z-index: var(--z-index-sticky);
+    }
+  }
+}
+
+// ===============================
+// 🛠️ TABLE TOOLBAR
+// ===============================
+
+.table__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-surface-variant);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 3rem;
+  
+  &-start,
+  &-end {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+}
+
+.table__search {
+  min-width: 250px;
+  max-width: 400px;
+}
+
+.table__item-count {
+  @include mixins.text-style("body-small");
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+// ===============================
+// 📋 TABLE CONTAINER
+// ===============================
+
+.table__container {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  
+  &--scrollable {
+    max-height: var(--table-max-height, 400px);
+    overflow-y: auto;
+    
+    // تحسين التمرير
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--color-border);
+      @include mixins.border-radius("sm");
+      
+      &:hover {
+        background-color: var(--color-text-secondary);
+      }
+    }
+  }
+}
+
+// ===============================
+// 📊 TABLE STRUCTURE
+// ===============================
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  
+  // تحسينات الأداء
+  &--hoverable {
+    .table__row:not(.table__row--header):hover {
+      background-color: var(--color-hover);
+    }
+  }
+  
+  &--clickable {
+    .table__row:not(.table__row--header) {
+      cursor: pointer;
+      
+      &:active {
+        background-color: var(--color-active);
+      }
+    }
+  }
+  
+  &--selectable {
+    .table__row:not(.table__row--header) {
+      &.table__row--selected {
+        background-color: var(--color-primary-container);
+        color: var(--color-primary);
+      }
+    }
+  }
+}
+
+// ===============================
+// 🎯 TABLE HEAD
+// ===============================
+
+.table__head {
+  background-color: var(--color-surface-container);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.table__row {
+  &--header {
+    .table__cell {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      background-color: inherit;
+      border-bottom: none;
+    }
+  }
+  
+  &--loading,
+  &--empty {
+    .table__cell {
+      text-align: center;
+      padding: var(--spacing-xl);
+    }
+  }
+}
+
+// ===============================
+// 📝 TABLE CELLS
+// ===============================
+
+.table__cell {
+  // الأساسيات
+  border-bottom: 1px solid var(--color-border);
+  text-align: right;
+  vertical-align: middle;
+  @include mixins.text-style("body");
+  color: var(--color-text-primary);
+  @include mixins.transition(all, "fast");
+  
+  // تحسينات RTL
+  direction: rtl;
+  
+  // ===============================
+  // 🎯 ALIGNMENT - المحاذاة
+  // ===============================
+  
+  &--align-start {
+    text-align: right;
+  }
+  
+  &--align-center {
+    text-align: center;
+  }
+  
+  &--align-end {
+    text-align: left;
+  }
+  
+  // ===============================
+  // 🔧 SPECIAL CELLS
+  // ===============================
+  
+  &--header {
+    position: relative;
+    user-select: none;
+    
+    &.table__cell--sortable {
+      cursor: pointer;
+      @include mixins.transition(background-color, "fast");
+      
+      &:hover {
+        background-color: var(--color-hover);
+      }
+      
+      &.table__cell--sorted {
+        background-color: var(--color-primary-container);
+        color: var(--color-primary);
+      }
+    }
+  }
+  
+  &--select {
+    width: 48px;
+    text-align: center;
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+  
+  &--loading {
+    .table__loading {
+      @include mixins.flex-center;
+      gap: var(--spacing-md);
+      color: var(--color-text-secondary);
+      
+      &-icon {
+        animation: table-spin 1s linear infinite;
+      }
+    }
+  }
+  
+  &--empty {
+    .table__empty {
+      @include mixins.flex-center;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      padding: var(--spacing-2xl);
+      
+      &-icon {
+        color: var(--color-text-disabled);
+        opacity: map.get(vars.$opacity, "60");
+      }
+      
+      &-title {
+        @include mixins.text-style("heading-6");
+        color: var(--color-text-secondary);
+        margin: 0;
+      }
+      
+      &-text {
+        @include mixins.text-style("body-small");
+        color: var(--color-text-secondary);
+        margin: 0;
+        max-width: 400px;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// ===============================
+// 📦 CELL CONTENT
+// ===============================
+
+.table__cell-content {
+  // النص المقطوع
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  
+  // للمحتوى المعقد
+  &--wrap {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+  
+  &--pre {
+    white-space: pre;
+    font-family: var(--font-family-mono);
+  }
+}
+
+// ===============================
+// 🎯 HEADER CONTENT
+// ===============================
+
+.table__header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+}
+
+.table__header-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table__sort-icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  @include mixins.transition(transform, "fast");
+}
+
+// ===============================
+// 📄 TABLE FOOTER
+// ===============================
+
+.table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-surface-variant);
+  border-top: 1px solid var(--color-border);
+  min-height: 3rem;
+}
+
+.table__footer-info {
+  @include mixins.text-style("body-small");
+  color: var(--color-text-secondary);
+}
+
+.table__pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.table__page-info {
+  @include mixins.text-style("body-small");
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+// ===============================
+// 🎬 ANIMATIONS
+// ===============================
+
+@keyframes table-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ===============================
+// 📱 RESPONSIVE
+// ===============================
+
+@include breakpoints.tablet-layout {
+  .table__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+    
+    &-start,
+    &-end {
+      justify-content: space-between;
+    }
+  }
+  
+  .table__search {
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .table__footer {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+    
+    .table__pagination {
+      justify-content: center;
+    }
+  }
+}
+
+@include breakpoints.mobile-layout {
+  .table {
+    font-size: var(--font-size-sm);
+  }
+  
+  .table__cell {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    
+    &--header {
+      @include mixins.text-style("caption");
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+  
+  .table__toolbar {
+    padding: var(--spacing-sm);
+  }
+  
+  .table__footer {
+    padding: var(--spacing-sm);
+  }
+  
+  // إخفاء أعمدة أقل أهمية على الموبايل
+  .table__cell--mobile-hidden {
+    display: none;
+  }
+}
+
+// ===============================
+// 🌙 THEME VARIATIONS
+// ===============================
+
+[data-theme="dark"] {
+  .table__head {
+    background-color: var(--color-surface-container);
+  }
+  
+  .table__toolbar,
+  .table__footer {
+    background-color: var(--color-surface-container);
+  }
+  
+  .table__cell--sortable:hover {
+    background-color: var(--color-hover);
+  }
+}
+
+// ===============================
+// 🎯 ACCESSIBILITY
+// ===============================
+
+@media (prefers-reduced-motion: reduce) {
+  .table,
+  .table__cell,
+  .table__sort-icon {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// ===============================
+// 📄 PRINT STYLES
+// ===============================
+
+@media print {
+  .table-wrapper {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+  
+  .table__toolbar,
+  .table__footer {
+    display: none !important;
+  }
+  
+  .table {
+    font-size: 12px !important;
+    color: #000 !important;
+  }
+  
+  .table__cell {
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+  }
+}
+
+// ===============================
+// 🔧 UTILITY CLASSES
+// ===============================
+
+.table__cell--number {
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+
+.table__cell--currency {
+  @extend .table__cell--number;
+  
+  &::before {
+    content: attr(data-currency) " ";
+  }
+}
+
+.table__cell--badge {
+  .table__cell-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+}
+
+.table__cell--actions {
+  white-space: nowrap;
+  
+  .table__cell-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    justify-content: center;
+  }
+}
+
+.table__cell--nowrap {
+  .table__cell-content {
+    white-space: nowrap;
+  }
+}
+
+.table__cell--wrap {
+  .table__cell-content {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+}
+
+.table__cell--pre {
+  .table__cell-content {
+    white-space: pre;
+    font-family: var(--font-family-mono);
+  }
+} 

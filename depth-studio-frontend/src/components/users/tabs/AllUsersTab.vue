@@ -427,12 +427,12 @@ const clearAllFilters = (): void => {
 
 const getStatusFilterName = (status: string): string => {
   const option = statusFilterOptions.find(opt => opt.value === status)
-  return option?.title || status
+  return option?.text || status
 }
 
 const getRoleFilterName = (role: string): string => {
   const option = roleFilterOptions.find(opt => opt.value === role)
-  return option?.title || role
+  return option?.text || role
 }
 
 const getSortName = (sort: string): string => {

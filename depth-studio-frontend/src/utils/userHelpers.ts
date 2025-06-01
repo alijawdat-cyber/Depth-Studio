@@ -1,355 +1,377 @@
 /**
- * User Management Helper Functions
- * @description دوال مساعدة لإدارة المستخدمين
+ * ==============================================
+ * DEPTH STUDIO - مساعدات إدارة المستخدمين
+ * User Management Utilities
+ * ==============================================
  */
-
-// === Role Helpers ===
-
-/**
- * الحصول على لون الدور
- */
-export const getRoleColor = (role: string): string => {
-  switch (role) {
-    case 'photographer': return 'primary'
-    case 'brand_coordinator': return 'warning'
-    case 'marketing_coordinator': return 'error'
-    case 'super_admin': return 'purple'
-    default: return 'grey'
-  }
-}
-
-/**
- * الحصول على أيقونة الدور
- */
-export const getRoleIcon = (role: string): string => {
-  switch (role) {
-    case 'photographer': return 'mdi-camera'
-    case 'brand_coordinator': return 'mdi-domain'
-    case 'marketing_coordinator': return 'mdi-bullhorn'
-    case 'super_admin': return 'mdi-crown'
-    default: return 'mdi-account'
-  }
-}
-
-/**
- * الحصول على اسم الدور
- */
-export const getRoleName = (role: string): string => {
-  switch (role) {
-    case 'photographer': return 'مصور'
-    case 'brand_coordinator': return 'منسق براند'
-    case 'marketing_coordinator': return 'منسق تسويق'
-    case 'super_admin': return 'مدير عام'
-    default: return 'غير محدد'
-  }
-}
-
-// === Status Helpers ===
-
-/**
- * الحصول على لون الحالة
- */
-export const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'active': return 'success'
-    case 'pending_approval': return 'warning'
-    case 'suspended': return 'error'
-    case 'deleted': return 'grey'
-    default: return 'grey'
-  }
-}
-
-/**
- * الحصول على أيقونة الحالة
- */
-export const getStatusIcon = (status: string): string => {
-  switch (status) {
-    case 'active': return 'mdi-check-circle'
-    case 'pending_approval': return 'mdi-clock-alert'
-    case 'suspended': return 'mdi-pause-circle'
-    case 'deleted': return 'mdi-delete'
-    default: return 'mdi-help-circle'
-  }
-}
-
-/**
- * الحصول على اسم الحالة
- */
-export const getStatusName = (status: string): string => {
-  switch (status) {
-    case 'active': return 'نشط'
-    case 'pending_approval': return 'في انتظار الموافقة'
-    case 'suspended': return 'معلق'
-    case 'deleted': return 'محذوف'
-    default: return 'غير محدد'
-  }
-}
-
-// === Date Helpers ===
-
-/**
- * تنسيق التاريخ
- */
-export const formatDate = (date: any): string => {
-  if (!date) return 'غير محدد'
-  
-  let dateObj
-  if (date.toDate) {
-    dateObj = date.toDate()
-  } else if (date instanceof Date) {
-    dateObj = date
-  } else {
-    dateObj = new Date(date)
-  }
-  
-  return dateObj.toLocaleDateString('ar-EG', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-/**
- * حساب الفرق الزمني
- */
-export const getTimeDifference = (date: any): string => {
-  if (!date) return ''
-  
-  const now = new Date()
-  const targetDate = date.toDate ? date.toDate() : new Date(date)
-  const diffTime = Math.abs(now.getTime() - targetDate.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 1) return 'أمس'
-  if (diffDays < 7) return `منذ ${diffDays} أيام`
-  if (diffDays < 30) return `منذ ${Math.ceil(diffDays / 7)} أسابيع`
-  if (diffDays < 365) return `منذ ${Math.ceil(diffDays / 30)} أشهر`
-  return `منذ ${Math.ceil(diffDays / 365)} سنوات`
-}
-
-// === Specialization Helpers ===
-
-/**
- * الحصول على اسم التخصص
- */
-export const getSpecializationName = (spec: string): string => {
-  const specializations: { [key: string]: string } = {
-    'social_media': 'السوشال ميديا',
-    'content_creation': 'إنشاء المحتوى',
-    'campaign_management': 'إدارة الحملات',
-    'analytics': 'التحليلات',
-    'brand_management': 'إدارة البراندات'
-  }
-  return specializations[spec] || spec
-}
-
-/**
- * الحصول على اسم تخصص المصور
- */
-export const getPhotographerSpecialization = (spec: string): string => {
-  const specializations: { [key: string]: string } = {
-    'product_photography': 'تصوير المنتجات',
-    'portrait_photography': 'تصوير الأشخاص',
-    'video_production': 'إنتاج الفيديو',
-    'graphic_design': 'التصميم الجرافيكي',
-    'social_media_content': 'محتوى السوشال ميديا',
-    'commercial_photography': 'التصوير التجاري'
-  }
-  return specializations[spec] || spec
-}
-
-/**
- * الحصول على وقت التوفر
- */
-export const getAvailabilityTime = (time: string): string => {
-  const times: { [key: string]: string } = {
-    'morning': 'الفترة الصباحية (8ص - 12ظ)',
-    'afternoon': 'فترة بعد الظهر (12ظ - 6م)',
-    'evening': 'الفترة المسائية (6م - 10م)',
-    'weekend': 'عطلة نهاية الأسبوع'
-  }
-  return times[time] || time
-}
-
-// === Brand Helpers ===
-
-/**
- * الحصول على اسم البراند
- * @todo جلب اسم البراند من قاعدة البيانات
- */
-export const getBrandName = (brandId: string): string => {
-  // TODO: جلب اسم البراند من قاعدة البيانات
-  return brandId || 'غير محدد'
-}
-
-// === Validation Helpers ===
-
-/**
- * التحقق من صحة بيانات المستخدم
- */
-export const validateUserData = (user: any): boolean => {
-  return !!(user && user.email && user.primary_role)
-}
-
-/**
- * التحقق من صحة الدور
- */
-export const isValidRole = (role: string): boolean => {
-  const validRoles = ['photographer', 'brand_coordinator', 'marketing_coordinator', 'super_admin']
-  return validRoles.includes(role)
-}
-
-/**
- * التحقق من صحة الحالة
- */
-export const isValidStatus = (status: string): boolean => {
-  const validStatuses = ['active', 'pending_approval', 'suspended', 'deleted']
-  return validStatuses.includes(status)
-}
-
-// === Filter Options ===
-
-/**
- * خيارات فلترة الحالة
- */
-export const statusFilterOptions = [
-  { title: 'الكل', value: '' },
-  { title: 'نشط', value: 'active' },
-  { title: 'معلق', value: 'pending_approval' },
-  { title: 'معطل', value: 'suspended' },
-  { title: 'محذوف', value: 'deleted' }
-]
-
-/**
- * خيارات فلترة الدور
- */
-export const roleFilterOptions = [
-  { title: 'الكل', value: '' },
-  { title: 'مصور', value: 'photographer' },
-  { title: 'منسق براند', value: 'brand_coordinator' },
-  { title: 'منسق تسويق', value: 'marketing_coordinator' },
-  { title: 'مدير عام', value: 'super_admin' }
-]
-
-// === Table Headers ===
-
-/**
- * أعمدة جدول المستخدمين النشطين
- */
-export const activeUsersHeaders = [
-  {
-    title: 'المستخدم',
-    key: 'user_info',
-    sortable: false,
-    width: '250px'
-  },
-  {
-    title: 'الدور',
-    key: 'primary_role',
-    sortable: true,
-    width: '150px'
-  },
-  {
-    title: 'الهاتف',
-    key: 'phone',
-    sortable: false,
-    width: '130px'
-  },
-  {
-    title: 'تاريخ التفعيل',
-    key: 'approved_at',
-    sortable: true,
-    width: '150px'
-  },
-  {
-    title: 'الحالة',
-    key: 'status',
-    sortable: false,
-    width: '100px'
-  },
-  {
-    title: 'الإجراءات',
-    key: 'actions',
-    sortable: false,
-    width: '150px',
-    align: 'center' as const
-  }
-] as const
-
-/**
- * أعمدة جدول جميع المستخدمين
- */
-export const allUsersHeaders = [
-  {
-    title: 'المستخدم',
-    key: 'user_info',
-    sortable: false,
-    width: '220px'
-  },
-  {
-    title: 'الدور',
-    key: 'primary_role',
-    sortable: true,
-    width: '130px'
-  },
-  {
-    title: 'الحالة',
-    key: 'status',
-    sortable: true,
-    width: '120px'
-  },
-  {
-    title: 'الهاتف',
-    key: 'phone',
-    sortable: false,
-    width: '120px'
-  },
-  {
-    title: 'تاريخ التسجيل',
-    key: 'created_at',
-    sortable: true,
-    width: '140px'
-  },
-  {
-    title: 'الإجراءات',
-    key: 'actions',
-    sortable: false,
-    width: '120px',
-    align: 'center' as const
-  }
-] as const
-
-// === Types (للـ TypeScript) ===
 
 export interface User {
   id: string
   email: string
+  displayName: string
   display_name?: string
   full_name?: string
-  phone?: string
-  primary_role: string
-  status: string
-  created_at: any
-  updated_at?: any
-  approved_at?: any
-  suspended_at?: any
-  reactivated_at?: any
-  approved_by?: string
-  suspended_by?: string
-  reactivated_by?: string
+  photoURL?: string
   profile_photo_url?: string
+  phone?: string
   firebase_uid?: string
   auth_provider?: string
+  status: 'pending_approval' | 'active' | 'suspended' | 'rejected'
+  primary_role: 'super_admin' | 'marketing_coordinator' | 'brand_coordinator' | 'photographer'
+  secondary_roles?: string[]
+  permissions?: string[]
+  brand_access?: string[]
+  created_at: string
+  updated_at: string
+  last_login?: string
+  approved_at?: string
+  suspended_at?: string
+  profile?: UserProfile
+}
+
+export interface UserProfile {
+  firstName?: string
+  lastName?: string
+  phone?: string
+  address?: string
+  bio?: string
+  skills?: string[]
+  experience?: string
+  portfolio_links?: string[]
+  contract_type?: 'freelancer' | 'salary'
+  hourly_rate?: number
+  monthly_salary?: number
+  emergency_contact?: {
+    name: string
+    phone: string
+    relationship: string
+  }
 }
 
 export interface UserStats {
   total: number
   active: number
   pending: number
+  suspended: number
+  by_role: Record<string, number>
 }
 
-export interface FilterOptions {
-  status: string
-  role: string
-  search: string
-} 
+/**
+ * الحصول على اسم الدور بالعربية
+ */
+export function getRoleName(role: string): string {
+  const roleNames: Record<string, string> = {
+    'super_admin': 'المدير العام',
+    'marketing_coordinator': 'منسق التسويق',
+    'brand_coordinator': 'منسق البراند',
+    'photographer': 'مصور'
+  }
+  
+  return roleNames[role] || role
+}
+
+/**
+ * الحصول على لون الدور
+ */
+export function getRoleColor(role: string): string {
+  const roleColors: Record<string, string> = {
+    'super_admin': 'error',
+    'marketing_coordinator': 'primary',
+    'brand_coordinator': 'warning',
+    'photographer': 'success'
+  }
+  
+  return roleColors[role] || 'default'
+}
+
+/**
+ * الحصول على حالة المستخدم بالعربية
+ */
+export function getStatusName(status: string): string {
+  const statusNames: Record<string, string> = {
+    'pending_approval': 'في انتظار الموافقة',
+    'active': 'نشط',
+    'suspended': 'موقوف',
+    'rejected': 'مرفوض'
+  }
+  
+  return statusNames[status] || status
+}
+
+/**
+ * الحصول على لون الحالة
+ */
+export function getStatusColor(status: string): string {
+  const statusColors: Record<string, string> = {
+    'pending_approval': 'warning',
+    'active': 'success',
+    'suspended': 'error',
+    'rejected': 'error'
+  }
+  
+  return statusColors[status] || 'default'
+}
+
+/**
+ * فحص صلاحية المستخدم
+ */
+export function hasPermission(user: User, permission: string): boolean {
+  if (!user.permissions) return false
+  return user.permissions.includes(permission)
+}
+
+/**
+ * فحص الوصول للبراند
+ */
+export function hasBrandAccess(user: User, brandId: string): boolean {
+  if (user.primary_role === 'super_admin') return true
+  if (!user.brand_access) return false
+  return user.brand_access.includes(brandId)
+}
+
+/**
+ * فرمتة آخر تسجيل دخول
+ */
+export function formatLastLogin(lastLogin?: string): string {
+  if (!lastLogin) return 'لم يسجل دخول بعد'
+  
+  const date = new Date(lastLogin)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) return 'اليوم'
+  if (diffDays === 1) return 'أمس'
+  if (diffDays < 7) return `منذ ${diffDays} أيام`
+  if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`
+  if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} شهور`
+  
+  return `منذ ${Math.floor(diffDays / 365)} سنة`
+}
+
+/**
+ * تنسيق اسم المستخدم الكامل
+ */
+export function getFullName(user: User): string {
+  if (user.profile?.firstName && user.profile?.lastName) {
+    return `${user.profile.firstName} ${user.profile.lastName}`
+  }
+  return user.displayName || user.email
+}
+
+/**
+ * التحقق من صحة البريد الإلكتروني
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+/**
+ * التحقق من قوة كلمة المرور
+ */
+export function validatePassword(password: string): {
+  isValid: boolean
+  strength: 'weak' | 'medium' | 'strong'
+  errors: string[]
+} {
+  const errors: string[] = []
+  let score = 0
+  
+  if (password.length < 8) {
+    errors.push('كلمة المرور يجب أن تكون 8 أحرف على الأقل')
+  } else {
+    score += 1
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('يجب أن تحتوي على حرف صغير')
+  } else {
+    score += 1
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push('يجب أن تحتوي على حرف كبير')
+  } else {
+    score += 1
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('يجب أن تحتوي على رقم')
+  } else {
+    score += 1
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push('يجب أن تحتوي على رمز خاص')
+  } else {
+    score += 1
+  }
+  
+  let strength: 'weak' | 'medium' | 'strong' = 'weak'
+  if (score >= 4) strength = 'strong'
+  else if (score >= 2) strength = 'medium'
+  
+  return {
+    isValid: errors.length === 0,
+    strength,
+    errors
+  }
+}
+
+/**
+ * فرمتة رقم الهاتف
+ */
+export function formatPhoneNumber(phone: string): string {
+  const cleaned = phone.replace(/\D/g, '')
+  
+  if (cleaned.startsWith('964')) {
+    // العراق
+    return `+964 ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`
+  }
+  
+  return phone
+}
+
+/**
+ * إنشاء الأحرف الأولى من الاسم
+ */
+export function getInitials(user: User): string {
+  const name = getFullName(user)
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+// أيقونات الأدوار
+export function getRoleIcon(role: string): string {
+  const roleIcons: Record<string, string> = {
+    'super_admin': 'admin-panel-settings',
+    'marketing_coordinator': 'campaign',
+    'brand_coordinator': 'business',
+    'photographer': 'camera'
+  }
+  
+  return roleIcons[role] || 'person'
+}
+
+// أيقونات الحالات
+export function getStatusIcon(status: string): string {
+  const statusIcons: Record<string, string> = {
+    'pending_approval': 'hourglass-empty',
+    'active': 'check-circle',
+    'suspended': 'pause-circle',
+    'rejected': 'cancel'
+  }
+  
+  return statusIcons[status] || 'help'
+}
+
+// فرمتة التاريخ
+export function formatDate(dateString: string | Date): string {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString
+  
+  if (isNaN(date.getTime())) return 'تاريخ غير صحيح'
+  
+  return new Intl.DateTimeFormat('ar-IQ', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+// حساب الفرق الزمني
+export function getTimeDifference(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) return 'اليوم'
+  if (diffDays === 1) return 'أمس'
+  if (diffDays < 7) return `منذ ${diffDays} أيام`
+  if (diffDays < 30) return `منذ ${Math.floor(diffDays / 7)} أسابيع`
+  if (diffDays < 365) return `منذ ${Math.floor(diffDays / 30)} شهور`
+  
+  return `منذ ${Math.floor(diffDays / 365)} سنة`
+}
+
+// تخصص المصور
+export function getPhotographerSpecialization(user: User): string {
+  if (user.profile?.skills && user.profile.skills.length > 0) {
+    return user.profile.skills.join(', ')
+  }
+  return 'غير محدد'
+}
+
+// وقت التوفر
+export function getAvailabilityTime(user: User): string {
+  // منطق مخصص لحساب وقت التوفر
+  return 'متاح الآن'
+}
+
+// اسم التخصص
+export function getSpecializationName(specialization: string): string {
+  const specializations: Record<string, string> = {
+    'portrait': 'تصوير شخصي',
+    'wedding': 'تصوير زفاف',
+    'product': 'تصوير منتجات',
+    'fashion': 'تصوير أزياء',
+    'event': 'تصوير مناسبات'
+  }
+  
+  return specializations[specialization] || specialization
+}
+
+// اسم البراند
+export function getBrandName(brandId: string): string {
+  const brands: Record<string, string> = {
+    'nava': 'NAVA',
+    'sportmore': 'Sport&More',
+    'inoff': 'INOFF',
+    'blo': 'BLO',
+    'clinica': 'Clinica A'
+  }
+  
+  return brands[brandId] || brandId
+}
+
+// خيارات فلترة الحالة
+export const statusFilterOptions = [
+  { text: 'جميع الحالات', value: '' },
+  { text: 'في انتظار الموافقة', value: 'pending_approval' },
+  { text: 'نشط', value: 'active' },
+  { text: 'موقوف', value: 'suspended' },
+  { text: 'مرفوض', value: 'rejected' }
+]
+
+// خيارات فلترة الأدوار
+export const roleFilterOptions = [
+  { text: 'جميع الأدوار', value: '' },
+  { text: 'المدير العام', value: 'super_admin' },
+  { text: 'منسق التسويق', value: 'marketing_coordinator' },
+  { text: 'منسق البراند', value: 'brand_coordinator' },
+  { text: 'مصور', value: 'photographer' }
+]
+
+// عناوين جدول المستخدمين النشطين
+export const activeUsersHeaders = [
+  { text: 'المستخدم', value: 'user', sortable: true },
+  { text: 'الدور', value: 'primary_role', sortable: true },
+  { text: 'آخر نشاط', value: 'last_login', sortable: true },
+  { text: 'الإجراءات', value: 'actions', sortable: false }
+]
+
+// عناوين جدول جميع المستخدمين
+export const allUsersHeaders = [
+  { text: 'المستخدم', value: 'user', sortable: true },
+  { text: 'الحالة', value: 'status', sortable: true },
+  { text: 'الدور', value: 'primary_role', sortable: true },
+  { text: 'تاريخ التسجيل', value: 'created_at', sortable: true },
+  { text: 'الإجراءات', value: 'actions', sortable: false }
+] 

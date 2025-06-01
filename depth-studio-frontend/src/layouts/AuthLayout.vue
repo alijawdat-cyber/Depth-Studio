@@ -14,7 +14,6 @@
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/design-system/index';
 
 .auth-layout {
   min-height: 100vh;

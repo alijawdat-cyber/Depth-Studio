@@ -1,0 +1,557 @@
+/**
+ * ==============================================
+ * MIXINS & UTILITIES
+ * المخالطات والأدوات المساعدة
+ * ==============================================
+ */
+
+@use "sass:map";
+@use "sass:math";
+@use "../foundation/variables" as vars;
+@use "../foundation/colors" as colors;
+@use "../foundation/spacing" as spacing;
+@use "../foundation/typography" as typo;
+@use "../foundation/breakpoints" as breakpoints;
+
+// ===============================
+// 🎨 LAYOUT MIXINS
+// ===============================
+
+@mixin flex-center($direction: row, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: center;
+  justify-content: center;
+  
+  @if $gap {
+    gap: $gap;
+  }
+}
+
+@mixin flex-start($direction: row, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: flex-start;
+  justify-content: flex-start;
+  
+  @if $gap {
+    gap: $gap;
+  }
+}
+
+@mixin flex-between($direction: row, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: center;
+  justify-content: space-between;
+  
+  @if $gap {
+    gap: $gap;
+  }
+}
+
+@mixin flex-end($direction: row, $gap: null) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: flex-end;
+  justify-content: flex-end;
+  
+  @if $gap {
+    gap: $gap;
+  }
+}
+
+@mixin flex-wrap($wrap: wrap) {
+  flex-wrap: $wrap;
+}
+
+// ===============================
+// 📐 SIZE MIXINS
+// ===============================
+
+@mixin size($width, $height: $width) {
+  width: $width;
+  height: $height;
+}
+
+@mixin min-size($width, $height: $width) {
+  min-width: $width;
+  min-height: $height;
+}
+
+@mixin max-size($width, $height: $width) {
+  max-width: $width;
+  max-height: $height;
+}
+
+// ===============================
+// 🎯 POSITIONING MIXINS
+// ===============================
+
+@mixin absolute($top: null, $right: null, $bottom: null, $left: null) {
+  position: absolute;
+  
+  @if $top { top: $top; }
+  @if $right { right: $right; }
+  @if $bottom { bottom: $bottom; }
+  @if $left { left: $left; }
+}
+
+@mixin fixed($top: null, $right: null, $bottom: null, $left: null) {
+  position: fixed;
+  
+  @if $top { top: $top; }
+  @if $right { right: $right; }
+  @if $bottom { bottom: $bottom; }
+  @if $left { left: $left; }
+}
+
+@mixin center($position: absolute) {
+  position: $position;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// ===============================
+// 🔄 TRANSITION & ANIMATION
+// ===============================
+
+$transition-speeds: (
+  "instant": 0ms,
+  "fast": 150ms,
+  "normal": 300ms,
+  "slow": 500ms,
+  "slower": 750ms,
+  "slowest": 1000ms,
+  "smooth": 400ms
+);
+
+@mixin transition($property: all, $speed: "normal", $easing: ease-out) {
+  $duration: map.get($transition-speeds, $speed);
+  transition: $property $duration $easing;
+}
+
+@mixin hover-effect {
+  @include transition(all, "fast");
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// ===============================
+// 🎨 VISUAL EFFECTS
+// ===============================
+
+$elevation-levels: (
+  0: none,
+  1: 0 1px 3px rgba(0, 0, 0, 0.12),
+  2: 0 1px 5px rgba(0, 0, 0, 0.2),
+  3: 0 1px 8px rgba(0, 0, 0, 0.24),
+  4: 0 2px 10px rgba(0, 0, 0, 0.28),
+  5: 0 4px 15px rgba(0, 0, 0, 0.32)
+);
+
+@mixin elevation($level: 1) {
+  @if map.has-key($elevation-levels, $level) {
+    & {
+      box-shadow: map.get($elevation-levels, $level);
+    }
+  } @else {
+    & {
+      box-shadow: 0 #{$level}px #{$level * 2}px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+$border-radii: (
+  "none": 0,
+  "sm": 4px,
+  "md": 8px,
+  "lg": 12px,
+  "xl": 16px,
+  "2xl": 24px,
+  "3xl": 32px,
+  "full": 50%,
+  "pill": 9999px
+);
+
+@mixin border-radius($size: "md") {
+  @if map.has-key($border-radii, $size) {
+    border-radius: map.get($border-radii, $size);
+  } @else {
+    border-radius: $size;
+  }
+}
+
+// ===============================
+// 🔍 FOCUS & INTERACTION STATES
+// ===============================
+
+@mixin focus-effect {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  @include border-radius("sm");
+}
+
+@mixin disabled-effect {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@mixin hover-disabled {
+  &:hover:not(:disabled) {
+    @content;
+  }
+}
+
+@mixin focus-visible {
+  &:focus-visible {
+    @include focus-effect;
+  }
+}
+
+// ===============================
+// 📝 TYPOGRAPHY MIXINS
+// ===============================
+
+// توسيع خريطة الأنماط النصية
+$text-styles: map.merge(typo.$text-styles, (
+  "display-large": (
+    "font-size": 3.5rem,    // 56px
+    "font-weight": 700,
+    "line-height": 1.1,
+    "letter-spacing": -0.02em
+  ),
+  "display-medium": (
+    "font-size": 2.875rem,  // 46px  
+    "font-weight": 700,
+    "line-height": 1.15,
+    "letter-spacing": -0.01em
+  ),
+  "display-small": (
+    "font-size": 2.25rem,   // 36px
+    "font-weight": 600,
+    "line-height": 1.2,
+    "letter-spacing": 0
+  ),
+  "title-large": (
+    "font-size": 1.375rem,  // 22px
+    "font-weight": 600,
+    "line-height": 1.3,
+    "letter-spacing": 0
+  ),
+  "title-medium": (
+    "font-size": 1.125rem,  // 18px
+    "font-weight": 600,
+    "line-height": 1.4,
+    "letter-spacing": 0.01em
+  ),
+  "title-small": (
+    "font-size": 0.875rem,  // 14px
+    "font-weight": 600,
+    "line-height": 1.4,
+    "letter-spacing": 0.01em
+  ),
+  "label-large": (
+    "font-size": 0.875rem,  // 14px
+    "font-weight": 500,
+    "line-height": 1.4,
+    "letter-spacing": 0.01em
+  ),
+  "label-medium": (
+    "font-size": 0.75rem,   // 12px
+    "font-weight": 500,
+    "line-height": 1.3,
+    "letter-spacing": 0.05em
+  ),
+  "label-small": (
+    "font-size": 0.6875rem, // 11px
+    "font-weight": 500,
+    "line-height": 1.3,
+    "letter-spacing": 0.05em
+  )
+));
+
+@mixin text-style($style) {
+  @if map.has-key($text-styles, $style) {
+    $style-map: map.get($text-styles, $style);
+    
+    @each $property, $value in $style-map {
+      #{$property}: $value;
+    }
+  } @else {
+    @warn "Text style '#{$style}' not found.";
+  }
+}
+
+@mixin truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ===============================
+// 📱 RESPONSIVE MIXINS
+// ===============================
+
+@mixin mobile-layout {
+  @include breakpoints.mobile-layout {
+    @content;
+  }
+}
+
+@mixin tablet-layout {
+  @include breakpoints.tablet-layout {
+    @content;
+  }
+}
+
+@mixin desktop-layout {
+  @include breakpoints.desktop-layout {
+    @content;
+  }
+}
+
+@mixin respond-above($breakpoint) {
+  @include breakpoints.respond-above($breakpoint) {
+    @content;
+  }
+}
+
+@mixin respond-below($breakpoint) {
+  @include breakpoints.respond-below($breakpoint) {
+    @content;
+  }
+}
+
+// ===============================
+// 🖼️ IMAGE & MEDIA MIXINS
+// ===============================
+
+@mixin aspect-ratio($width, $height) {
+  position: relative;
+  
+  &::before {
+    content: "";
+    display: block;
+    padding-top: math.percentage(math.div($height, $width));
+  }
+  
+  > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@mixin cover-image {
+  object-fit: cover;
+  object-position: center;
+}
+
+@mixin contain-image {
+  object-fit: contain;
+  object-position: center;
+}
+
+// ===============================
+// 🎭 ADVANCED EFFECTS
+// ===============================
+
+@mixin glassmorphism($blur: 10px, $opacity: 0.1) {
+  background: rgba(255, 255, 255, $opacity);
+  backdrop-filter: blur($blur);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  [data-theme="dark"] & {
+    background: rgba(0, 0, 0, $opacity);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@mixin backdrop-blur($amount: 10px) {
+  backdrop-filter: blur($amount);
+  -webkit-backdrop-filter: blur($amount);
+  
+  // Fallback للمتصفحات التي لا تدعم backdrop-filter
+  @supports not (backdrop-filter: blur($amount)) {
+    & {
+      background-color: rgba(255, 255, 255, 0.8);
+      
+      [data-theme="dark"] & {
+        background-color: rgba(0, 0, 0, 0.8);
+      }
+    }
+  }
+}
+
+@mixin gradient-background($direction: 135deg, $colors...) {
+  background: linear-gradient($direction, $colors);
+}
+
+// ===============================
+// ♿ ACCESSIBILITY MIXINS
+// ===============================
+
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@mixin high-contrast {
+  @media (prefers-contrast: high) {
+    @content;
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// ===============================
+// 📱 MOBILE OPTIMIZATIONS
+// ===============================
+
+@mixin mobile-optimized {
+  // تحسين اللمس
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  
+  // تحسين التمرير
+  -webkit-overflow-scrolling: touch;
+  
+  // منع التكبير على النقر المزدوج
+  touch-action: manipulation;
+  
+  // تحسين الخطوط على الشاشات الصغيرة
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@mixin safe-area {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+// ===============================
+// 🏗️ LAYOUT UTILITIES
+// ===============================
+
+@mixin container($max-width-or-fluid: 1200px) {
+  @if $max-width-or-fluid == true {
+    // Fluid container
+    max-width: none;
+    width: 100%;
+  } @else {
+    // Fixed max-width container
+    max-width: $max-width-or-fluid;
+  }
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+@mixin grid($columns: 12, $gap: 1rem) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+}
+
+@mixin auto-grid($min-size: 250px, $gap: 1rem) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-size, 1fr));
+  gap: $gap;
+}
+
+// ===============================
+// 🎨 THEME UTILITIES
+// ===============================
+
+@mixin theme-aware($light-property, $light-value, $dark-property, $dark-value) {
+  #{$light-property}: #{$light-value};
+  
+  [data-theme="dark"] & {
+    #{$dark-property}: #{$dark-value};
+  }
+}
+
+@mixin dark-mode {
+  [data-theme="dark"] & {
+    @content;
+  }
+}
+
+// ===============================
+// 📜 SCROLLBAR UTILITIES
+// ===============================
+
+@mixin custom-scrollbar($size: 8px) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  
+  &::-webkit-scrollbar {
+    width: $size;
+    height: $size;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: calc(#{$size} / 2);
+    
+    &:hover {
+      background: var(--color-text-secondary);
+    }
+  }
+}
+
+@mixin no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// ===============================
+// 📝 TEXT UTILITIES
+// ===============================
+
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

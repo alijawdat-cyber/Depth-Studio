@@ -1,0 +1,726 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - أنماط التخطيط الرئيسي
+ * Main Layout Styles
+ * ==============================================
+ */
+
+@use "sass:map";
+@use '../foundation/_variables' as vars;
+@use '../foundation/_colors' as colors;
+@use '../foundation/_spacing' as spacing;
+@use '../foundation/_typography' as typo;
+@use '../foundation/_breakpoints' as breakpoints;
+@use '../utilities/_mixins' as mixins;
+
+// ===============================
+// 📐 LAYOUT VARIABLES
+// ===============================
+
+$layout-animation: (
+  "sidebar": map.get(vars.$transition-duration, "base"),
+  "content": map.get(vars.$transition-duration, "fast")
+) !default;
+
+$layout-gaps: (
+  "mobile": var(--spacing-md),
+  "tablet": var(--spacing-lg),
+  "desktop": var(--spacing-xl)
+) !default;
+
+// ===============================
+// 🏗️ LAYOUT CONTAINER
+// ===============================
+
+.layout {
+  // الأساسيات
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  
+  // الاتجاه RTL
+  [dir="rtl"] & {
+    direction: rtl;
+  }
+  
+  // ===============================
+  // 🎛️ LAYOUT VARIANTS
+  // ===============================
+  
+  &--with-sidebar {
+    @include breakpoints.desktop-layout {
+      flex-direction: row;
+    }
+    
+    .layout__main {
+      @include breakpoints.desktop-layout {
+        margin-left: var(--sidebar-width, 280px);
+      }
+      
+      [dir="rtl"] & {
+        @include breakpoints.desktop-layout {
+          margin-left: 0;
+          margin-right: var(--sidebar-width, 280px);
+        }
+      }
+    }
+    
+    &.layout--sidebar-collapsed {
+      .layout__main {
+        @include breakpoints.desktop-layout {
+          margin-left: 60px;
+        }
+        
+        [dir="rtl"] & {
+          @include breakpoints.desktop-layout {
+            margin-left: 0;
+            margin-right: 60px;
+          }
+        }
+      }
+    }
+  }
+  
+  &--fullscreen {
+    .layout__header,
+    .layout__sidebar,
+    .layout__footer {
+      display: none;
+    }
+    
+    .layout__main {
+      margin: 0;
+      border-radius: 0;
+    }
+  }
+  
+  &--centered {
+    .layout__main {
+      @include mixins.container(1200px);
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+  
+  // ===============================
+  // 📱 LAYOUT HEADER
+  // ===============================
+  
+  &__header {
+    position: sticky;
+    top: 0;
+    z-index: map.get(vars.$z-index, "sticky");
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-divider);
+    @include mixins.elevation(1);
+    @include mixins.backdrop-blur(20px);
+    
+    // لمنع القفز عند التمرير
+    will-change: transform;
+  }
+  
+  // ===============================
+  // 📂 LAYOUT SIDEBAR
+  // ===============================
+  
+  &__sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: map.get(vars.$z-index, "docked");
+    width: var(--sidebar-width, 280px);
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-divider);
+    @include mixins.elevation(2);
+    @include mixins.transition(transform, "base");
+    
+    [dir="rtl"] & {
+      left: 0;
+      border-right: none;
+      border-left: 1px solid var(--color-divider);
+    }
+    
+    [dir="ltr"] & {
+      left: 0;
+    }
+    
+    // الحالات المختلفة
+    &--collapsed {
+      --sidebar-width: 60px;
+    }
+    
+    &--hidden {
+      transform: translateX(-100%);
+      
+      [dir="rtl"] & {
+        transform: translateX(100%);
+      }
+    }
+    
+    &--floating {
+      @include breakpoints.mobile-layout {
+        top: var(--topbar-height, 64px);
+        background: rgba(var(--color-surface-rgb), 0.95);
+        @include mixins.backdrop-blur(30px);
+        border-radius: 0 var(--border-radius-lg) var(--border-radius-lg) 0;
+        
+        [dir="rtl"] & {
+          border-radius: var(--border-radius-lg) 0 0 var(--border-radius-lg);
+        }
+      }
+    }
+    
+    // التفاعل على الموبايل
+    @include breakpoints.mobile-layout {
+      transform: translateX(-100%);
+      
+      [dir="rtl"] & {
+        transform: translateX(100%);
+      }
+      
+      &--open {
+        transform: translateX(0);
+      }
+    }
+    
+    // إخفاء على الطباعة
+    @media print {
+      display: none !important;
+    }
+  }
+  
+  // ===============================
+  // 🎯 LAYOUT MAIN CONTENT
+  // ===============================
+  
+  &__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; // لحل مشاكل الـ Flexbox
+    @include mixins.transition(all, map.get($layout-animation, "content"));
+    
+    // المسافات المتجاوبة
+    @include breakpoints.mobile-layout {
+      margin: 0;
+    }
+    
+    @include breakpoints.tablet-layout {
+      margin: 0;
+    }
+  }
+  
+  &__content {
+    flex: 1;
+    padding: var(--content-padding, var(--spacing-md));
+    @include mixins.container(true);
+    
+    // المسافات المتجاوبة
+    @include breakpoints.mobile-layout {
+      --content-padding: var(--spacing-sm);
+    }
+    
+    @include breakpoints.tablet-layout {
+      --content-padding: var(--spacing-md);
+    }
+    
+    @include breakpoints.desktop-layout {
+      --content-padding: var(--spacing-lg);
+    }
+    
+    // إعدادات أفضل للمحتوى النصي
+    &--prose {
+      max-width: 65ch;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+      
+      h1, h2, h3, h4, h5, h6 {
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        line-height: 1.3;
+      }
+      
+      p {
+        margin-bottom: 1em;
+      }
+      
+      ul, ol {
+        margin-bottom: 1em;
+        padding-left: 1.5em;
+        
+        [dir="rtl"] & {
+          padding-left: 0;
+          padding-right: 1.5em;
+        }
+      }
+    }
+    
+    // تخطيط بشبكة
+    &--grid {
+      display: grid;
+      gap: var(--spacing-lg);
+      
+      &-auto {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      
+      &-2 {
+        grid-template-columns: 1fr 1fr;
+        
+        @include breakpoints.mobile-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+      &-3 {
+        grid-template-columns: repeat(3, 1fr);
+        
+        @include breakpoints.tablet-layout {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @include breakpoints.mobile-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+    
+    // تخطيط مرن
+    &--flex {
+      display: flex;
+      gap: var(--spacing-lg);
+      
+      &-column {
+        flex-direction: column;
+      }
+      
+      &-wrap {
+        flex-wrap: wrap;
+      }
+      
+      @include breakpoints.mobile-layout {
+        flex-direction: column;
+      }
+    }
+  }
+  
+  // ===============================
+  // 🔗 LAYOUT FOOTER
+  // ===============================
+  
+  &__footer {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-divider);
+    padding: var(--spacing-lg) var(--spacing-md);
+    margin-top: auto;
+    
+    @include breakpoints.mobile-layout {
+      padding: var(--spacing-md) var(--spacing-sm);
+    }
+    
+    // إخفاء على الطباعة
+    @media print {
+      display: none !important;
+    }
+  }
+}
+
+// ===============================
+// 🎨 LAYOUT OVERLAYS
+// ===============================
+
+.layout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: map.get(vars.$z-index, "modal-backdrop");
+  opacity: 0;
+  visibility: hidden;
+  @include mixins.transition(all, "fast");
+  
+  &--active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  // على الموبايل فقط
+  @include breakpoints.desktop-layout {
+    display: none !important;
+  }
+}
+
+// ===============================
+// 📄 PAGE CONTAINERS
+// ===============================
+
+.page {
+  // الحاوي الأساسي للصفحة
+  &__container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+    
+    @include breakpoints.mobile-layout {
+      padding: 0 var(--spacing-sm);
+    }
+  }
+  
+  // رأس الصفحة
+  &__header {
+    padding: var(--spacing-lg) 0;
+    border-bottom: 1px solid var(--color-divider);
+    margin-bottom: var(--spacing-lg);
+    
+    @include breakpoints.mobile-layout {
+      padding: var(--spacing-md) 0;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    &-title {
+      @include mixins.text-style("display-small");
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-xs);
+    }
+    
+    &-subtitle {
+      @include mixins.text-style("body-large");
+      color: var(--color-text-secondary);
+    }
+    
+    &-actions {
+      @include mixins.flex-between;
+      margin-top: var(--spacing-md);
+      
+      @include breakpoints.mobile-layout {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+      }
+    }
+  }
+  
+  // محتوى الصفحة
+  &__content {
+    min-height: 400px;
+    
+    // للصفحات الفارغة
+    &--empty {
+      @include mixins.flex-center(column, var(--spacing-md));
+      min-height: 60vh;
+      color: var(--color-text-secondary);
+      
+      .empty-icon {
+        @include mixins.size(64px);
+        color: var(--color-text-hint);
+        margin-bottom: var(--spacing-md);
+      }
+      
+      .empty-title {
+        @include mixins.text-style("title-medium");
+        color: var(--color-text-primary);
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .empty-description {
+        @include mixins.text-style("body");
+        text-align: center;
+        max-width: 400px;
+      }
+    }
+    
+    // للصفحات قيد التحميل
+    &--loading {
+      @include mixins.flex-center(column, var(--spacing-md));
+      min-height: 40vh;
+      color: var(--color-text-secondary);
+      
+      .loading-spinner {
+        @include mixins.size(48px);
+        margin-bottom: var(--spacing-md);
+      }
+      
+      .loading-text {
+        @include mixins.text-style("body");
+      }
+    }
+  }
+  
+  // أقسام الصفحة
+  &__section {
+    margin-bottom: var(--spacing-xl);
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &-title {
+      @include mixins.text-style("title-large");
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-md);
+      
+      &--with-border {
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--color-primary);
+      }
+    }
+    
+    &-subtitle {
+      @include mixins.text-style("body-large");
+      color: var(--color-text-secondary);
+      margin-bottom: var(--spacing-lg);
+    }
+  }
+}
+
+// ===============================
+// 📊 DASHBOARD LAYOUTS
+// ===============================
+
+.dashboard {
+  &__grid {
+    display: grid;
+    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    
+    @include breakpoints.mobile-layout {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+  }
+  
+  &__stats {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-bottom: var(--spacing-xl);
+    
+    @include breakpoints.mobile-layout {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-sm);
+    }
+  }
+  
+  &__charts {
+    display: grid;
+    gap: var(--spacing-lg);
+    grid-template-columns: 2fr 1fr;
+    
+    @include breakpoints.tablet-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &__widget {
+    background: var(--color-surface);
+    border: 1px solid var(--color-divider);
+    @include mixins.border-radius("lg");
+    @include mixins.elevation(1);
+    @include mixins.transition(box-shadow, "fast");
+    
+    &:hover {
+      @include mixins.elevation(2);
+    }
+    
+    &-header {
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-bottom: 1px solid var(--color-divider);
+      @include mixins.flex-between;
+      
+      &-title {
+        @include mixins.text-style("title-medium");
+        color: var(--color-text-primary);
+      }
+      
+      &-actions {
+        @include mixins.flex-start(row, var(--spacing-xs));
+      }
+    }
+    
+    &-content {
+      padding: var(--spacing-lg);
+    }
+    
+    &-footer {
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-top: 1px solid var(--color-divider);
+      background: var(--color-surface-variant);
+      @include mixins.border-radius(0 0 var(--border-radius-lg) var(--border-radius-lg));
+    }
+  }
+}
+
+// ===============================
+// 🔍 SEARCH LAYOUTS
+// ===============================
+
+.search-layout {
+  &__filters {
+    background: var(--color-surface);
+    border: 1px solid var(--color-divider);
+    @include mixins.border-radius("lg");
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    
+    @include breakpoints.mobile-layout {
+      padding: var(--spacing-md);
+    }
+    
+    &-title {
+      @include mixins.text-style("title-medium");
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-md);
+    }
+    
+    &-grid {
+      display: grid;
+      gap: var(--spacing-md);
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      
+      @include breakpoints.mobile-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+  
+  &__results {
+    &-header {
+      @include mixins.flex-between;
+      margin-bottom: var(--spacing-lg);
+      
+      @include breakpoints.mobile-layout {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+      }
+      
+      &-info {
+        @include mixins.text-style("body");
+        color: var(--color-text-secondary);
+      }
+      
+      &-actions {
+        @include mixins.flex-start(row, var(--spacing-sm));
+        
+        @include breakpoints.mobile-layout {
+          justify-content: stretch;
+        }
+      }
+    }
+    
+    &-grid {
+      display: grid;
+      gap: var(--spacing-md);
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      
+      @include breakpoints.mobile-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    &-list {
+      .result-item {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid var(--color-divider);
+        @include mixins.transition(background, "fast");
+        
+        &:hover {
+          background: var(--color-surface-variant);
+        }
+        
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+}
+
+// ===============================
+// 📱 RESPONSIVE ADJUSTMENTS
+// ===============================
+
+@include breakpoints.mobile-layout {
+  .layout {
+    &__main {
+      min-height: calc(100vh - var(--topbar-height, 64px));
+    }
+    
+    &__content {
+      padding: var(--spacing-sm);
+    }
+  }
+  
+  .page {
+    &__header {
+      &-title {
+        @include mixins.text-style("title-large");
+      }
+    }
+    
+    &__section {
+      margin-bottom: var(--spacing-lg);
+      
+      &-title {
+        @include mixins.text-style("title-medium");
+      }
+    }
+  }
+}
+
+// ===============================
+// 🎨 THEME SUPPORT
+// ===============================
+
+// الوضع المظلم
+@media (prefers-color-scheme: dark) {
+  .layout-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+// دعم تقليل الحركة
+@media (prefers-reduced-motion: reduce) {
+  .layout,
+  .layout *,
+  .layout::before,
+  .layout::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// تحسين الأداء
+.layout {
+  &__sidebar,
+  &__main {
+    will-change: transform;
+  }
+}
+
+// للطباعة
+@media print {
+  .layout {
+    &__main {
+      margin: 0 !important;
+    }
+    
+    &__content {
+      padding: 0 !important;
+      max-width: none !important;
+    }
+  }
+  
+  .page {
+    &__header,
+    &__section {
+      break-inside: avoid;
+    }
+  }
+} 

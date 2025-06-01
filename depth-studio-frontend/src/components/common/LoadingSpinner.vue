@@ -219,7 +219,6 @@ const computedStyles = computed((): StyleValue => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/design-system/index';
 
 // === LOADING SPINNER COMPONENT ===
 .loading-spinner {

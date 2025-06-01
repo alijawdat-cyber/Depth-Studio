@@ -1,0 +1,721 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - أنماط البطاقات
+ * Card Styles  
+ * ==============================================
+ */
+
+@use "sass:map";
+@use "sass:list";
+@use '../foundation/_variables' as vars;
+@use '../foundation/_colors' as colors;
+@use '../foundation/_spacing' as spacing;
+@use '../foundation/_typography' as typo;
+@use '../foundation/_breakpoints' as breakpoints;
+@use '../utilities/_mixins' as mixins;
+
+// ===============================
+// 🎯 CARD SPECIFIC VARIABLES
+// ===============================
+
+$card-aspect-ratios: (
+  "square": (1, 1),
+  "video": (16, 9),
+  "photo": (4, 3),
+  "portrait": (3, 4),
+  "golden": (1.618, 1)
+);
+
+$card-grid-gaps: (
+  "tight": var(--spacing-sm),
+  "normal": var(--spacing-md),
+  "loose": var(--spacing-lg),
+  "relaxed": var(--spacing-xl)
+);
+
+$card-image-overlays: (
+  "light": rgba(255, 255, 255, 0.9),
+  "dark": rgba(0, 0, 0, 0.7),
+  "primary": rgba(var(--color-primary-rgb), 0.8),
+  "gradient": linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3))
+);
+
+// === مؤشرات Z-Index ===
+$z-index: (
+  "dropdown": 1000,
+  "sticky": 1020,
+  "fixed": 1030,
+  "modal": 1050
+);
+
+// ===============================
+// 🎨 CARD VARIATIONS
+// ===============================
+
+// === بطاقات الأخبار والمقالات ===
+.card-article {
+  .card__image {
+    @include mixins.aspect-ratio(16, 9);
+    
+    img {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  .card__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    @include mixins.text-style("caption");
+    color: var(--color-text-secondary);
+    
+    .meta__date,
+    .meta__author,
+    .meta__category {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2xs);
+    }
+    
+    .meta__separator {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: var(--color-text-secondary);
+    }
+  }
+  
+  .card__excerpt {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    
+    .tag {
+      padding: var(--spacing-2xs) var(--spacing-xs);
+      @include mixins.text-style("caption");
+      background-color: var(--color-surface-variant);
+      color: var(--color-text-secondary);
+      @include mixins.border-radius("sm");
+      @include mixins.transition(all, "fast");
+      
+      &:hover {
+        background-color: var(--color-primary);
+        color: var(--color-on-primary);
+      }
+    }
+  }
+}
+
+// === بطاقات المنتجات ===
+.card-product {
+  .card__image {
+    position: relative;
+    @include mixins.aspect-ratio(1, 1);
+    
+    .product__badge {
+      position: absolute;
+      top: var(--spacing-sm);
+      right: var(--spacing-sm);
+      padding: var(--spacing-2xs) var(--spacing-xs);
+      @include mixins.text-style("caption");
+      @include mixins.border-radius("sm");
+      font-weight: var(--font-weight-semibold);
+      
+      &--sale {
+        background-color: var(--color-error);
+        color: var(--color-on-error);
+      }
+      
+      &--new {
+        background-color: var(--color-success);
+        color: var(--color-on-success);
+      }
+      
+      &--featured {
+        background-color: var(--color-warning);
+        color: var(--color-on-warning);
+      }
+    }
+    
+    .product__favorite {
+      position: absolute;
+      top: var(--spacing-sm);
+      left: var(--spacing-sm);
+      @include mixins.size(2rem);
+      @include mixins.flex-center;
+      background-color: rgba(255, 255, 255, 0.9);
+      @include mixins.border-radius("sm");
+      cursor: pointer;
+      @include mixins.transition(all, "fast");
+      
+      &:hover {
+        background-color: var(--color-error);
+        color: var(--color-on-error);
+      }
+      
+      &--active {
+        background-color: var(--color-error);
+        color: var(--color-on-error);
+      }
+    }
+  }
+  
+  .product__price {
+    @include mixins.flex-between;
+    margin-top: var(--spacing-xs);
+    
+    .price__current {
+      @include mixins.text-style("heading-6");
+      color: var(--color-primary);
+      font-weight: var(--font-weight-bold);
+    }
+    
+    .price__original {
+      @include mixins.text-style("body-small");
+      color: var(--color-text-secondary);
+      text-decoration: line-through;
+    }
+    
+    .price__discount {
+      @include mixins.text-style("caption");
+      color: var(--color-error);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+  
+  .product__rating {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-xs);
+    
+    .rating__stars {
+      display: flex;
+      gap: 2px;
+      
+      .star {
+        @include mixins.size(16px);
+        color: var(--color-warning);
+        
+        &--empty {
+          color: var(--color-outline);
+        }
+      }
+    }
+    
+    .rating__count {
+      @include mixins.text-style("caption");
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
+// === بطاقات الملف الشخصي ===
+.card-profile {
+  text-align: center;
+  
+  .profile__avatar {
+    @include mixins.size(80px);
+    margin: 0 auto var(--spacing-md);
+    border-radius: 50%;
+    @include mixins.elevation(2);
+    overflow: hidden;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  
+  .profile__name {
+    @include mixins.text-style("heading-5");
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .profile__title {
+    @include mixins.text-style("body-small");
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .profile__stats {
+    display: flex;
+    justify-content: space-around;
+    padding: var(--spacing-sm) 0;
+    border-top: 1px solid var(--color-divider);
+    
+    .stat {
+      text-align: center;
+      
+      .stat__number {
+        @include mixins.text-style("heading-6");
+        color: var(--color-primary);
+        display: block;
+      }
+      
+      .stat__label {
+        @include mixins.text-style("caption");
+        color: var(--color-text-secondary);
+      }
+    }
+  }
+  
+  .profile__social {
+    @include mixins.flex-center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+    
+    .social__link {
+      @include mixins.size(2rem);
+      @include mixins.flex-center;
+      @include mixins.border-radius("sm");
+      background-color: var(--color-surface-variant);
+      color: var(--color-text-secondary);
+      @include mixins.transition(all, "fast");
+      
+      &:hover {
+        background-color: var(--color-primary);
+        color: var(--color-on-primary);
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+// === بطاقات الإحصائيات ===
+.card-stat {
+  .stat__icon {
+    @include mixins.size(3rem);
+    @include mixins.flex-center;
+    @include mixins.border-radius("md");
+    margin-bottom: var(--spacing-md);
+    
+    &--primary {
+      background-color: var(--color-primary-container);
+      color: var(--color-primary);
+    }
+    
+    &--success {
+      background-color: var(--color-success-container);
+      color: var(--color-success);
+    }
+    
+    &--warning {
+      background-color: var(--color-warning-container);
+      color: var(--color-warning);
+    }
+    
+    &--error {
+      background-color: var(--color-error-container);
+      color: var(--color-error);
+    }
+  }
+  
+  .stat__value {
+    @include mixins.text-style("heading-2");
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-xs);
+    
+    .value__trend {
+      @include mixins.text-style("body-small");
+      margin-right: var(--spacing-xs);
+      
+      &--up {
+        color: var(--color-success);
+      }
+      
+      &--down {
+        color: var(--color-error);
+      }
+      
+      &--neutral {
+        color: var(--color-text-secondary);
+      }
+    }
+  }
+  
+  .stat__label {
+    @include mixins.text-style("body");
+    color: var(--color-text-secondary);
+  }
+  
+  .stat__progress {
+    margin-top: var(--spacing-sm);
+    
+    .progress__bar {
+      height: 4px;
+      background-color: var(--color-surface-variant);
+      @include mixins.border-radius("full");
+      overflow: hidden;
+      
+      .progress__fill {
+        height: 100%;
+        background-color: var(--color-primary);
+        @include mixins.transition(width, "base");
+      }
+    }
+    
+    .progress__label {
+      @include mixins.flex-between;
+      margin-top: var(--spacing-xs);
+      @include mixins.text-style("caption");
+      color: var(--color-text-secondary);
+    }
+  }
+}
+
+// ===============================
+// 🎯 CARD LAYOUTS
+// ===============================
+
+// === شبكة البطاقات ===
+.cards-grid {
+  display: grid;
+  gap: var(--spacing-md);
+  
+  // شبكة متجاوبة
+  &--responsive {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  // أحجام ثابتة
+  &--cols-1 { grid-template-columns: 1fr; }
+  &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+  &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+  &--cols-4 { grid-template-columns: repeat(4, 1fr); }
+  &--cols-5 { grid-template-columns: repeat(5, 1fr); }
+  &--cols-6 { grid-template-columns: repeat(6, 1fr); }
+  
+  // تباعد مختلف
+  @each $name, $gap in $card-grid-gaps {
+    &--gap-#{$name} {
+      gap: $gap;
+    }
+  }
+  
+  // شبكة masonry
+  &--masonry {
+    columns: 3;
+    column-gap: var(--spacing-md);
+    
+    .card {
+      break-inside: avoid;
+      margin-bottom: var(--spacing-md);
+    }
+  }
+}
+
+// === قائمة البطاقات ===
+.cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  
+  .card {
+    @include mixins.flex-start;
+    
+    .card__image {
+      flex: 0 0 120px;
+      height: 120px;
+      margin-left: var(--spacing-md);
+    }
+    
+    .card__content {
+      flex: 1;
+    }
+  }
+}
+
+// === البطاقات المرتبة عموديا ===
+.cards-stack {
+  display: flex;
+  flex-direction: column;
+  
+  .card {
+    margin-bottom: calc(var(--spacing-md) * -1);
+    
+    &:hover {
+      z-index: map.get($z-index, "dropdown");
+      transform: translateY(-8px);
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// ===============================
+// 🎨 CARD EFFECTS
+// ===============================
+
+// === تأثير التمرير ===
+.card-parallax {
+  .card__image {
+    overflow: hidden;
+    
+    img {
+      @include mixins.transition(transform, "slow");
+    }
+  }
+  
+  &:hover {
+    .card__image img {
+      transform: scale(1.1) translateY(-10%);
+    }
+  }
+}
+
+// === تأثير الانعكاس ===
+.card-flip {
+  perspective: 1000px;
+  
+  .card__inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    @include mixins.transition(transform, "base");
+    transform-style: preserve-3d;
+  }
+  
+  &:hover .card__inner {
+    transform: rotateY(180deg);
+  }
+  
+  .card__front,
+  .card__back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    @include mixins.border-radius("md");
+  }
+  
+  .card__back {
+    transform: rotateY(180deg);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    @include mixins.flex-center;
+    @include mixins.text-style("heading-6");
+  }
+}
+
+// === تأثير الإمالة ===
+.card-tilt {
+  @include mixins.transition(transform, "base");
+  
+  &:hover {
+    transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+  }
+}
+
+// === بطاقة قابلة للطي ===
+.card-expandable {
+  overflow: hidden;
+  @include mixins.transition(max-height, "base");
+  
+  &:not(.card--expanded) {
+    max-height: 300px;
+    
+    .card__body {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .card__footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, var(--color-surface));
+      padding-top: var(--spacing-lg);
+    }
+  }
+  
+  &.card--expanded {
+    max-height: none;
+    
+    .card__footer {
+      position: static;
+      background: transparent;
+      padding-top: var(--spacing-sm);
+    }
+  }
+  
+  .expand-toggle {
+    @include mixins.text-style("body-small");
+    color: var(--color-primary);
+    cursor: pointer;
+    @include mixins.transition(color, "fast");
+    
+    &:hover {
+      color: var(--color-primary-variant);
+    }
+  }
+}
+
+// ===============================
+// 📱 RESPONSIVE CARD LAYOUTS
+// ===============================
+
+@include breakpoints.mobile-layout {
+  .cards-grid {
+    &--responsive {
+      grid-template-columns: 1fr;
+    }
+    
+    &--cols-2,
+    &--cols-3,
+    &--cols-4,
+    &--cols-5,
+    &--cols-6 {
+      grid-template-columns: 1fr;
+    }
+    
+    &--masonry {
+      columns: 1;
+    }
+  }
+  
+  .cards-list {
+    .card {
+      flex-direction: column;
+      
+      .card__image {
+        flex: none;
+        width: 100%;
+        height: 200px;
+        margin-left: 0;
+        margin-bottom: var(--spacing-sm);
+      }
+    }
+  }
+  
+  .card-product {
+    .card__image {
+      .product__favorite,
+      .product__badge {
+        top: var(--spacing-xs);
+        right: var(--spacing-xs);
+      }
+    }
+  }
+}
+
+// ===============================
+// 🎯 ACCESSIBILITY
+// ===============================
+
+// === تحسين التركيز ===
+.card {
+  &:focus-within {
+    .card__title {
+      color: var(--color-primary);
+    }
+  }
+}
+
+// === إزالة الحركات للمستخدمين الذين يفضلون ذلك ===
+@media (prefers-reduced-motion: reduce) {
+  .card-parallax,
+  .card-flip,
+  .card-tilt,
+  .card-expandable {
+    .card__inner,
+    .card__image img,
+    &:hover {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+// ===============================
+// 🌙 THEME VARIATIONS
+// ===============================
+
+[data-theme="dark"] {
+  .card-article {
+    .card__tags .tag {
+      background-color: var(--color-surface-container);
+      border: 1px solid var(--color-outline-variant);
+    }
+  }
+  
+  .card-product {
+    .product__favorite {
+      background-color: rgba(0, 0, 0, 0.8);
+      color: var(--color-text-primary);
+    }
+  }
+  
+  .card-profile {
+    .profile__social .social__link {
+      background-color: var(--color-surface-container);
+      border: 1px solid var(--color-outline-variant);
+    }
+  }
+}
+
+// ===============================
+// 🔧 UTILITY CLASSES
+// ===============================
+
+// === نسب عرض-ارتفاع للبطاقات ===
+@each $name, $ratio in $card-aspect-ratios {
+  .card-aspect-#{$name} .card__image {
+    @include mixins.aspect-ratio(list.nth($ratio, 1), list.nth($ratio, 2));
+  }
+}
+
+// === أحجام صور البطاقات ===
+.card-image {
+  &--xs { height: 120px; }
+  &--sm { height: 160px; }
+  &--md { height: 200px; }
+  &--lg { height: 280px; }
+  &--xl { height: 360px; }
+}
+
+// === تأثيرات خاصة للصور ===
+.card__image {
+  &--overlay {
+    position: relative;
+    
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: map.get($card-image-overlays, "dark");
+    }
+  }
+  
+  &--overlay-light::after {
+    background: map.get($card-image-overlays, "light");
+  }
+  
+  &--overlay-primary::after {
+    background: map.get($card-image-overlays, "primary");
+  }
+  
+  &--overlay-gradient::after {
+    background: map.get($card-image-overlays, "gradient");
+  }
+} 

@@ -1,0 +1,849 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - أنماط النماذج الشاملة
+ * Forms Component Styles
+ * ==============================================
+ */
+
+@use "sass:map";
+@use "sass:list";
+@use '../foundation/_variables' as vars;
+@use '../foundation/_colors' as colors;
+@use '../foundation/_spacing' as spacing;
+@use '../foundation/_typography' as typo;
+@use '../foundation/_breakpoints' as breakpoints;
+@use '../utilities/_mixins' as mixins;
+
+// ===============================
+// 🎯 FORM SPECIFIC VARIABLES
+// ===============================
+
+$form-field-heights: (
+  "xs": 1.75rem,
+  "sm": 2rem,
+  "md": 2.5rem,
+  "lg": 3rem,
+  "xl": 3.5rem
+);
+
+$form-field-paddings: (
+  "xs": var(--spacing-2xs) var(--spacing-xs),
+  "sm": var(--spacing-xs) var(--spacing-sm),
+  "md": var(--spacing-sm) var(--spacing-md),
+  "lg": var(--spacing-sm) var(--spacing-lg),
+  "xl": var(--spacing-md) var(--spacing-xl)
+);
+
+$form-validation-colors: (
+  "success": var(--color-success),
+  "warning": var(--color-warning),
+  "error": var(--color-error),
+  "info": var(--color-info)
+);
+
+$form-field-states: (
+  "default": var(--color-border),
+  "focused": var(--color-primary),
+  "error": var(--color-error),
+  "success": var(--color-success),
+  "warning": var(--color-warning),
+  "disabled": var(--color-border-disabled)
+);
+
+// ===============================
+// 🎨 FORM CONTAINERS & LAYOUTS
+// ===============================
+
+// === حاوي النموذج الأساسي ===
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  width: 100%;
+  
+  &--inline {
+    flex-direction: row;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+  
+  &--compact {
+    gap: var(--spacing-sm);
+  }
+  
+  &--spacious {
+    gap: var(--spacing-lg);
+  }
+  
+  // نموذج بخلفية
+  &--card {
+    padding: var(--spacing-lg);
+    background-color: var(--color-surface);
+    @include mixins.border-radius("lg");
+    @include mixins.elevation(1);
+  }
+  
+  // نموذج مع حدود
+  &--bordered {
+    padding: var(--spacing-lg);
+    border: 2px solid var(--color-border);
+    @include mixins.border-radius("lg");
+  }
+}
+
+// === مجموعات الحقول ===
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  
+  &--row {
+    flex-direction: row;
+    align-items: end;
+    gap: var(--spacing-md);
+    
+    > * {
+      flex: 1;
+    }
+  }
+  
+  &--inline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-sm);
+    
+    .form-label {
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+  }
+}
+
+// === شبكة الحقول ===
+.form-grid {
+  display: grid;
+  gap: var(--spacing-md);
+  
+  &--cols-1 { grid-template-columns: 1fr; }
+  &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+  &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+  &--cols-4 { grid-template-columns: repeat(4, 1fr); }
+  
+  // تخطيط متجاوب
+  &--responsive {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  // تباعد مختلف
+  &--tight { gap: var(--spacing-sm); }
+  &--loose { gap: var(--spacing-lg); }
+}
+
+// ===============================
+// 🏷️ FORM LABELS & LEGENDS
+// ===============================
+
+.form-label {
+  @include mixins.text-style("body-small");
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-xs);
+  
+  &--required::after {
+    content: " *";
+    color: var(--color-error);
+  }
+  
+  &--optional::after {
+    content: " (اختياري)";
+    color: var(--color-text-disabled);
+    font-weight: var(--font-weight-normal);
+  }
+  
+  &--large {
+    @include mixins.text-style("body");
+    font-weight: var(--font-weight-semibold);
+  }
+  
+  &--small {
+    @include mixins.text-style("caption");
+  }
+}
+
+.form-legend {
+  @include mixins.text-style("heading-6");
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-divider);
+  width: 100%;
+}
+
+// ===============================
+// 💬 FORM HELP & FEEDBACK
+// ===============================
+
+.form-help {
+  @include mixins.text-style("caption");
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+  
+  &--error {
+    color: var(--color-error);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  
+  &--success {
+    color: var(--color-success);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  
+  &--warning {
+    color: var(--color-warning);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  
+  &--info {
+    color: var(--color-info);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+}
+
+// === رسائل التحقق ===
+.form-feedback {
+  @include mixins.text-style("caption");
+  margin-top: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  
+  &--valid {
+    color: var(--color-success);
+  }
+  
+  &--invalid {
+    color: var(--color-error);
+  }
+  
+  &--warning {
+    color: var(--color-warning);
+  }
+  
+  &--info {
+    color: var(--color-info);
+  }
+}
+
+// ===============================
+// 📊 FORM CONTROLS EXTENSIONS
+// ===============================
+
+// === أحجام موحدة للحقول ===
+@each $size, $height in $form-field-heights {
+  .form-control--#{$size} {
+    min-height: $height;
+  }
+}
+
+// === حالات التحقق للحقول ===
+@each $state, $color in $form-field-states {
+  .form-control--#{$state} {
+    border-color: $color;
+    
+    &:focus {
+      border-color: $color;
+      box-shadow: 0 0 0 2px rgba($color, 0.2);
+    }
+  }
+}
+
+// === أنماط الحقول المتقدمة ===
+.form-control {
+  &--flush {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    @include mixins.border-radius(0);
+  }
+  
+  &--pill {
+    @include mixins.border-radius("full");
+  }
+  
+  &--square {
+    @include mixins.border-radius(0);
+  }
+  
+  // حقل بخلفية شفافة
+  &--transparent {
+    background-color: transparent;
+    border-color: transparent;
+    
+    &:focus {
+      background-color: var(--color-surface);
+      border-color: var(--color-primary);
+    }
+  }
+  
+  // حقل بحد سميك
+  &--thick-border {
+    border-width: 3px;
+  }
+}
+
+// ===============================
+// 🔘 CHECKBOX & RADIO STYLES
+// ===============================
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  
+  &-input {
+    @include mixins.size(1.25rem);
+    margin: 0;
+    cursor: pointer;
+    
+    &[type="checkbox"] {
+      @include mixins.border-radius("sm");
+    }
+    
+    &[type="radio"] {
+      @include mixins.border-radius("full");
+    }
+    
+    &:checked {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    
+    &:disabled {
+      cursor: not-allowed;
+      opacity: map.get(vars.$opacity, "60");
+    }
+  }
+  
+  &-label {
+    @include mixins.text-style("body");
+    color: var(--color-text-primary);
+    cursor: pointer;
+    flex: 1;
+    
+    &--small {
+      @include mixins.text-style("body-small");
+    }
+  }
+  
+  // مجموعة أفقية
+  &--inline {
+    display: inline-flex;
+    margin-left: var(--spacing-md);
+  }
+  
+  // checkbox/radio معكوس
+  &--reverse {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+  }
+  
+  // أحجام مختلفة
+  &--sm .form-check-input {
+    @include mixins.size(1rem);
+  }
+  
+  &--lg .form-check-input {
+    @include mixins.size(1.5rem);
+  }
+}
+
+// === مجموعات Checkbox/Radio ===
+.form-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  
+  &--inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+  }
+  
+  &--cards {
+    .form-check {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 1px solid var(--color-border);
+      @include mixins.border-radius("md");
+      margin-bottom: var(--spacing-xs);
+      @include mixins.transition(all, "fast");
+      
+      &:hover {
+        border-color: var(--color-primary);
+        background-color: var(--color-hover);
+      }
+      
+      .form-check-input:checked + .form-check-label {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-medium);
+      }
+    }
+  }
+}
+
+// ===============================
+// 🎛️ FORM CONTROLS ADVANCED
+// ===============================
+
+// === Range Slider ===
+.form-range {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--color-surface-variant);
+  @include mixins.border-radius("full");
+  outline: none;
+  @include mixins.transition(opacity, "fast");
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  // WebKit Thumb
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    @include mixins.size(20px);
+    @include mixins.border-radius("full");
+    background: var(--color-primary);
+    cursor: pointer;
+    @include mixins.transition(transform, "fast");
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+  
+  // Mozilla Thumb
+  &::-moz-range-thumb {
+    @include mixins.size(20px);
+    @include mixins.border-radius("full");
+    background: var(--color-primary);
+    cursor: pointer;
+    border: none;
+  }
+  
+  // حالات مختلفة
+  &--sm {
+    height: 4px;
+    
+    &::-webkit-slider-thumb {
+      @include mixins.size(16px);
+    }
+    
+    &::-moz-range-thumb {
+      @include mixins.size(16px);
+    }
+  }
+  
+  &--lg {
+    height: 8px;
+    
+    &::-webkit-slider-thumb {
+      @include mixins.size(24px);
+    }
+    
+    &::-moz-range-thumb {
+      @include mixins.size(24px);
+    }
+  }
+}
+
+// === File Input ===
+.form-file {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  
+  &-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  
+  &-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-surface);
+    border: 2px dashed var(--color-border);
+    @include mixins.border-radius("md");
+    color: var(--color-text-secondary);
+    @include mixins.transition(all, "fast");
+    cursor: pointer;
+    
+    &:hover {
+      border-color: var(--color-primary);
+      background-color: var(--color-hover);
+    }
+  }
+  
+  // حالة السحب والإفلات
+  &--dragover .form-file-label {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-container);
+    color: var(--color-primary);
+  }
+  
+  // منطقة إفلات كبيرة
+  &--dropzone {
+    .form-file-label {
+      min-height: 150px;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      
+      .file-icon {
+        @include mixins.size(3rem);
+        margin-bottom: var(--spacing-sm);
+      }
+    }
+  }
+}
+
+// ===============================
+// 🎨 FORM VALIDATION STATES
+// ===============================
+
+// === حالات التحقق العامة ===
+.was-validated,
+.needs-validation {
+  .form-control,
+  .form-select,
+  .form-check-input {
+    &:valid {
+      border-color: var(--color-success);
+      
+      &:focus {
+        border-color: var(--color-success);
+        box-shadow: 0 0 0 2px rgba(var(--color-success-rgb), 0.2);
+      }
+    }
+    
+    &:invalid {
+      border-color: var(--color-error);
+      
+      &:focus {
+        border-color: var(--color-error);
+        box-shadow: 0 0 0 2px rgba(var(--color-error-rgb), 0.2);
+      }
+    }
+  }
+}
+
+// === أيقونات التحقق ===
+.form-control-feedback {
+  position: absolute;
+  left: var(--spacing-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  
+  &--valid {
+    color: var(--color-success);
+  }
+  
+  &--invalid {
+    color: var(--color-error);
+  }
+}
+
+// ===============================
+// 🎭 FORM ANIMATIONS & EFFECTS
+// ===============================
+
+// === تأثيرات التركيز المتقدمة ===
+.form-control-animated {
+  position: relative;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-primary);
+    @include mixins.transition(all, "base");
+    transform: translateX(-50%);
+  }
+  
+  &:focus::before {
+    width: 100%;
+  }
+}
+
+// === Labels عائمة ===
+.form-floating {
+  position: relative;
+  
+  .form-control {
+    padding-top: calc(var(--spacing-md) + var(--spacing-xs));
+    padding-bottom: var(--spacing-xs);
+    
+    &::placeholder {
+      color: transparent;
+    }
+    
+    &:focus,
+    &:not(:placeholder-shown) {
+      ~ .form-label {
+        transform: translateY(-50%) scale(0.85);
+        color: var(--color-primary);
+      }
+    }
+  }
+  
+  .form-label {
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-md);
+    transform: translateY(-50%);
+    transform-origin: right center;
+    @include mixins.transition(all, "fast");
+    pointer-events: none;
+    background-color: var(--color-surface);
+    padding: 0 var(--spacing-2xs);
+  }
+}
+
+// ===============================
+// 📱 RESPONSIVE FORM LAYOUTS
+// ===============================
+
+@include breakpoints.mobile-layout {
+  .form {
+    &--inline {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    &-grid {
+      &--cols-2,
+      &--cols-3,
+      &--cols-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    &-group--row {
+      flex-direction: column;
+      align-items: stretch;
+      
+      > * {
+        flex: none;
+      }
+    }
+  }
+  
+  .form-check-group--inline {
+    flex-direction: column;
+  }
+  
+  .form-file--dropzone .form-file-label {
+    min-height: 120px;
+  }
+}
+
+// ===============================
+// 🌙 THEME VARIATIONS
+// ===============================
+
+[data-theme="dark"] {
+  .form-control {
+    &--transparent {
+      &:focus {
+        background-color: var(--color-surface-container);
+      }
+    }
+  }
+  
+  .form-check-group--cards {
+    .form-check {
+      background-color: var(--color-surface-container);
+      border-color: var(--color-outline-variant);
+      
+      &:hover {
+        background-color: var(--color-surface-variant);
+      }
+    }
+  }
+  
+  .form-file-label {
+    background-color: var(--color-surface-container);
+    border-color: var(--color-outline-variant);
+    
+    &:hover {
+      background-color: var(--color-surface-variant);
+    }
+  }
+  
+  .form-floating .form-label {
+    background-color: var(--color-surface);
+  }
+}
+
+// ===============================
+// 🎯 ACCESSIBILITY ENHANCEMENTS
+// ===============================
+
+// === تحسينات للمستخدمين ذوي الاحتياجات الخاصة ===
+@media (prefers-contrast: high) {
+  .form-control,
+  .form-select,
+  .form-check-input {
+    border-width: 2px;
+  }
+  
+  .form-control:focus,
+  .form-select:focus {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-control,
+  .form-floating .form-label,
+  .form-control-animated::before {
+    transition: none !important;
+  }
+  
+  .form-range::-webkit-slider-thumb {
+    transition: none !important;
+  }
+}
+
+// === تحسينات لقارئات الشاشة ===
+.sr-only-focusable {
+  &:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+// ===============================
+// 📄 PRINT STYLES
+// ===============================
+
+@media print {
+  .form {
+    page-break-inside: avoid;
+    
+    &-control,
+    &-select {
+      border: 1px solid #000 !important;
+      background: #fff !important;
+      color: #000 !important;
+    }
+    
+    &-check-input {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    &-file,
+    &-range {
+      display: none !important;
+    }
+    
+    &-help,
+    &-feedback {
+      color: #666 !important;
+    }
+  }
+}
+
+// ===============================
+// 🔧 UTILITY CLASSES
+// ===============================
+
+// === أحجام الحقول ===
+@each $size, $padding in $form-field-paddings {
+  .form-control-#{$size} {
+    padding: $padding;
+  }
+}
+
+// === هوامش النماذج ===
+.form-margin {
+  &-xs { margin-bottom: var(--spacing-xs); }
+  &-sm { margin-bottom: var(--spacing-sm); }
+  &-md { margin-bottom: var(--spacing-md); }
+  &-lg { margin-bottom: var(--spacing-lg); }
+  &-xl { margin-bottom: var(--spacing-xl); }
+}
+
+// === عروض الحقول ===
+.form-control-width {
+  &-25 { width: 25%; }
+  &-33 { width: 33.333%; }
+  &-50 { width: 50%; }
+  &-66 { width: 66.666%; }
+  &-75 { width: 75%; }
+  &-100 { width: 100%; }
+  
+  &-auto { width: auto; }
+  &-min { width: min-content; }
+  &-max { width: max-content; }
+}
+
+// === محاذاة النماذج ===
+.form-text-center { text-align: center; }
+.form-text-left { text-align: right; }
+.form-text-right { text-align: left; }
+
+// === مجموعات الأزرار في النماذج ===
+.form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-divider);
+  margin-top: var(--spacing-lg);
+  
+  &--center {
+    justify-content: center;
+  }
+  
+  &--start {
+    justify-content: flex-start;
+  }
+  
+  &--between {
+    justify-content: space-between;
+  }
+  
+  &--around {
+    justify-content: space-around;
+  }
+} 

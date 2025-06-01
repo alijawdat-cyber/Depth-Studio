@@ -31,7 +31,14 @@ export function useUserManagement() {
   const stats = computed((): UserStats => ({
     total: allUsers.value.length,
     active: activeUsers.value.length,
-    pending: pendingUsers.value.length
+    pending: pendingUsers.value.length,
+    suspended: allUsers.value.filter(user => user.status === 'suspended').length,
+    by_role: {
+      'super_admin': allUsers.value.filter(user => user.primary_role === 'super_admin').length,
+      'marketing_coordinator': allUsers.value.filter(user => user.primary_role === 'marketing_coordinator').length,
+      'brand_coordinator': allUsers.value.filter(user => user.primary_role === 'brand_coordinator').length,
+      'photographer': allUsers.value.filter(user => user.primary_role === 'photographer').length
+    }
   }))
 
   const photographersCount = computed(() => 
@@ -456,7 +463,7 @@ export function useUserManagement() {
       console.log(`📋 إنشاء صلاحيات لـ ${user.primary_role}...`)
       
       // صلاحيات أساسية حسب الدور
-      let permissions = {
+      const permissions = {
         user_id: user.id,
         role: user.primary_role,
         crud_permissions: {

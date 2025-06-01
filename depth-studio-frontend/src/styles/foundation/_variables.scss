@@ -1,0 +1,171 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - المتغيرات الأساسية
+ * Foundation Variables System
+ * ==============================================
+ */
+
+// === الإعدادات الأساسية ===
+$enable-rtl: true !default;
+$enable-dark-mode: true !default;
+$enable-rounded: true !default;
+$enable-shadows: true !default;
+$enable-transitions: true !default;
+
+// === البادئة (Prefix) ===
+$prefix: "ds" !default; // depth-studio
+
+// === الدقة (Precision) ===
+$decimal-places: 3 !default;
+
+// === الانتقالات (Transitions) ===
+$transition-duration: (
+  "fast": 150ms,
+  "base": 250ms,
+  "slow": 350ms,
+  "slower": 500ms
+) !default;
+
+$transition-timing: (
+  "ease": ease,
+  "ease-in": ease-in,
+  "ease-out": ease-out,
+  "ease-in-out": ease-in-out,
+  "linear": linear
+) !default;
+
+// === الظلال (Elevation) ===
+$elevation-levels: (
+  0: none,
+  1: 0 1px 3px rgba(0, 0, 0, 0.12),
+  2: 0 1px 5px rgba(0, 0, 0, 0.12),
+  3: 0 2px 8px rgba(0, 0, 0, 0.15),
+  4: 0 4px 12px rgba(0, 0, 0, 0.15),
+  5: 0 8px 16px rgba(0, 0, 0, 0.15),
+  6: 0 12px 24px rgba(0, 0, 0, 0.15),
+  7: 0 16px 32px rgba(0, 0, 0, 0.15),
+  8: 0 24px 48px rgba(0, 0, 0, 0.15)
+) !default;
+
+// === الحدود (Borders) ===
+$border-width: 1px !default;
+$border-style: solid !default;
+
+$border-radius: (
+  "none": 0,
+  "sm": 4px,
+  "base": 8px,
+  "md": 12px,
+  "lg": 16px,
+  "xl": 24px,
+  "2xl": 32px,
+  "full": 50%
+) !default;
+
+// === Z-Index Scale ===
+$z-index: (
+  "hide": -1,
+  "base": 0,
+  "docked": 10,
+  "dropdown": 1000,
+  "sticky": 1010,
+  "fixed": 1020,
+  "modal-backdrop": 1030,
+  "modal": 1040,
+  "popover": 1050,
+  "tooltip": 1060,
+  "toast": 1070,
+  "system": 1080
+) !default;
+
+// === الشفافية (Opacity) ===
+$opacity: (
+  "0": 0,
+  "5": 0.05,
+  "10": 0.1,
+  "20": 0.2,
+  "25": 0.25,
+  "30": 0.3,
+  "40": 0.4,
+  "50": 0.5,
+  "60": 0.6,
+  "70": 0.7,
+  "75": 0.75,
+  "80": 0.8,
+  "90": 0.9,
+  "95": 0.95,
+  "100": 1
+) !default;
+
+// === أحجام المكونات (Component Sizes) ===
+$component-sizes: (
+  "xs": (
+    "height": 24px,
+    "padding-x": 8px,
+    "padding-y": 4px,
+    "font-size": 12px
+  ),
+  "sm": (
+    "height": 32px,
+    "padding-x": 12px,
+    "padding-y": 6px,
+    "font-size": 14px
+  ),
+  "md": (
+    "height": 40px,
+    "padding-x": 16px,
+    "padding-y": 8px,
+    "font-size": 16px
+  ),
+  "lg": (
+    "height": 48px,
+    "padding-x": 20px,
+    "padding-y": 12px,
+    "font-size": 18px
+  ),
+  "xl": (
+    "height": 56px,
+    "padding-x": 24px,
+    "padding-y": 16px,
+    "font-size": 20px
+  )
+) !default;
+
+// === الحالات (States) ===
+$states: (
+  "hover": (
+    "opacity": 0.8,
+    "transform": translateY(-1px)
+  ),
+  "active": (
+    "opacity": 0.9,
+    "transform": translateY(0)
+  ),
+  "focus": (
+    "outline": 2px solid var(--color-primary),
+    "outline-offset": 2px
+  ),
+  "disabled": (
+    "opacity": 0.6,
+    "cursor": not-allowed
+  )
+) !default;
+
+// === إعدادات RTL ===
+$rtl-property-map: (
+  "left": "right",
+  "right": "left",
+  "margin-left": "margin-right",
+  "margin-right": "margin-left",
+  "padding-left": "padding-right",
+  "padding-right": "padding-left",
+  "border-left": "border-right",
+  "border-right": "border-left"
+) !default;
+
+// === إعدادات الطباعة ===
+$print-options: (
+  "remove-backgrounds": true,
+  "optimize-colors": true,
+  "hide-decorative": true
+) !default; 

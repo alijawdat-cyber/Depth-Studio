@@ -391,7 +391,6 @@ const closeDialog = (): void => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/design-system/index';
 
 .user-details-dialog {
   .user-header {

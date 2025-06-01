@@ -1,445 +1,349 @@
 <template>
-  <v-container fluid class="pa-0">
-    <v-row no-gutters justify="center" align="center" style="min-height: 100vh;">
-      <v-col cols="12" sm="10" md="8" lg="8" xl="7">
-        <v-card 
-          class="mx-auto role-setup-card" 
-          :max-width="850"
-          elevation="24"
-          rounded="xl"
-        >
-          <div class="card-header">
-            <v-img
-              src="/logo-depth-studio.png"
-              alt="Depth Studio"
-              height="50"
-              width="180"
-              contain
-              class="mx-auto mb-4"
-            />
-            <h1 class="text-h4 font-weight-bold text-center mb-2">
-              إعداد دورك في النظام
-            </h1>
-            <p class="text-center text-medium-emphasis mb-6">
-              اختر الدور المناسب لك واكمل البيانات المطلوبة
-            </p>
+  <v-container class="fill-height">
+    <v-row justify="center" align="center">
+      <v-col cols="12" sm="10" md="8">
+        <v-card class="pa-6">
+          <!-- Logo -->
+          <v-img
+            src="/logo-depth-studio.png"
+            alt="Depth Studio"
+            height="40"
+            width="150"
+            contain
+            class="mx-auto mb-4"
+          />
+          
+          <h2 class="text-center mb-2">إعداد دورك في النظام</h2>
+          <p class="text-center text-medium-emphasis mb-6">
+            اختر الدور المناسب لك واكمل البيانات المطلوبة
+          </p>
+
+          <!-- مرحلة اختيار الدور -->
+          <div v-if="currentStep === 'role-selection'">
+            <h3 class="mb-4 text-center">اختر دورك المطلوب</h3>
+            
+            <v-row>
+              <!-- مصور -->
+              <v-col cols="12" md="4">
+                <v-card 
+                  class="role-card" 
+                  :class="{ 'bg-primary': selectedRole === 'photographer' }"
+                  @click="selectRole('photographer')"
+                  variant="outlined"
+                  hover
+                >
+                  <v-card-text class="text-center pa-4">
+                    <v-icon size="48" color="primary" class="mb-3">mdi-camera</v-icon>
+                    <h4 class="mb-2">مصور</h4>
+                    <p class="text-body-2 mb-3">متخصص في التصوير الفوتوغرافي وإنتاج الفيديو</p>
+                    <v-chip color="success" variant="outlined" size="small">تفعيل فوري</v-chip>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <!-- منسق براند -->
+              <v-col cols="12" md="4">
+                <v-card 
+                  class="role-card" 
+                  :class="{ 'bg-warning': selectedRole === 'brand_coordinator' }"
+                  @click="selectRole('brand_coordinator')"
+                  variant="outlined"
+                  hover
+                >
+                  <v-card-text class="text-center pa-4">
+                    <v-icon size="48" color="warning" class="mb-3">mdi-domain</v-icon>
+                    <h4 class="mb-2">منسق براند</h4>
+                    <p class="text-body-2 mb-3">إدارة براند محدد والتنسيق مع الفريق</p>
+                    <v-chip color="warning" variant="outlined" size="small">يحتاج موافقة</v-chip>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <!-- منسق تسويق -->
+              <v-col cols="12" md="4">
+                <v-card 
+                  class="role-card" 
+                  :class="{ 'bg-error': selectedRole === 'marketing_coordinator' }"
+                  @click="selectRole('marketing_coordinator')"
+                  variant="outlined"
+                  hover
+                >
+                  <v-card-text class="text-center pa-4">
+                    <v-icon size="48" color="error" class="mb-3">mdi-bullhorn</v-icon>
+                    <h4 class="mb-2">منسق تسويق</h4>
+                    <p class="text-body-2 mb-3">إدارة الحملات التسويقية والمحتوى</p>
+                    <v-chip color="error" variant="outlined" size="small">موافقة خاصة</v-chip>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <div class="text-center mt-6">
+              <v-btn
+                color="primary"
+                size="large"
+                :disabled="!selectedRole"
+                @click="proceedToDetails"
+              >
+                <v-icon start>mdi-arrow-left</v-icon>
+                متابعة
+              </v-btn>
+            </div>
           </div>
 
-          <v-card-text class="pa-8">
-            <!-- مرحلة اختيار الدور -->
-            <div v-if="currentStep === 'role-selection'">
-              <h2 class="text-h5 mb-6 text-center">اختر دورك المطلوب</h2>
-              
-              <v-row>
-                <!-- مصور -->
-                <v-col cols="12" md="4">
-                  <v-card 
-                    class="role-card" 
-                    :class="{ 'selected': selectedRole === 'photographer' }"
-                    @click="selectRole('photographer')"
-                    variant="outlined"
-                    hover
-                  >
-                    <v-card-text class="text-center pa-6">
-                      <v-icon size="64" color="primary" class="mb-4">
-                        mdi-camera
-                      </v-icon>
-                      <h3 class="text-h6 mb-3">مصور</h3>
-                      <p class="text-body-2 mb-4">
-                        متخصص في التصوير الفوتوغرافي وإنتاج الفيديو
-                      </p>
-                      <v-chip color="success" variant="outlined" size="small">
-                        تفعيل فوري
-                      </v-chip>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
+          <!-- مرحلة تفاصيل المصور -->
+          <div v-if="currentStep === 'photographer-details'">
+            <v-form ref="photographerForm" v-model="isPhotographerFormValid">
+              <h3 class="mb-4 text-center">
+                <v-icon start>mdi-camera</v-icon>
+                إعداد ملف المصور
+              </h3>
 
-                <!-- منسق براند -->
-                <v-col cols="12" md="4">
-                  <v-card 
-                    class="role-card" 
-                    :class="{ 'selected': selectedRole === 'brand_coordinator' }"
-                    @click="selectRole('brand_coordinator')"
-                    variant="outlined"
-                    hover
-                  >
-                    <v-card-text class="text-center pa-6">
-                      <v-icon size="64" color="warning" class="mb-4">
-                        mdi-domain
-                      </v-icon>
-                      <h3 class="text-h6 mb-3">منسق براند</h3>
-                      <p class="text-body-2 mb-4">
-                        إدارة براند محدد والتنسيق مع الفريق
-                      </p>
-                      <v-chip color="warning" variant="outlined" size="small">
-                        يحتاج موافقة
-                      </v-chip>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
+              <!-- نوع العقد -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-title>نوع العقد</v-card-title>
+                <v-card-text>
+                  <v-radio-group v-model="photographerData.contractType" :rules="contractRules">
+                    <v-radio value="freelancer">
+                      <template #label>
+                        <div>
+                          <strong>فريلانسر (بالقطعة)</strong><br>
+                          <span class="text-caption">أجر متغير حسب نوع وعدد المهام المنجزة</span>
+                        </div>
+                      </template>
+                    </v-radio>
+                    <v-radio value="salary">
+                      <template #label>
+                        <div>
+                          <strong>راتب ثابت</strong><br>
+                          <span class="text-caption">راتب شهري ثابت مع مكافآت الأداء</span>
+                        </div>
+                      </template>
+                    </v-radio>
+                  </v-radio-group>
+                </v-card-text>
+              </v-card>
 
-                <!-- منسق تسويق -->
-                <v-col cols="12" md="4">
-                  <v-card 
-                    class="role-card" 
-                    :class="{ 'selected': selectedRole === 'marketing_coordinator' }"
-                    @click="selectRole('marketing_coordinator')"
-                    variant="outlined"
-                    hover
-                  >
-                    <v-card-text class="text-center pa-6">
-                      <v-icon size="64" color="error" class="mb-4">
-                        mdi-bullhorn
-                      </v-icon>
-                      <h3 class="text-h6 mb-3">منسق تسويق</h3>
-                      <p class="text-body-2 mb-4">
-                        إدارة الحملات التسويقية والمحتوى
-                      </p>
-                      <v-chip color="error" variant="outlined" size="small">
-                        موافقة خاصة
-                      </v-chip>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
+              <!-- التخصصات -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-title>التخصصات المفضلة</v-card-title>
+                <v-card-text>
+                  <v-row>
+                    <v-col v-for="specialization in availableSpecializations" :key="specialization.id" cols="6" md="4">
+                      <v-checkbox
+                        v-model="photographerData.specializations"
+                        :value="specialization.id"
+                        :label="specialization.name"
+                        color="primary"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
 
-              <div class="text-center mt-8">
+              <!-- أوقات التوفر -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-title>أوقات التوفر المفضلة</v-card-title>
+                <v-card-text>
+                  <v-checkbox v-model="photographerData.availability" value="morning" label="الفترة الصباحية (8ص - 12ظ)" />
+                  <v-checkbox v-model="photographerData.availability" value="afternoon" label="فترة بعد الظهر (12ظ - 6م)" />
+                  <v-checkbox v-model="photographerData.availability" value="evening" label="الفترة المسائية (6م - 10م)" />
+                  <v-checkbox v-model="photographerData.availability" value="weekend" label="عطلة نهاية الأسبوع" />
+                </v-card-text>
+              </v-card>
+
+              <!-- ملاحظات إضافية -->
+              <v-textarea
+                v-model="photographerData.notes"
+                label="ملاحظات إضافية أو خبرات سابقة"
+                variant="outlined"
+                rows="3"
+                class="mb-4"
+              />
+
+              <!-- رسالة الخطأ -->
+              <v-alert v-if="error" type="error" variant="outlined" class="mb-4" @click:close="clearError" closable>
+                {{ error }}
+              </v-alert>
+
+              <div class="d-flex justify-space-between">
+                <v-btn variant="outlined" @click="goBack">
+                  <v-icon start>mdi-arrow-right</v-icon>
+                  رجوع
+                </v-btn>
                 <v-btn
                   color="primary"
-                  size="large"
-                  :disabled="!selectedRole"
-                  @click="proceedToDetails"
-                  rounded="lg"
+                  :loading="isLoading"
+                  :disabled="!isPhotographerFormValid || isLoading"
+                  @click="handleSubmitPhotographer"
                 >
-                  <v-icon start>mdi-arrow-left</v-icon>
-                  متابعة
+                  <v-icon start>mdi-check</v-icon>
+                  إكمال التسجيل
                 </v-btn>
               </div>
-            </div>
+            </v-form>
+          </div>
 
-            <!-- مرحلة تفاصيل المصور -->
-            <div v-if="currentStep === 'photographer-details'">
-              <v-form ref="photographerForm" v-model="isPhotographerFormValid">
-                <h2 class="text-h5 mb-6 text-center">
-                  <v-icon start>mdi-camera</v-icon>
-                  إعداد ملف المصور
-                </h2>
+          <!-- مرحلة تفاصيل منسق البراند -->
+          <div v-if="currentStep === 'brand-coordinator-details'">
+            <v-form ref="brandCoordinatorForm" v-model="isBrandFormValid">
+              <h3 class="mb-4 text-center">
+                <v-icon start>mdi-domain</v-icon>
+                إعداد منسق البراند
+              </h3>
 
-                <!-- نوع العقد -->
-                <v-card variant="outlined" class="mb-6">
-                  <v-card-title>نوع العقد</v-card-title>
-                  <v-card-text>
-                    <v-radio-group v-model="photographerData.contractType" :rules="contractRules">
-                      <v-radio value="freelancer">
-                        <template #label>
-                          <div>
-                            <strong>فريلانسر (بالقطعة)</strong>
-                            <br>
-                            <span class="text-caption text-medium-emphasis">
-                              أجر متغير حسب نوع وعدد المهام المنجزة
-                            </span>
-                          </div>
-                        </template>
-                      </v-radio>
-                      <v-radio value="salary">
-                        <template #label>
-                          <div>
-                            <strong>راتب ثابت</strong>
-                            <br>
-                            <span class="text-caption text-medium-emphasis">
-                              راتب شهري ثابت مع مكافآت الأداء
-                            </span>
-                          </div>
-                        </template>
-                      </v-radio>
-                    </v-radio-group>
-                  </v-card-text>
-                </v-card>
-
-                <!-- التخصصات -->
-                <v-card variant="outlined" class="mb-6">
-                  <v-card-title>التخصصات المفضلة</v-card-title>
-                  <v-card-text>
-                    <v-row>
-                      <v-col v-for="specialization in availableSpecializations" :key="specialization.id" cols="6" md="4">
-                        <v-checkbox
-                          v-model="photographerData.specializations"
-                          :value="specialization.id"
-                          :label="specialization.name"
-                          color="primary"
-                        />
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
-                </v-card>
-
-                <!-- أوقات التوفر -->
-                <v-card variant="outlined" class="mb-6">
-                  <v-card-title>أوقات التوفر المفضلة</v-card-title>
-                  <v-card-text>
-                    <v-checkbox
-                      v-model="photographerData.availability"
-                      value="morning"
-                      label="الفترة الصباحية (8ص - 12ظ)"
-                    />
-                    <v-checkbox
-                      v-model="photographerData.availability"
-                      value="afternoon"
-                      label="فترة بعد الظهر (12ظ - 6م)"
-                    />
-                    <v-checkbox
-                      v-model="photographerData.availability"
-                      value="evening"
-                      label="الفترة المسائية (6م - 10م)"
-                    />
-                    <v-checkbox
-                      v-model="photographerData.availability"
-                      value="weekend"
-                      label="عطلة نهاية الأسبوع"
-                    />
-                  </v-card-text>
-                </v-card>
-
-                <!-- ملاحظات إضافية -->
-                <v-textarea
-                  v-model="photographerData.notes"
-                  label="ملاحظات إضافية أو خبرات سابقة"
-                  variant="outlined"
-                  rows="3"
-                  class="mb-6"
-                />
-
-                <!-- رسالة الخطأ -->
-                <v-alert
-                  v-if="error"
-                  type="error"
-                  variant="outlined"
-                  class="mb-4"
-                  @click:close="clearError"
-                  closable
-                >
-                  {{ error }}
-                </v-alert>
-
-                <div class="d-flex justify-space-between">
-                  <v-btn variant="outlined" @click="goBack">
-                    <v-icon start>mdi-arrow-right</v-icon>
-                    رجوع
-                  </v-btn>
-                  <v-btn
-                    color="primary"
-                    :loading="isLoading"
-                    :disabled="!isPhotographerFormValid || isLoading"
-                    @click="handleSubmitPhotographer"
-                  >
-                    <v-icon start>mdi-check</v-icon>
-                    إكمال التسجيل
-                  </v-btn>
-                </div>
-              </v-form>
-            </div>
-
-            <!-- مرحلة تفاصيل منسق البراند -->
-            <div v-if="currentStep === 'brand-coordinator-details'">
-              <v-form ref="brandCoordinatorForm" v-model="isBrandFormValid">
-                <h2 class="text-h5 mb-6 text-center">
-                  <v-icon start>mdi-domain</v-icon>
-                  إعداد منسق البراند
-                </h2>
-
-                <!-- البحث عن البراند -->
-                <v-autocomplete
-                  v-model="brandCoordinatorData.selectedBrand"
-                  :items="availableBrands"
-                  :rules="brandRules"
-                  item-title="name"
-                  item-value="id"
-                  label="ابحث عن البراند المطلوب"
-                  variant="outlined"
-                  clearable
-                  class="mb-6"
-                >
-                  <template #item="{ props, item }">
-                    <v-list-item v-bind="props">
-                      <template #prepend>
-                        <v-avatar size="40" class="ms-3">
-                          <v-img :src="item.raw.logo" :alt="item.raw.name" />
-                        </v-avatar>
-                      </template>
-                      <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
-                      <v-list-item-subtitle>{{ item.raw.description }}</v-list-item-subtitle>
-                    </v-list-item>
-                  </template>
-                </v-autocomplete>
-
-                <!-- معلومات البراند المختار -->
-                <v-card v-if="selectedBrandInfo" variant="outlined" class="mb-6">
-                  <v-card-title>معلومات البراند المختار</v-card-title>
-                  <v-card-text>
-                    <div class="d-flex align-center mb-4">
-                      <v-avatar size="60" class="ms-4">
-                        <v-img :src="selectedBrandInfo.logo" :alt="selectedBrandInfo.name" />
+              <!-- البحث عن البراند -->
+              <v-autocomplete
+                v-model="brandCoordinatorData.selectedBrand"
+                :items="availableBrands"
+                :rules="brandRules"
+                item-title="name"
+                item-value="id"
+                label="ابحث عن البراند المطلوب"
+                variant="outlined"
+                clearable
+                class="mb-4"
+              >
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template #prepend>
+                      <v-avatar size="32" class="ms-2">
+                        <v-img :src="item.raw.logo" :alt="item.raw.name" />
                       </v-avatar>
-                      <div>
-                        <h3>{{ selectedBrandInfo.name }}</h3>
-                        <p class="text-medium-emphasis">{{ selectedBrandInfo.description }}</p>
-                      </div>
+                    </template>
+                    <v-list-item-title>{{ item.raw.name }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ item.raw.description }}</v-list-item-subtitle>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+
+              <!-- معلومات البراند المختار -->
+              <v-card v-if="selectedBrandInfo" variant="outlined" class="mb-4">
+                <v-card-title>معلومات البراند المختار</v-card-title>
+                <v-card-text>
+                  <div class="d-flex align-center mb-3">
+                    <v-avatar size="48" class="ms-3">
+                      <v-img :src="selectedBrandInfo.logo" :alt="selectedBrandInfo.name" />
+                    </v-avatar>
+                    <div>
+                      <h4>{{ selectedBrandInfo.name }}</h4>
+                      <p class="text-medium-emphasis">{{ selectedBrandInfo.description }}</p>
                     </div>
-                    <v-chip-group>
-                      <v-chip v-for="color in selectedBrandInfo.colors" :key="color" :color="color" size="small">
-                        {{ color }}
-                      </v-chip>
-                    </v-chip-group>
-                  </v-card-text>
-                </v-card>
+                  </div>
+                </v-card-text>
+              </v-card>
 
-                <!-- الخبرة مع البراند -->
-                <v-textarea
-                  v-model="brandCoordinatorData.experience"
-                  :rules="experienceRules"
-                  label="اكتب عن خبرتك مع هذا البراند أو الأسباب التي تجعلك مناسب لتنسيقه"
-                  variant="outlined"
-                  rows="4"
-                  class="mb-6"
-                />
+              <!-- الخبرة مع البراند -->
+              <v-textarea
+                v-model="brandCoordinatorData.experience"
+                :rules="experienceRules"
+                label="اكتب عن خبرتك مع هذا البراند أو الأسباب التي تجعلك مناسب لتنسيقه"
+                variant="outlined"
+                rows="4"
+                class="mb-4"
+              />
 
-                <!-- الخبرة السابقة -->
-                <v-text-field
-                  v-model="brandCoordinatorData.previousExperience"
-                  label="سنوات الخبرة في التنسيق أو المبيعات"
-                  variant="outlined"
-                  type="number"
-                  min="0"
-                  class="mb-6"
-                />
+              <!-- الخبرة السابقة -->
+              <v-text-field
+                v-model="brandCoordinatorData.previousExperience"
+                label="سنوات الخبرة في التنسيق أو المبيعات"
+                variant="outlined"
+                type="number"
+                min="0"
+                class="mb-4"
+              />
 
-                <!-- رسالة الخطأ -->
-                <v-alert
-                  v-if="error"
-                  type="error"
-                  variant="outlined"
-                  class="mb-4"
-                  @click:close="clearError"
-                  closable
+              <!-- رسالة الخطأ -->
+              <v-alert v-if="error" type="error" variant="outlined" class="mb-4" @click:close="clearError" closable>
+                {{ error }}
+              </v-alert>
+
+              <div class="d-flex justify-space-between">
+                <v-btn variant="outlined" @click="goBack">
+                  <v-icon start>mdi-arrow-right</v-icon>
+                  رجوع
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  :loading="isLoading"
+                  :disabled="!isBrandFormValid || isLoading"
+                  @click="handleSubmitBrandCoordinator"
                 >
-                  {{ error }}
-                </v-alert>
+                  <v-icon start>mdi-send</v-icon>
+                  إرسال طلب الموافقة
+                </v-btn>
+              </div>
+            </v-form>
+          </div>
 
-                <div class="d-flex justify-space-between">
-                  <v-btn variant="outlined" @click="goBack">
-                    <v-icon start>mdi-arrow-right</v-icon>
-                    رجوع
-                  </v-btn>
-                  <v-btn
-                    color="primary"
-                    :loading="isLoading"
-                    :disabled="!isBrandFormValid || isLoading"
-                    @click="handleSubmitBrandCoordinator"
-                  >
-                    <v-icon start>mdi-send</v-icon>
-                    إرسال طلب الموافقة
-                  </v-btn>
-                </div>
-              </v-form>
-            </div>
+          <!-- مرحلة تفاصيل منسق التسويق -->
+          <div v-if="currentStep === 'marketing-coordinator-details'">
+            <v-form ref="marketingForm" v-model="isMarketingFormValid">
+              <h3 class="mb-4 text-center">
+                <v-icon start>mdi-bullhorn</v-icon>
+                طلب دور منسق التسويق
+              </h3>
 
-            <!-- مرحلة تفاصيل منسق التسويق -->
-            <div v-if="currentStep === 'marketing-coordinator-details'">
-              <v-form ref="marketingForm" v-model="isMarketingFormValid">
-                <h2 class="text-h5 mb-6 text-center">
-                  <v-icon start>mdi-bullhorn</v-icon>
-                  طلب دور منسق التسويق
-                </h2>
+              <v-alert type="warning" variant="outlined" class="mb-4">
+                <strong>تنويه مهم:</strong>
+                دور منسق التسويق يتطلب موافقة خاصة من الإدارة وله صلاحيات واسعة في النظام.
+              </v-alert>
 
-                <v-alert type="warning" variant="outlined" class="mb-6">
-                  <strong>تنويه مهم:</strong>
-                  دور منسق التسويق يتطلب موافقة خاصة من الإدارة وله صلاحيات واسعة في النظام.
-                </v-alert>
+              <!-- سبب الطلب -->
+              <v-textarea
+                v-model="marketingData.reason"
+                :rules="reasonRules"
+                label="لماذا تريد أن تصبح منسق تسويق؟ اشرح خبرتك ومؤهلاتك"
+                variant="outlined"
+                rows="5"
+                class="mb-4"
+              />
 
-                <!-- سبب الطلب -->
-                <v-textarea
-                  v-model="marketingData.reason"
-                  :rules="reasonRules"
-                  label="لماذا تريد أن تصبح منسق تسويق؟ اشرح خبرتك ومؤهلاتك"
-                  variant="outlined"
-                  rows="5"
-                  class="mb-6"
-                />
+              <!-- الخبرة في التسويق -->
+              <v-text-field
+                v-model="marketingData.marketingExperience"
+                :rules="experienceMarketingRules"
+                label="سنوات الخبرة في التسويق الرقمي"
+                variant="outlined"
+                type="number"
+                min="0"
+                class="mb-4"
+              />
 
-                <!-- الخبرة في التسويق -->
-                <v-text-field
-                  v-model="marketingData.marketingExperience"
-                  :rules="experienceMarketingRules"
-                  label="سنوات الخبرة في التسويق الرقمي"
-                  variant="outlined"
-                  type="number"
-                  min="0"
-                  class="mb-6"
-                />
+              <!-- التخصصات التسويقية -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-title>التخصصات التسويقية</v-card-title>
+                <v-card-text>
+                  <v-checkbox v-model="marketingData.marketingSpecializations" value="social_media" label="إدارة وسائل التواصل الاجتماعي" />
+                  <v-checkbox v-model="marketingData.marketingSpecializations" value="content_creation" label="إنشاء المحتوى التسويقي" />
+                  <v-checkbox v-model="marketingData.marketingSpecializations" value="campaign_management" label="إدارة الحملات الإعلانية" />
+                  <v-checkbox v-model="marketingData.marketingSpecializations" value="analytics" label="تحليل البيانات والأداء" />
+                  <v-checkbox v-model="marketingData.marketingSpecializations" value="brand_management" label="إدارة العلامات التجارية" />
+                </v-card-text>
+              </v-card>
 
-                <!-- التخصصات التسويقية -->
-                <v-card variant="outlined" class="mb-6">
-                  <v-card-title>التخصصات التسويقية</v-card-title>
-                  <v-card-text>
-                    <v-checkbox
-                      v-model="marketingData.marketingSpecializations"
-                      value="social_media"
-                      label="إدارة وسائل التواصل الاجتماعي"
-                    />
-                    <v-checkbox
-                      v-model="marketingData.marketingSpecializations"
-                      value="content_creation"
-                      label="إنشاء المحتوى التسويقي"
-                    />
-                    <v-checkbox
-                      v-model="marketingData.marketingSpecializations"
-                      value="campaign_management"
-                      label="إدارة الحملات الإعلانية"
-                    />
-                    <v-checkbox
-                      v-model="marketingData.marketingSpecializations"
-                      value="analytics"
-                      label="تحليل البيانات والأداء"
-                    />
-                    <v-checkbox
-                      v-model="marketingData.marketingSpecializations"
-                      value="brand_management"
-                      label="إدارة العلامات التجارية"
-                    />
-                  </v-card-text>
-                </v-card>
+              <!-- رسالة الخطأ -->
+              <v-alert v-if="error" type="error" variant="outlined" class="mb-4" @click:close="clearError" closable>
+                {{ error }}
+              </v-alert>
 
-                <!-- رسالة الخطأ -->
-                <v-alert
-                  v-if="error"
-                  type="error"
-                  variant="outlined"
-                  class="mb-4"
-                  @click:close="clearError"
-                  closable
+              <div class="d-flex justify-space-between">
+                <v-btn variant="outlined" @click="goBack">
+                  <v-icon start>mdi-arrow-right</v-icon>
+                  رجوع
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  :loading="isLoading"
+                  :disabled="!isMarketingFormValid || isLoading"
+                  @click="handleSubmitMarketingCoordinator"
                 >
-                  {{ error }}
-                </v-alert>
-
-                <div class="d-flex justify-space-between">
-                  <v-btn variant="outlined" @click="goBack">
-                    <v-icon start>mdi-arrow-right</v-icon>
-                    رجوع
-                  </v-btn>
-                  <v-btn
-                    color="primary"
-                    :loading="isLoading"
-                    :disabled="!isMarketingFormValid || isLoading"
-                    @click="handleSubmitMarketingCoordinator"
-                  >
-                    <v-icon start>mdi-send</v-icon>
-                    إرسال طلب الموافقة
-                  </v-btn>
-                </div>
-              </v-form>
-            </div>
-          </v-card-text>
+                  <v-icon start>mdi-send</v-icon>
+                  إرسال طلب الموافقة
+                </v-btn>
+              </div>
+            </v-form>
+          </div>
         </v-card>
       </v-col>
     </v-row>
@@ -666,117 +570,14 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
-@import '@/styles/design-system/index';
-
-.role-setup-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-info-400) 0%, var(--color-info-600) 100%);
-  
-  .role-setup-container {
-    padding: var(--spacing-6);
-  }
-  
-  .role-setup-card {
-    max-width: 500px;
-    width: 100%;
-    margin: 0 auto;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--elevation-high);
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    
-    .v-card__text {
-      padding: var(--spacing-8);
-    }
-  }
-  
-  .role-setup-title {
-    margin-bottom: var(--spacing-6);
-    text-align: center;
-    color: var(--color-text-primary);
-  }
-  
-  .role-option {
-    transition: all var(--transition-normal) var(--easing-ease-out);
-    border: 2px solid var(--color-border-light);
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-4);
-    margin-bottom: var(--spacing-3);
-    cursor: pointer;
-    
-    &:hover {
-      border-color: var(--color-primary-500);
-      transform: translateY(-2px);
-      box-shadow: var(--elevation-medium);
-    }
-    
-    &.selected {
-      border-color: var(--color-primary-500);
-      background-color: var(--color-primary-50);
-    }
-  }
-  
-  .role-title {
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin-bottom: var(--spacing-1);
-  }
-  
-  .role-description {
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-  }
-  
-  .continue-button {
-    margin-top: var(--spacing-6);
-    height: 48px;
-    font-weight: 600;
-    text-transform: none;
-  }
-  
-  .back-link {
-    margin-top: var(--spacing-4);
-    text-align: center;
-    color: var(--color-text-secondary);
-  }
-  
-  // Specific role styling
-  .photographer-option {
-    .role-icon {
-      color: var(--color-primary-500);
-    }
-  }
-  
-  .coordinator-option {
-    .role-icon {
-      color: var(--color-info-500);
-    }
-  }
-  
-  .client-option {
-    .role-icon {
-      color: var(--color-success-500);
-    }
-  }
+<style scoped>
+.role-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-// Responsive design
-@media (max-width: 600px) {
-  .role-setup-page {
-    .role-setup-container {
-      padding: var(--spacing-4);
-    }
-    
-    .role-setup-card {
-      .v-card__text {
-        padding: var(--spacing-6);
-      }
-    }
-    
-    .role-option {
-      padding: var(--spacing-3);
-    }
-  }
+.role-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style> 

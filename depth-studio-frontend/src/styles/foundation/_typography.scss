@@ -1,0 +1,447 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - نظام الخطوط العربي الاحترافي
+ * Arabic-First Typography System
+ * ==============================================
+ */
+
+@use "sass:map";
+
+// === إعداد الخطوط الأساسية ===
+$base-font-size: 16px !default;
+$base-line-height: 1.6 !default;
+
+// === خطوط النظام الاحترافية ===
+
+// الخط الأساسي العربي + اللاتيني
+$font-family-primary: (
+  'Cairo',                        // خط عربي حديث وواضح
+  'Segoe UI',                     // ويندوز
+  'Roboto',                       // أندرويد/جوجل
+  '-apple-system',                // آبل
+  'BlinkMacSystemFont',           // ماك
+  'sans-serif'                    // احتياطي
+) !default;
+
+// خط ثانوي للعناوين المميزة
+$font-family-display: (
+  'Almarai',                      // خط عربي أنيق للعناوين
+  'Cairo',                        // احتياطي عربي
+  'Roboto',                       // احتياطي لاتيني
+  'sans-serif'
+) !default;
+
+// خط الكود والنصوص التقنية
+$font-family-mono: (
+  'JetBrains Mono',               // خط تقني احترافي
+  'Fira Code',                    // احتياطي تقني
+  'Consolas',                     // ويندوز
+  'Monaco',                       // ماك
+  'monospace'                     // احتياطي
+) !default;
+
+// === مقياس أحجام الخطوط (Type Scale) ===
+$font-sizes: (
+  "xs": 12px,                     // نصوص صغيرة، تسميات
+  "sm": 14px,                     // نصوص الأزرار، التفاصيل
+  "base": 16px,                   // النص الأساسي (المرجع)
+  "lg": 18px,                     // عناوين فرعية صغيرة
+  "xl": 20px,                     // عناوين فرعية
+  "2xl": 24px,                    // عناوين متوسطة
+  "3xl": 30px,                    // عناوين كبيرة
+  "4xl": 36px,                    // عناوين رئيسية
+  "5xl": 48px,                    // عناوين ضخمة
+  "6xl": 60px                     // عناوين غلاف
+) !default;
+
+// === أوزان الخطوط ===
+$font-weights: (
+  "light": 300,                   // خفيف
+  "normal": 400,                  // عادي (افتراضي)
+  "medium": 500,                  // متوسط
+  "semibold": 600,                // نصف عريض
+  "bold": 700,                    // عريض
+  "extrabold": 800                // عريض جداً
+) !default;
+
+// === ارتفاع الأسطر (Line Heights) ===
+$line-heights: (
+  "tight": 1.25,                 // للعناوين الكبيرة
+  "snug": 1.375,                 // للعناوين المتوسطة
+  "normal": 1.5,                 // للنصوص العادية
+  "relaxed": 1.625,              // للنصوص الطويلة
+  "loose": 2                     // للمباعدة الواسعة
+) !default;
+
+// === تباعد الأحرف (Letter Spacing) ===
+$letter-spacings: (
+  "tighter": -0.05em,
+  "tight": -0.025em,
+  "normal": 0,
+  "wide": 0.025em,
+  "wider": 0.05em,
+  "widest": 0.1em
+) !default;
+
+// === أنماط النصوص المعرفة مسبقاً ===
+$text-styles: (
+  // العناوين
+  "heading-1": (
+    "font-family": $font-family-display,
+    "font-size": map.get($font-sizes, "4xl"),      // 36px
+    "font-weight": map.get($font-weights, "bold"),
+    "line-height": map.get($line-heights, "tight"),
+    "letter-spacing": map.get($letter-spacings, "tight"),
+    "margin-bottom": 1.5rem
+  ),
+  
+  "heading-2": (
+    "font-family": $font-family-display,
+    "font-size": map.get($font-sizes, "3xl"),      // 30px
+    "font-weight": map.get($font-weights, "semibold"),
+    "line-height": map.get($line-heights, "tight"),
+    "letter-spacing": map.get($letter-spacings, "tight"),
+    "margin-bottom": 1.25rem
+  ),
+  
+  "heading-3": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "2xl"),      // 24px
+    "font-weight": map.get($font-weights, "semibold"),
+    "line-height": map.get($line-heights, "snug"),
+    "letter-spacing": map.get($letter-spacings, "normal"),
+    "margin-bottom": 1rem
+  ),
+  
+  "heading-4": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "xl"),       // 20px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "snug"),
+    "letter-spacing": map.get($letter-spacings, "normal"),
+    "margin-bottom": 0.75rem
+  ),
+  
+  "heading-5": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "lg"),       // 18px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "normal"),
+    "margin-bottom": 0.5rem
+  ),
+  
+  "heading-6": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "base"),     // 16px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "wide"),
+    "margin-bottom": 0.5rem
+  ),
+  
+  // نصوص الجسم
+  "body-large": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "lg"),       // 18px
+    "font-weight": map.get($font-weights, "normal"),
+    "line-height": map.get($line-heights, "relaxed"),
+    "letter-spacing": map.get($letter-spacings, "normal")
+  ),
+  
+  "body": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "base"),     // 16px
+    "font-weight": map.get($font-weights, "normal"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "normal")
+  ),
+  
+  "body-small": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "sm"),       // 14px
+    "font-weight": map.get($font-weights, "normal"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "normal")
+  ),
+  
+  // نصوص مساعدة
+  "caption": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "xs"),       // 12px
+    "font-weight": map.get($font-weights, "normal"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "wide")
+  ),
+  
+  "overline": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "xs"),       // 12px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "widest"),
+    "text-transform": uppercase
+  ),
+  
+  // نصوص الأزرار والتسميات
+  "button-large": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "lg"),       // 18px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": 1,
+    "letter-spacing": map.get($letter-spacings, "wide")
+  ),
+  
+  "button": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "base"),     // 16px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": 1,
+    "letter-spacing": map.get($letter-spacings, "wide")
+  ),
+  
+  "button-small": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "sm"),       // 14px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": 1,
+    "letter-spacing": map.get($letter-spacings, "wide")
+  ),
+  
+  // أنماط نصية إضافية مطلوبة
+  "display-large": (
+    "font-family": $font-family-display,
+    "font-size": map.get($font-sizes, "6xl"),      // 60px
+    "font-weight": map.get($font-weights, "bold"),
+    "line-height": map.get($line-heights, "tight"),
+    "letter-spacing": map.get($letter-spacings, "tighter")
+  ),
+  
+  "display-medium": (
+    "font-family": $font-family-display,
+    "font-size": map.get($font-sizes, "5xl"),      // 48px
+    "font-weight": map.get($font-weights, "bold"),
+    "line-height": map.get($line-heights, "tight"),
+    "letter-spacing": map.get($letter-spacings, "tighter")
+  ),
+  
+  "display-small": (
+    "font-family": $font-family-display,
+    "font-size": map.get($font-sizes, "4xl"),      // 36px
+    "font-weight": map.get($font-weights, "semibold"),
+    "line-height": map.get($line-heights, "tight"),
+    "letter-spacing": map.get($letter-spacings, "tight")
+  ),
+  
+  "title-large": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "xl"),       // 20px
+    "font-weight": map.get($font-weights, "semibold"),
+    "line-height": map.get($line-heights, "snug"),
+    "letter-spacing": map.get($letter-spacings, "normal")
+  ),
+  
+  "title-medium": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "lg"),       // 18px
+    "font-weight": map.get($font-weights, "semibold"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "normal")
+  ),
+  
+  "title-small": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "sm"),       // 14px
+    "font-weight": map.get($font-weights, "semibold"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "wide")
+  ),
+  
+  "label-large": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "sm"),       // 14px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "wide")
+  ),
+  
+  "label-medium": (
+    "font-family": $font-family-primary,
+    "font-size": map.get($font-sizes, "xs"),       // 12px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "wider")
+  ),
+  
+  "label-small": (
+    "font-family": $font-family-primary,
+    "font-size": 11px,                             // 11px
+    "font-weight": map.get($font-weights, "medium"),
+    "line-height": map.get($line-heights, "tight"),
+    "letter-spacing": map.get($letter-spacings, "wider")
+  ),
+  
+  // نص الكود
+  "code": (
+    "font-family": $font-family-mono,
+    "font-size": map.get($font-sizes, "sm"),       // 14px
+    "font-weight": map.get($font-weights, "normal"),
+    "line-height": map.get($line-heights, "normal"),
+    "letter-spacing": map.get($letter-spacings, "normal")
+  )
+) !default;
+
+// === CSS Custom Properties ===
+:root {
+  // عائلات الخطوط
+  --font-family-primary: #{$font-family-primary};
+  --font-family-display: #{$font-family-display};
+  --font-family-mono: #{$font-family-mono};
+  
+  // أحجام الخطوط
+  @each $name, $size in $font-sizes {
+    --font-size-#{$name}: #{$size};
+  }
+  
+  // أوزان الخطوط
+  @each $name, $weight in $font-weights {
+    --font-weight-#{$name}: #{$weight};
+  }
+  
+  // ارتفاع الأسطر
+  @each $name, $height in $line-heights {
+    --line-height-#{$name}: #{$height};
+  }
+  
+  // تباعد الأحرف
+  @each $name, $spacing in $letter-spacings {
+    --letter-spacing-#{$name}: #{$spacing};
+  }
+  
+  // الإعدادات الأساسية
+  --font-size-base: #{$base-font-size};
+  --line-height-base: #{$base-line-height};
+}
+
+// === إعدادات الجسم الأساسية ===
+body {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-base);
+  letter-spacing: var(--letter-spacing-normal);
+  color: var(--color-text-primary);
+  
+  // تحسينات العرض
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  // دعم العربية
+  direction: rtl;
+  text-align: right;
+}
+
+// === تطبيق أنماط النصوص ===
+@each $name, $styles in $text-styles {
+  .text-#{$name} {
+    @each $property, $value in $styles {
+      @if $property == "font-family" {
+        font-family: #{$value};
+      } @else {
+        #{$property}: #{$value};
+      }
+    }
+  }
+}
+
+// === فئات الأحجام ===
+@each $name, $size in $font-sizes {
+  .text-#{$name} {
+    font-size: #{$size} !important;
+  }
+}
+
+// === فئات الأوزان ===
+@each $name, $weight in $font-weights {
+  .font-#{$name} {
+    font-weight: #{$weight} !important;
+  }
+}
+
+// === فئات ارتفاع الأسطر ===
+@each $name, $height in $line-heights {
+  .leading-#{$name} {
+    line-height: #{$height} !important;
+  }
+}
+
+// === فئات التراص ===
+.text-left { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+
+// === فئات التحويل ===
+.uppercase { text-transform: uppercase !important; }
+.lowercase { text-transform: lowercase !important; }
+.capitalize { text-transform: capitalize !important; }
+.normal-case { text-transform: none !important; }
+
+// === فئات الزخرفة ===
+.underline { text-decoration: underline !important; }
+.line-through { text-decoration: line-through !important; }
+.no-underline { text-decoration: none !important; }
+
+// === فئات القطع ===
+.truncate {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.text-ellipsis { text-overflow: ellipsis !important; }
+.text-clip { text-overflow: clip !important; }
+
+// === أنماط خاصة للعربية ===
+[dir="rtl"] {
+  .text-left { text-align: right !important; }
+  .text-right { text-align: left !important; }
+}
+
+// === استجابة أحجام الخطوط ===
+@media (max-width: 768px) {
+  :root {
+    --font-size-4xl: 28px;        // تقليل حجم العناوين الكبيرة
+    --font-size-3xl: 24px;
+    --font-size-2xl: 20px;
+  }
+  
+  .text-heading-1 {
+    font-size: var(--font-size-3xl) !important;
+  }
+  
+  .text-heading-2 {
+    font-size: var(--font-size-2xl) !important;
+  }
+}
+
+// === تحسينات الطباعة ===
+@media print {
+  body {
+    font-family: 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000000;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  p, blockquote {
+    orphans: 3;
+    widows: 3;
+  }
+} 

@@ -93,18 +93,22 @@ export const useUserValidation = () => {
       errors.email = 'البريد الإلكتروني غير صحيح'
     }
 
-    // Name validation
-    if (!user.full_name) {
+    // التحقق من الاسم الكامل
+    if (!user.displayName && !user.display_name && !user.full_name) {
       errors.full_name = 'الاسم الكامل مطلوب'
-    } else if (!isValidName(user.full_name)) {
-      errors.full_name = 'الاسم يجب أن يكون بين 2-50 حرف ويحتوي على أحرف عربية أو إنجليزية فقط'
+    } else {
+      const nameToCheck = user.displayName || user.display_name || user.full_name
+      if (nameToCheck && !isValidName(nameToCheck)) {
+        errors.full_name = 'الاسم يجب أن يحتوي على حروف صحيحة فقط'
+      }
     }
 
-    // Phone validation
-    if (!user.phone) {
-      errors.phone = 'رقم الهاتف مطلوب'
-    } else if (!isValidPhone(user.phone)) {
-      errors.phone = 'رقم الهاتف غير صحيح (مثال: 07901234567)'
+    // التحقق من رقم الهاتف
+    if (user.profile?.phone || user.phone) {
+      const phoneToCheck = user.profile?.phone || user.phone
+      if (phoneToCheck && !isValidPhone(phoneToCheck)) {
+        errors.phone = 'رقم الهاتف غير صحيح'
+      }
     }
 
     // Role validation
@@ -181,7 +185,7 @@ export const useUserValidation = () => {
     reason?: string
   } => {
     // Check if user profile is complete
-    if (user.status !== 'pending') {
+    if (user.status !== 'pending_approval') {
       return {
         canApprove: false,
         reason: 'المستخدم ليس في حالة انتظار الموافقة'

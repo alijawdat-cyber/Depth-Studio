@@ -1,0 +1,387 @@
+/**
+ * ==============================================
+ * DEPTH STUDIO - نقاط الانكسار المتجاوبة
+ * Responsive Breakpoints System
+ * ==============================================
+ */
+
+@use "sass:map";
+
+// === نقاط التوقف الأساسية ===
+$breakpoints: (
+  "xs": 0,        // الهواتف الصغيرة
+  "sm": 576px,    // الهواتف الكبيرة
+  "md": 768px,    // الأجهزة اللوحية
+  "lg": 1024px,   // اللابتوب الصغير
+  "xl": 1280px,   // اللابتوب الكبير
+  "2xl": 1536px,  // شاشات سطح المكتب
+  "3xl": 1920px   // شاشات كبيرة
+) !default;
+
+// === حدود التخطيط (Layout Bounds) ===
+$layout-bounds: (
+  "mobile": (
+    "min": map.get($breakpoints, "xs"),
+    "max": #{map.get($breakpoints, "md") - 1px}
+  ),
+  "tablet": (
+    "min": map.get($breakpoints, "md"),
+    "max": #{map.get($breakpoints, "lg") - 1px}
+  ),
+  "desktop": (
+    "min": map.get($breakpoints, "lg"),
+    "max": null
+  )
+) !default;
+
+// === عروض الحاويات ===
+$container-widths: (
+  "xs": 100%,
+  "sm": 540px,
+  "md": 720px,
+  "lg": 960px,
+  "xl": 1200px,
+  "2xl": 1400px,
+  "3xl": 1600px
+) !default;
+
+// === مسافات الحاويات المتجاوبة ===
+$container-padding: (
+  "xs": 16px,
+  "sm": 16px,
+  "md": 24px,
+  "lg": 32px,
+  "xl": 40px,
+  "2xl": 48px,
+  "3xl": 56px
+) !default;
+
+// === مخططات الشبكة (Grid Layouts) ===
+$grid-columns: (
+  "mobile": 4,                    // 4 أعمدة للهواتف
+  "tablet": 8,                    // 8 أعمدة للأجهزة اللوحية
+  "desktop": 12                   // 12 عمود لسطح المكتب
+) !default;
+
+$grid-gaps: (
+  "mobile": 16px,
+  "tablet": 24px,
+  "desktop": 32px
+) !default;
+
+// === CSS Custom Properties ===
+:root {
+  // نقاط الانكسار
+  @each $name, $value in $breakpoints {
+    --breakpoint-#{$name}: #{$value};
+  }
+  
+  // عروض الحاويات
+  @each $name, $width in $container-widths {
+    --container-width-#{$name}: #{$width};
+  }
+  
+  // مسافات الحاويات
+  @each $name, $padding in $container-padding {
+    --container-padding-#{$name}: #{$padding};
+  }
+  
+  // إعدادات الشبكة
+  --grid-columns: #{map.get($grid-columns, "mobile")};
+  --grid-gap: #{map.get($grid-gaps, "mobile")};
+}
+
+// === Mixins للاستعلامات المتجاوبة ===
+
+// Min-width breakpoint
+@mixin respond-above($breakpoint) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    $value: map.get($breakpoints, $breakpoint);
+    @media (min-width: $value) {
+      @content;
+    }
+  } @else {
+    @warn "Breakpoint '#{$breakpoint}' not found in $breakpoints map.";
+  }
+}
+
+// Max-width breakpoint
+@mixin respond-below($breakpoint) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    $value: map.get($breakpoints, $breakpoint) - 1px;
+    @media (max-width: $value) {
+      @content;
+    }
+  } @else {
+    @warn "Breakpoint '#{$breakpoint}' not found in $breakpoints map.";
+  }
+}
+
+// Between two breakpoints
+@mixin respond-between($min-breakpoint, $max-breakpoint) {
+  @if map.has-key($breakpoints, $min-breakpoint) and map.has-key($breakpoints, $max-breakpoint) {
+    $min-value: map.get($breakpoints, $min-breakpoint);
+    $max-value: map.get($breakpoints, $max-breakpoint) - 1px;
+    @media (min-width: $min-value) and (max-width: $max-value) {
+      @content;
+    }
+  } @else {
+    @warn "One or both breakpoints not found in $breakpoints map.";
+  }
+}
+
+// Only specific breakpoint range
+@mixin respond-only($breakpoint) {
+  @if $breakpoint == "xs" {
+    @include respond-below("sm") {
+      @content;
+    }
+  } @else if $breakpoint == "sm" {
+    @include respond-between("sm", "md") {
+      @content;
+    }
+  } @else if $breakpoint == "md" {
+    @include respond-between("md", "lg") {
+      @content;
+    }
+  } @else if $breakpoint == "lg" {
+    @include respond-between("lg", "xl") {
+      @content;
+    }
+  } @else if $breakpoint == "xl" {
+    @include respond-between("xl", "2xl") {
+      @content;
+    }
+  } @else if $breakpoint == "2xl" {
+    @include respond-above("2xl") {
+      @content;
+    }
+  }
+}
+
+// Mobile-first approach
+@mixin mobile-first {
+  @include respond-below("md") {
+    @content;
+  }
+}
+
+// Desktop-first approach
+@mixin desktop-first {
+  @include respond-above("lg") {
+    @content;
+  }
+}
+
+// Layout-specific mixins
+@mixin mobile-layout {
+  @include respond-below("md") {
+    @content;
+  }
+}
+
+@mixin tablet-layout {
+  @include respond-between("md", "lg") {
+    @content;
+  }
+}
+
+@mixin desktop-layout {
+  @include respond-above("lg") {
+    @content;
+  }
+}
+
+// === حاوي متجاوب ===
+@mixin container($fluid: false) {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  
+  @if not $fluid {
+    @each $breakpoint, $width in $container-widths {
+      @include respond-above($breakpoint) {
+        max-width: $width;
+      }
+    }
+  }
+  
+  // مسافات جانبية متجاوبة
+  @each $breakpoint, $padding in $container-padding {
+    @include respond-above($breakpoint) {
+      padding-left: $padding;
+      padding-right: $padding;
+    }
+  }
+}
+
+// === شبكة متجاوبة ===
+@mixin grid-container {
+  display: grid;
+  width: 100%;
+  
+  // Mobile grid
+  grid-template-columns: repeat(#{map.get($grid-columns, "mobile")}, 1fr);
+  gap: #{map.get($grid-gaps, "mobile")};
+  
+  // Tablet grid
+  @include respond-above("md") {
+    grid-template-columns: repeat(#{map.get($grid-columns, "tablet")}, 1fr);
+    gap: #{map.get($grid-gaps, "tablet")};
+  }
+  
+  // Desktop grid
+  @include respond-above("lg") {
+    grid-template-columns: repeat(#{map.get($grid-columns, "desktop")}, 1fr);
+    gap: #{map.get($grid-gaps, "desktop")};
+  }
+}
+
+@mixin grid-span($mobile: 1, $tablet: null, $desktop: null) {
+  grid-column: span $mobile;
+  
+  @if $tablet {
+    @include respond-above("md") {
+      grid-column: span $tablet;
+    }
+  }
+  
+  @if $desktop {
+    @include respond-above("lg") {
+      grid-column: span $desktop;
+    }
+  }
+}
+
+// === تحديث متغيرات CSS للاستجابة ===
+@include respond-above("md") {
+  :root {
+    --grid-columns: #{map.get($grid-columns, "tablet")};
+    --grid-gap: #{map.get($grid-gaps, "tablet")};
+  }
+}
+
+@include respond-above("lg") {
+  :root {
+    --grid-columns: #{map.get($grid-columns, "desktop")};
+    --grid-gap: #{map.get($grid-gaps, "desktop")};
+  }
+}
+
+// === فئات الاستجابة المساعدة ===
+
+// إخفاء/إظهار حسب الجهاز
+.hide-mobile {
+  @include mobile-layout {
+    display: none !important;
+  }
+}
+
+.hide-tablet {
+  @include tablet-layout {
+    display: none !important;
+  }
+}
+
+.hide-desktop {
+  @include desktop-layout {
+    display: none !important;
+  }
+}
+
+.show-mobile {
+  display: none !important;
+  @include mobile-layout {
+    display: block !important;
+  }
+}
+
+.show-tablet {
+  display: none !important;
+  @include tablet-layout {
+    display: block !important;
+  }
+}
+
+.show-desktop {
+  display: none !important;
+  @include desktop-layout {
+    display: block !important;
+  }
+}
+
+// === حاويات جاهزة ===
+.container {
+  @include container;
+}
+
+.container-fluid {
+  @include container(true);
+}
+
+// === شبكة جاهزة ===
+.grid {
+  @include grid-container;
+}
+
+@for $i from 1 through 12 {
+  .col-#{$i} {
+    @include grid-span($i);
+  }
+  
+  .col-md-#{$i} {
+    @include respond-above("md") {
+      @include grid-span($i);
+    }
+  }
+  
+  .col-lg-#{$i} {
+    @include respond-above("lg") {
+      @include grid-span($i);
+    }
+  }
+}
+
+// === إعدادات خاصة للشاشات فائقة الدقة ===
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .retina-ready {
+    // تحسينات للشاشات عالية الدقة
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+// === دعم الاتجاه (Orientation) ===
+@media (orientation: portrait) {
+  .portrait-only {
+    display: block !important;
+  }
+  .landscape-only {
+    display: none !important;
+  }
+}
+
+@media (orientation: landscape) {
+  .portrait-only {
+    display: none !important;
+  }
+  .landscape-only {
+    display: block !important;
+  }
+}
+
+// === إعدادات الطباعة ===
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .container {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+} 

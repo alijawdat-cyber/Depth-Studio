@@ -175,7 +175,6 @@ const confirmRejection = (): void => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/design-system/index';
 
 .user-reject-dialog {
   .reject-header {
