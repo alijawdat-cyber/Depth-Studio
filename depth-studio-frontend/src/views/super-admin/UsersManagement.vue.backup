@@ -1,0 +1,2042 @@
+<template>
+  <v-container fluid>
+    <!-- Page Header -->
+    <v-row class="mb-6">
+      <v-col cols="12">
+        <div class="d-flex align-center justify-space-between mb-4">
+          <div>
+            <h1 class="text-h4 font-weight-bold text-primary">
+              <v-icon start size="32">mdi-account-group</v-icon>
+              إدارة المستخدمين
+            </h1>
+            <p class="text-subtitle-1 text-medium-emphasis mt-2">
+              مراجعة الطلبات الجديدة وإدارة جميع مستخدمي النظام
+            </p>
+          </div>
+          
+          <!-- إحصائيات سريعة -->
+          <div class="d-flex ga-4">
+            <v-card variant="outlined" class="pa-3 text-center" min-width="100">
+              <div class="text-h6 font-weight-bold text-primary">{{ stats.total }}</div>
+              <div class="text-caption">المجموع</div>
+            </v-card>
+            <v-card variant="outlined" class="pa-3 text-center" min-width="100">
+              <div class="text-h6 font-weight-bold text-success">{{ stats.active }}</div>
+              <div class="text-caption">نشط</div>
+            </v-card>
+            <v-card variant="outlined" class="pa-3 text-center" min-width="100">
+              <div class="text-h6 font-weight-bold text-warning">{{ stats.pending }}</div>
+              <div class="text-caption">معلق</div>
+            </v-card>
+          </div>
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Tabs Navigation -->
+    <v-row>
+      <v-col cols="12">
+        <v-card elevation="2">
+          <v-tabs
+            v-model="currentTab"
+            bg-color="primary"
+            color="white"
+            fixed-tabs
+            show-arrows
+          >
+            <v-tab value="pending" class="font-weight-bold">
+              <v-icon start>mdi-clock-alert</v-icon>
+              طلبات معلقة
+              <v-chip 
+                v-if="pendingUsers.length > 0"
+                color="error"
+                size="small"
+                class="ms-2"
+              >
+                {{ pendingUsers.length }}
+              </v-chip>
+            </v-tab>
+            
+            <v-tab value="active" class="font-weight-bold">
+              <v-icon start>mdi-check-circle</v-icon>
+              المستخدمون النشطون
+            </v-tab>
+            
+            <v-tab value="all" class="font-weight-bold">
+              <v-icon start>mdi-account-multiple</v-icon>
+              جميع المستخدمين
+            </v-tab>
+            
+            <v-tab value="reports" class="font-weight-bold">
+              <v-icon start>mdi-chart-line</v-icon>
+              التقارير
+            </v-tab>
+          </v-tabs>
+
+          <!-- Tab Content -->
+          <v-card-text class="pa-6">
+            <!-- Pending Approvals Tab -->
+            <div v-if="currentTab === 'pending'">
+              <!-- Header with bulk actions -->
+              <div class="d-flex align-center justify-space-between mb-6">
+                <h2 class="text-h5 font-weight-bold">
+                  طلبات التسجيل المعلقة ({{ pendingUsers.length }})
+                </h2>
+                
+                <div class="d-flex ga-2" v-if="pendingUsers.length > 0">
+                  <v-btn 
+                    color="success"
+                    prepend-icon="mdi-check-all"
+                    :disabled="selectedUsers.length === 0 || isProcessing"
+                    @click="approveBulk"
+                  >
+                    موافقة المحدد ({{ selectedUsers.length }})
+                  </v-btn>
+                  
+                  <v-btn 
+                    color="error"
+                    variant="outlined"
+                    prepend-icon="mdi-close-circle"
+                    :disabled="selectedUsers.length === 0 || isProcessing"
+                    @click="rejectBulk"
+                  >
+                    رفض المحدد
+                  </v-btn>
+                </div>
+              </div>
+
+              <!-- Pending Users List -->
+              <div v-if="pendingUsers.length === 0" class="text-center py-8">
+                <v-icon size="64" color="success" class="mb-4">mdi-check-all</v-icon>
+                <h3 class="text-h5 mb-2">لا توجد طلبات معلقة!</h3>
+                <p class="text-body-1 text-medium-emphasis">
+                  جميع طلبات التسجيل تمت مراجعتها بنجاح.
+                </p>
+              </div>
+
+              <v-row v-else>
+                <v-col 
+                  v-for="user in pendingUsers" 
+                  :key="user.id" 
+                  cols="12" 
+                  md="6" 
+                  lg="4"
+                >
+                  <v-card
+                    elevation="3"
+                    class="pending-user-card"
+                    :class="{ 'selected': selectedUsers.includes(user.id) }"
+                  >
+                    <!-- Card Header -->
+                    <v-card-title class="pb-2">
+                      <div class="d-flex align-center justify-space-between w-100">
+                        <div class="d-flex align-center">
+                          <v-checkbox
+                            v-model="selectedUsers"
+                            :value="user.id"
+                            color="primary"
+                            hide-details
+                            class="ms-2"
+                          />
+                          <div>
+                            <h3 class="text-h6">{{ user.display_name || user.full_name }}</h3>
+                            <p class="text-caption text-medium-emphasis">{{ user.email }}</p>
+                          </div>
+                        </div>
+                        
+                        <v-chip 
+                          :color="getRoleColor(user.primary_role)"
+                          size="small"
+                          variant="outlined"
+                        >
+                          <v-icon start size="12">{{ getRoleIcon(user.primary_role) }}</v-icon>
+                          {{ getRoleName(user.primary_role) }}
+                        </v-chip>
+                      </div>
+                    </v-card-title>
+
+                    <!-- Card Content -->
+                    <v-card-text>
+                      <!-- معلومات إضافية حسب الدور -->
+                      <div v-if="user.primary_role === 'brand_coordinator'" class="mb-3">
+                        <v-alert type="info" variant="outlined" density="compact">
+                          <strong>براند مطلوب:</strong> {{ getBrandName(user.requested_brand_id) }}
+                        </v-alert>
+                        
+                        <v-expansion-panels variant="accordion" class="mt-2">
+                          <v-expansion-panel>
+                            <v-expansion-panel-title>
+                              <v-icon start>mdi-text</v-icon>
+                              الخبرة والمؤهلات
+                            </v-expansion-panel-title>
+                            <v-expansion-panel-text>
+                              <p class="text-body-2">{{ user.brand_experience || 'لم يتم تقديم معلومات' }}</p>
+                              <p class="text-caption mt-2">
+                                <strong>سنوات الخبرة:</strong> {{ user.previous_experience_years || 0 }} سنة
+                              </p>
+                            </v-expansion-panel-text>
+                          </v-expansion-panel>
+                        </v-expansion-panels>
+                      </div>
+
+                      <div v-if="user.primary_role === 'marketing_coordinator'" class="mb-3">
+                        <v-alert type="warning" variant="outlined" density="compact">
+                          <strong>يحتاج موافقة خاصة</strong>
+                        </v-alert>
+                        
+                        <v-expansion-panels variant="accordion" class="mt-2">
+                          <v-expansion-panel>
+                            <v-expansion-panel-title>
+                              <v-icon start>mdi-text</v-icon>
+                              سبب الطلب والخبرة
+                            </v-expansion-panel-title>
+                            <v-expansion-panel-text>
+                              <p class="text-body-2">{{ user.marketing_reason || 'لم يتم تقديم سبب' }}</p>
+                              <p class="text-caption mt-2">
+                                <strong>سنوات الخبرة:</strong> {{ user.marketing_experience_years || 0 }} سنة
+                              </p>
+                              <div v-if="user.marketing_specializations?.length" class="mt-2">
+                                <strong class="text-caption">التخصصات:</strong>
+                                <v-chip-group class="mt-1">
+                                  <v-chip 
+                                    v-for="spec in user.marketing_specializations" 
+                                    :key="spec" 
+                                    size="x-small"
+                                    variant="outlined"
+                                  >
+                                    {{ getSpecializationName(spec) }}
+                                  </v-chip>
+                                </v-chip-group>
+                              </div>
+                            </v-expansion-panel-text>
+                          </v-expansion-panel>
+                        </v-expansion-panels>
+                      </div>
+
+                      <!-- معلومات عامة -->
+                      <div class="d-flex justify-space-between text-caption text-medium-emphasis mb-3">
+                        <span>تاريخ التسجيل: {{ formatDate(user.created_at) }}</span>
+                        <span v-if="user.phone">📱 {{ user.phone }}</span>
+                      </div>
+                    </v-card-text>
+
+                    <!-- Card Actions -->
+                    <v-card-actions class="pt-0">
+                      <v-btn
+                        color="success"
+                        variant="flat"
+                        size="small"
+                        :loading="isProcessing && processingUsers.includes(user.id)"
+                        @click="approveUser(user)"
+                      >
+                        <v-icon start size="16">mdi-check</v-icon>
+                        موافقة
+                      </v-btn>
+                      
+                      <v-btn
+                        color="error"
+                        variant="outlined"
+                        size="small"
+                        :loading="isProcessing && processingUsers.includes(user.id)"
+                        @click="showRejectDialog(user)"
+                      >
+                        <v-icon start size="16">mdi-close</v-icon>
+                        رفض
+                      </v-btn>
+                      
+                      <v-spacer />
+                      
+                      <v-btn
+                        color="grey"
+                        variant="text"
+                        size="small"
+                        @click="viewUserDetails(user)"
+                      >
+                        <v-icon start size="16">mdi-eye</v-icon>
+                        التفاصيل
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </div>
+
+            <!-- Active Users Tab -->
+            <div v-if="currentTab === 'active'">
+              <div class="d-flex align-center justify-space-between mb-6">
+                <h2 class="text-h5 font-weight-bold">
+                  المستخدمون النشطون ({{ activeUsers.length }})
+                </h2>
+                
+                <!-- خيارات سريعة للمستخدمين النشطين -->
+                <div class="d-flex ga-2">
+                  <v-text-field
+                    v-model="activeUsersSearch"
+                    prepend-inner-icon="mdi-magnify"
+                    label="البحث في المستخدمين النشطين..."
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    style="max-width: 300px;"
+                  />
+                  <v-btn 
+                    color="primary"
+                    prepend-icon="mdi-refresh"
+                    @click="loadAllUsers"
+                    :loading="isProcessing"
+                  >
+                    تحديث
+                  </v-btn>
+                </div>
+              </div>
+
+              <!-- جدول المستخدمين النشطين -->
+              <v-card elevation="2" class="users-table-card">
+                <v-data-table
+                  :headers="activeUsersHeaders"
+                  :items="activeUsers"
+                  :search="activeUsersSearch"
+                  :items-per-page="10"
+                  :items-per-page-options="[5, 10, 25, 50]"
+                  class="elevation-0"
+                  item-value="id"
+                  show-current-page
+                >
+                  <!-- رأس الجدول مخصص -->
+                  <template v-slot:top>
+                    <v-toolbar flat color="surface">
+                      <v-toolbar-title class="text-h6 font-weight-bold">
+                        <v-icon start color="success">mdi-check-circle</v-icon>
+                        المستخدمون المفعلون
+                      </v-toolbar-title>
+                      <v-spacer></v-spacer>
+                      <v-chip color="success" variant="outlined">
+                        {{ activeUsers.length }} مستخدم نشط
+                      </v-chip>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                  </template>
+
+                  <!-- عمود الصورة والاسم -->
+                  <template v-slot:item.user_info="{ item }">
+                    <div class="d-flex align-center py-2">
+                      <v-avatar size="40" class="me-3">
+                        <v-img 
+                          :src="item.profile_photo_url" 
+                          :alt="item.display_name"
+                          v-if="item.profile_photo_url"
+                        />
+                        <v-icon v-else size="24" color="grey">mdi-account-circle</v-icon>
+                      </v-avatar>
+                      <div>
+                        <div class="text-body-1 font-weight-medium">
+                          {{ item.display_name || item.full_name }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          {{ item.email }}
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- عمود الدور -->
+                  <template v-slot:item.primary_role="{ item }">
+                    <v-chip 
+                      :color="getRoleColor(item.primary_role)"
+                      variant="tonal"
+                      size="small"
+                      class="font-weight-medium"
+                    >
+                      <v-icon start size="16">{{ getRoleIcon(item.primary_role) }}</v-icon>
+                      {{ getRoleName(item.primary_role) }}
+                    </v-chip>
+                  </template>
+
+                  <!-- عمود الهاتف -->
+                  <template v-slot:item.phone="{ item }">
+                    <div v-if="item.phone" class="d-flex align-center">
+                      <v-icon size="16" color="success" class="me-1">mdi-phone</v-icon>
+                      <span class="text-body-2">{{ item.phone }}</span>
+                    </div>
+                    <span v-else class="text-caption text-medium-emphasis">غير محدد</span>
+                  </template>
+
+                  <!-- عمود تاريخ التفعيل -->
+                  <template v-slot:item.approved_at="{ item }">
+                    <div v-if="item.approved_at">
+                      <div class="text-body-2">{{ formatDate(item.approved_at) }}</div>
+                      <div class="text-caption text-success">مفعل</div>
+                    </div>
+                    <div v-else>
+                      <div class="text-body-2">{{ formatDate(item.created_at) }}</div>
+                      <div class="text-caption text-medium-emphasis">تاريخ التسجيل</div>
+                    </div>
+                  </template>
+
+                  <!-- عمود الحالة -->
+                  <template v-slot:item.status="{ item }">
+                    <v-chip 
+                      color="success"
+                      variant="tonal"
+                      size="small"
+                      prepend-icon="mdi-check-circle"
+                    >
+                      نشط
+                    </v-chip>
+                  </template>
+
+                  <!-- عمود الإجراءات -->
+                  <template v-slot:item.actions="{ item }">
+                    <div class="d-flex ga-1">
+                      <v-btn
+                        icon
+                        size="small"
+                        color="primary"
+                        variant="text"
+                        @click="viewUserDetails(item)"
+                      >
+                        <v-icon size="18">mdi-eye</v-icon>
+                        <v-tooltip activator="parent" location="top">عرض التفاصيل</v-tooltip>
+                      </v-btn>
+                      
+                      <v-btn
+                        icon
+                        size="small"
+                        color="warning"
+                        variant="text"
+                        @click="editUser(item)"
+                      >
+                        <v-icon size="18">mdi-pencil</v-icon>
+                        <v-tooltip activator="parent" location="top">تعديل البيانات</v-tooltip>
+                      </v-btn>
+                      
+                      <v-btn
+                        icon
+                        size="small"
+                        color="error"
+                        variant="text"
+                        @click="suspendUser(item)"
+                      >
+                        <v-icon size="18">mdi-pause-circle</v-icon>
+                        <v-tooltip activator="parent" location="top">تعليق الحساب</v-tooltip>
+                      </v-btn>
+                    </div>
+                  </template>
+
+                  <!-- رسالة عدم وجود بيانات -->
+                  <template v-slot:no-data>
+                    <div class="text-center py-8">
+                      <v-icon size="64" color="grey" class="mb-4">mdi-account-off</v-icon>
+                      <h3 class="text-h6 mb-2">لا يوجد مستخدمون نشطون</h3>
+                      <p class="text-body-2 text-medium-emphasis">
+                        لم يتم تفعيل أي مستخدمين بعد.
+                      </p>
+                    </div>
+                  </template>
+                </v-data-table>
+              </v-card>
+            </div>
+
+            <!-- All Users Tab -->
+            <div v-if="currentTab === 'all'">
+              <div class="d-flex align-center justify-space-between mb-6">
+                <h2 class="text-h5 font-weight-bold">
+                  جميع المستخدمين ({{ filteredAllUsers.length }} من {{ allUsers.length }})
+                </h2>
+                
+                <!-- أدوات التحكم والفلترة -->
+                <div class="d-flex ga-2 flex-wrap">
+                  <v-text-field
+                    v-model="allUsersSearch"
+                    prepend-inner-icon="mdi-magnify"
+                    label="البحث العام..."
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    style="max-width: 250px;"
+                  />
+                  
+                  <v-select
+                    v-model="statusFilter"
+                    :items="statusFilterOptions"
+                    label="الحالة"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    style="max-width: 150px;"
+                  />
+                  
+                  <v-select
+                    v-model="roleFilter"
+                    :items="roleFilterOptions"
+                    label="الدور"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    style="max-width: 150px;"
+                  />
+                  
+                  <v-btn 
+                    color="primary"
+                    prepend-icon="mdi-refresh"
+                    @click="loadAllUsers"
+                    :loading="isProcessing"
+                  >
+                    تحديث
+                  </v-btn>
+                </div>
+              </div>
+
+              <!-- إحصائيات سريعة -->
+              <v-row class="mb-4">
+                <v-col cols="12" sm="6" md="3">
+                  <v-card variant="outlined" class="pa-3 text-center">
+                    <div class="text-h6 font-weight-bold text-success">{{ activeUsers.length }}</div>
+                    <div class="text-caption">المستخدمون النشطون</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-card variant="outlined" class="pa-3 text-center">
+                    <div class="text-h6 font-weight-bold text-warning">{{ pendingUsers.length }}</div>
+                    <div class="text-caption">في انتظار الموافقة</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-card variant="outlined" class="pa-3 text-center">
+                    <div class="text-h6 font-weight-bold text-primary">{{ photographersCount }}</div>
+                    <div class="text-caption">المصورون</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" sm="6" md="3">
+                  <v-card variant="outlined" class="pa-3 text-center">
+                    <div class="text-h6 font-weight-bold text-info">{{ coordinatorsCount }}</div>
+                    <div class="text-caption">المنسقون</div>
+                  </v-card>
+                </v-col>
+              </v-row>
+
+              <!-- جدول جميع المستخدمين -->
+              <v-card elevation="2" class="users-table-card">
+                <v-data-table
+                  :headers="allUsersHeaders"
+                  :items="filteredAllUsers"
+                  :search="allUsersSearch"
+                  :items-per-page="15"
+                  :items-per-page-options="[10, 15, 25, 50, 100]"
+                  class="elevation-0"
+                  item-value="id"
+                  show-current-page
+                  show-select
+                  v-model="selectedAllUsers"
+                >
+                  <!-- رأس الجدول مخصص -->
+                  <template v-slot:top>
+                    <v-toolbar flat color="surface">
+                      <v-toolbar-title class="text-h6 font-weight-bold">
+                        <v-icon start color="primary">mdi-account-multiple</v-icon>
+                        جدول شامل لكافة المستخدمين
+                      </v-toolbar-title>
+                      <v-spacer></v-spacer>
+                      
+                      <!-- إجراءات جماعية -->
+                      <div v-if="selectedAllUsers.length > 0" class="d-flex ga-2">
+                        <v-chip color="primary" variant="outlined">
+                          {{ selectedAllUsers.length }} محدد
+                        </v-chip>
+                        <v-btn 
+                          color="warning"
+                          size="small"
+                          prepend-icon="mdi-pause"
+                          @click="bulkSuspendUsers"
+                        >
+                          تعليق المحدد
+                        </v-btn>
+                        <v-btn 
+                          color="success"
+                          size="small"
+                          prepend-icon="mdi-play"
+                          @click="bulkActivateUsers"
+                        >
+                          تفعيل المحدد
+                        </v-btn>
+                      </div>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                  </template>
+
+                  <!-- عمود الصورة والاسم -->
+                  <template v-slot:item.user_info="{ item }">
+                    <div class="d-flex align-center py-2">
+                      <v-avatar size="36" class="me-3">
+                        <v-img 
+                          :src="item.profile_photo_url" 
+                          :alt="item.display_name"
+                          v-if="item.profile_photo_url"
+                        />
+                        <v-icon v-else size="20" color="grey">mdi-account-circle</v-icon>
+                      </v-avatar>
+                      <div>
+                        <div class="text-body-2 font-weight-medium">
+                          {{ item.display_name || item.full_name }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          {{ item.email }}
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- عمود الدور -->
+                  <template v-slot:item.primary_role="{ item }">
+                    <v-chip 
+                      :color="getRoleColor(item.primary_role)"
+                      variant="tonal"
+                      size="x-small"
+                      class="font-weight-medium"
+                    >
+                      <v-icon start size="12">{{ getRoleIcon(item.primary_role) }}</v-icon>
+                      {{ getRoleName(item.primary_role) }}
+                    </v-chip>
+                  </template>
+
+                  <!-- عمود الحالة -->
+                  <template v-slot:item.status="{ item }">
+                    <v-chip 
+                      :color="getStatusColor(item.status)"
+                      variant="tonal"
+                      size="x-small"
+                      :prepend-icon="getStatusIcon(item.status)"
+                    >
+                      {{ getStatusName(item.status) }}
+                    </v-chip>
+                  </template>
+
+                  <!-- عمود الهاتف -->
+                  <template v-slot:item.phone="{ item }">
+                    <span v-if="item.phone" class="text-body-2">{{ item.phone }}</span>
+                    <span v-else class="text-caption text-medium-emphasis">غير محدد</span>
+                  </template>
+
+                  <!-- عمود تاريخ التسجيل -->
+                  <template v-slot:item.created_at="{ item }">
+                    <div class="text-body-2">{{ formatDate(item.created_at) }}</div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ getTimeDifference(item.created_at) }}
+                    </div>
+                  </template>
+
+                  <!-- عمود الإجراءات -->
+                  <template v-slot:item.actions="{ item }">
+                    <div class="d-flex ga-1">
+                      <v-btn
+                        icon
+                        size="x-small"
+                        color="primary"
+                        variant="text"
+                        @click="viewUserDetails(item)"
+                      >
+                        <v-icon size="16">mdi-eye</v-icon>
+                        <v-tooltip activator="parent" location="top">التفاصيل</v-tooltip>
+                      </v-btn>
+                      
+                      <v-btn
+                        icon
+                        size="x-small"
+                        color="warning"
+                        variant="text"
+                        @click="editUser(item)"
+                        v-if="item.status === 'active'"
+                      >
+                        <v-icon size="16">mdi-pencil</v-icon>
+                        <v-tooltip activator="parent" location="top">تعديل</v-tooltip>
+                      </v-btn>
+                      
+                      <v-btn
+                        icon
+                        size="x-small"
+                        :color="item.status === 'active' ? 'error' : 'success'"
+                        variant="text"
+                        @click="toggleUserStatus(item)"
+                        v-if="item.status !== 'pending_approval'"
+                      >
+                        <v-icon size="16">
+                          {{ item.status === 'active' ? 'mdi-pause' : 'mdi-play' }}
+                        </v-icon>
+                        <v-tooltip activator="parent" location="top">
+                          {{ item.status === 'active' ? 'تعليق' : 'تفعيل' }}
+                        </v-tooltip>
+                      </v-btn>
+                      
+                      <v-btn
+                        icon
+                        size="x-small"
+                        color="success"
+                        variant="text"
+                        @click="approveUser(item)"
+                        v-if="item.status === 'pending_approval'"
+                      >
+                        <v-icon size="16">mdi-check</v-icon>
+                        <v-tooltip activator="parent" location="top">موافقة</v-tooltip>
+                      </v-btn>
+                    </div>
+                  </template>
+
+                  <!-- رسالة عدم وجود بيانات -->
+                  <template v-slot:no-data>
+                    <div class="text-center py-8">
+                      <v-icon size="64" color="grey" class="mb-4">mdi-database-search</v-icon>
+                      <h3 class="text-h6 mb-2">لا توجد نتائج</h3>
+                      <p class="text-body-2 text-medium-emphasis">
+                        جرب تغيير معايير البحث أو الفلترة.
+                      </p>
+                    </div>
+                  </template>
+                </v-data-table>
+              </v-card>
+            </div>
+
+            <!-- Reports Tab -->
+            <div v-if="currentTab === 'reports'">
+              <h2 class="text-h5 font-weight-bold mb-4">
+                تقارير المستخدمين
+              </h2>
+              
+              <!-- Reports would go here -->
+              <v-alert type="info" variant="outlined">
+                <v-icon start>mdi-information</v-icon>
+                التقارير قيد التطوير...
+              </v-alert>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Reject Dialog -->
+    <v-dialog v-model="rejectDialog" max-width="500">
+      <v-card>
+        <v-card-title class="text-h5">
+          <v-icon start color="error">mdi-alert-circle</v-icon>
+          رفض طلب التسجيل
+        </v-card-title>
+        <v-card-text>
+          <p class="mb-4">
+            هل أنت متأكد من رفض طلب التسجيل لـ 
+            <strong>{{ userToReject?.display_name }}</strong>؟
+          </p>
+          
+          <v-textarea
+            v-model="rejectReason"
+            label="سبب الرفض (اختياري)"
+            variant="outlined"
+            rows="3"
+            placeholder="اكتب السبب ليتم إرساله للمستخدم..."
+          />
+          
+          <v-alert type="warning" variant="outlined" class="mt-3">
+            <strong>تنبيه:</strong> سيتم حذف الحساب نهائياً ولن يتمكن المستخدم من تسجيل الدخول.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="grey" @click="rejectDialog = false">
+            إلغاء
+          </v-btn>
+          <v-btn 
+            color="error" 
+            :loading="isProcessing"
+            @click="confirmReject"
+          >
+            تأكيد الرفض
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- User Details Dialog -->
+    <v-dialog v-model="detailsDialog" max-width="700" scrollable>
+      <v-card>
+        <v-card-title class="text-h5 bg-primary text-white">
+          <v-icon start>mdi-account-details</v-icon>
+          تفاصيل طلب التسجيل
+          <v-spacer />
+          <v-btn icon variant="text" @click="detailsDialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+        
+        <v-card-text class="pa-6" v-if="selectedUserForDetails">
+          <!-- معلومات أساسية -->
+          <v-card variant="outlined" class="mb-4">
+            <v-card-title class="text-h6 bg-grey-lighten-4">
+              <v-icon start>mdi-account</v-icon>
+              المعلومات الأساسية
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <div class="mb-3">
+                    <strong>الاسم الكامل:</strong>
+                    <p class="mt-1">{{ selectedUserForDetails.display_name || selectedUserForDetails.full_name }}</p>
+                  </div>
+                  <div class="mb-3">
+                    <strong>البريد الإلكتروني:</strong>
+                    <p class="mt-1">{{ selectedUserForDetails.email }}</p>
+                  </div>
+                  <div class="mb-3">
+                    <strong>الهاتف:</strong>
+                    <p class="mt-1">{{ selectedUserForDetails.phone || 'غير محدد' }}</p>
+                  </div>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <div class="mb-3">
+                    <strong>الدور المطلوب:</strong>
+                    <v-chip 
+                      :color="getRoleColor(selectedUserForDetails.primary_role)"
+                      class="mt-1"
+                    >
+                      <v-icon start size="16">{{ getRoleIcon(selectedUserForDetails.primary_role) }}</v-icon>
+                      {{ getRoleName(selectedUserForDetails.primary_role) }}
+                    </v-chip>
+                  </div>
+                  <div class="mb-3">
+                    <strong>تاريخ التسجيل:</strong>
+                    <p class="mt-1">{{ formatDate(selectedUserForDetails.created_at) }}</p>
+                  </div>
+                  <div class="mb-3">
+                    <strong>طريقة التسجيل:</strong>
+                    <v-chip size="small" variant="outlined" class="mt-1">
+                      {{ selectedUserForDetails.auth_provider || 'email' }}
+                    </v-chip>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <!-- تفاصيل خاصة بالدور -->
+          <v-card v-if="selectedUserForDetails.primary_role === 'brand_coordinator'" variant="outlined" class="mb-4">
+            <v-card-title class="text-h6 bg-warning-lighten-4">
+              <v-icon start>mdi-domain</v-icon>
+              تفاصيل منسق البراند
+            </v-card-title>
+            <v-card-text>
+              <div class="mb-3">
+                <strong>البراند المطلوب:</strong>
+                <p class="mt-1">{{ getBrandName(selectedUserForDetails.requested_brand_id) }}</p>
+              </div>
+              <div class="mb-3">
+                <strong>سنوات الخبرة:</strong>
+                <p class="mt-1">{{ selectedUserForDetails.previous_experience_years || 0 }} سنة</p>
+              </div>
+              <div class="mb-3">
+                <strong>الخبرة والمؤهلات:</strong>
+                <p class="mt-1">{{ selectedUserForDetails.brand_experience || 'لم يتم تقديم معلومات' }}</p>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <v-card v-if="selectedUserForDetails.primary_role === 'marketing_coordinator'" variant="outlined" class="mb-4">
+            <v-card-title class="text-h6 bg-error-lighten-4">
+              <v-icon start>mdi-bullhorn</v-icon>
+              تفاصيل منسق التسويق
+            </v-card-title>
+            <v-card-text>
+              <div class="mb-3">
+                <strong>سنوات الخبرة في التسويق:</strong>
+                <p class="mt-1">{{ selectedUserForDetails.marketing_experience_years || 0 }} سنة</p>
+              </div>
+              <div class="mb-3">
+                <strong>سبب طلب الدور:</strong>
+                <p class="mt-1">{{ selectedUserForDetails.marketing_reason || 'لم يتم تقديم سبب' }}</p>
+              </div>
+              <div v-if="selectedUserForDetails.marketing_specializations?.length" class="mb-3">
+                <strong>التخصصات التسويقية:</strong>
+                <v-chip-group class="mt-2">
+                  <v-chip 
+                    v-for="spec in selectedUserForDetails.marketing_specializations" 
+                    :key="spec"
+                    size="small"
+                    variant="outlined"
+                  >
+                    {{ getSpecializationName(spec) }}
+                  </v-chip>
+                </v-chip-group>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <v-card v-if="selectedUserForDetails.primary_role === 'photographer'" variant="outlined" class="mb-4">
+            <v-card-title class="text-h6 bg-primary-lighten-4">
+              <v-icon start>mdi-camera</v-icon>
+              تفاصيل المصور
+            </v-card-title>
+            <v-card-text>
+              <div class="mb-3">
+                <strong>نوع العقد:</strong>
+                <v-chip 
+                  :color="selectedUserForDetails.photographer_contract_type === 'freelancer' ? 'success' : 'info'"
+                  size="small"
+                  class="mt-1"
+                >
+                  {{ selectedUserForDetails.photographer_contract_type === 'freelancer' ? 'فريلانسر' : 'راتب ثابت' }}
+                </v-chip>
+              </div>
+              <div v-if="selectedUserForDetails.photographer_specializations?.length" class="mb-3">
+                <strong>التخصصات:</strong>
+                <v-chip-group class="mt-2">
+                  <v-chip 
+                    v-for="spec in selectedUserForDetails.photographer_specializations" 
+                    :key="spec"
+                    size="small"
+                    variant="outlined"
+                  >
+                    {{ getPhotographerSpecialization(spec) }}
+                  </v-chip>
+                </v-chip-group>
+              </div>
+              <div v-if="selectedUserForDetails.photographer_availability?.length" class="mb-3">
+                <strong>أوقات التوفر:</strong>
+                <v-chip-group class="mt-2">
+                  <v-chip 
+                    v-for="time in selectedUserForDetails.photographer_availability" 
+                    :key="time"
+                    size="small"
+                    variant="outlined"
+                  >
+                    {{ getAvailabilityTime(time) }}
+                  </v-chip>
+                </v-chip-group>
+              </div>
+              <div v-if="selectedUserForDetails.photographer_notes" class="mb-3">
+                <strong>ملاحظات إضافية:</strong>
+                <p class="mt-1">{{ selectedUserForDetails.photographer_notes }}</p>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <!-- معلومات تقنية -->
+          <v-card variant="outlined">
+            <v-card-title class="text-h6 bg-grey-lighten-4">
+              <v-icon start>mdi-information</v-icon>
+              معلومات تقنية
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <div class="mb-2">
+                    <strong>معرف المستخدم:</strong>
+                    <code class="text-caption bg-grey-lighten-3 pa-1 rounded">{{ selectedUserForDetails.firebase_uid || selectedUserForDetails.id }}</code>
+                  </div>
+                  <div class="mb-2">
+                    <strong>الحالة:</strong>
+                    <v-chip 
+                      :color="selectedUserForDetails.status === 'active' ? 'success' : 'warning'"
+                      size="small"
+                    >
+                      {{ selectedUserForDetails.status }}
+                    </v-chip>
+                  </div>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <div class="mb-2">
+                    <strong>تاريخ آخر تحديث:</strong>
+                    <p class="text-caption">{{ formatDate(selectedUserForDetails.updated_at) }}</p>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-card-text>
+
+        <v-card-actions class="pa-4 bg-grey-lighten-5">
+          <v-spacer />
+          <v-btn color="grey" @click="detailsDialog = false">
+            إغلاق
+          </v-btn>
+          <v-btn 
+            v-if="selectedUserForDetails?.status === 'pending_approval'"
+            color="success"
+            @click="approveUserFromDetails"
+          >
+            <v-icon start>mdi-check</v-icon>
+            موافقة الآن
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { db } from '@/firebase/config'
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc,
+  doc, 
+  writeBatch,
+  setDoc,
+  addDoc,
+  orderBy,
+  serverTimestamp
+} from 'firebase/firestore'
+
+// === Route ===
+const route = useRoute()
+
+// === Reactive Data ===
+const currentTab = ref('pending')
+const allUsers = ref<any[]>([])
+const pendingUsers = ref<any[]>([])
+const activeUsers = ref<any[]>([])
+const selectedUsers = ref<string[]>([])
+const isProcessing = ref(false)
+const processingUsers = ref<string[]>([])
+
+// Reject dialog
+const rejectDialog = ref(false)
+const userToReject = ref<any>(null)
+const rejectReason = ref('')
+
+// User details dialog
+const detailsDialog = ref(false)
+const selectedUserForDetails = ref<any>(null)
+
+// === جديد: بيانات الجداول الجديدة ===
+// بحث للمستخدمين النشطين
+const activeUsersSearch = ref('')
+
+// بحث وفلترة لجميع المستخدمين
+const allUsersSearch = ref('')
+const statusFilter = ref('')
+const roleFilter = ref('')
+const selectedAllUsers = ref<string[]>([])
+
+// خيارات الفلترة
+const statusFilterOptions = [
+  { title: 'الكل', value: '' },
+  { title: 'نشط', value: 'active' },
+  { title: 'معلق', value: 'pending_approval' },
+  { title: 'معطل', value: 'suspended' },
+  { title: 'محذوف', value: 'deleted' }
+]
+
+const roleFilterOptions = [
+  { title: 'الكل', value: '' },
+  { title: 'مصور', value: 'photographer' },
+  { title: 'منسق براند', value: 'brand_coordinator' },
+  { title: 'منسق تسويق', value: 'marketing_coordinator' },
+  { title: 'مدير عام', value: 'super_admin' }
+]
+
+// تعريف أعمدة جدول المستخدمين النشطين
+const activeUsersHeaders = [
+  {
+    title: 'المستخدم',
+    key: 'user_info',
+    sortable: false,
+    width: '250px'
+  },
+  {
+    title: 'الدور',
+    key: 'primary_role',
+    sortable: true,
+    width: '150px'
+  },
+  {
+    title: 'الهاتف',
+    key: 'phone',
+    sortable: false,
+    width: '130px'
+  },
+  {
+    title: 'تاريخ التفعيل',
+    key: 'approved_at',
+    sortable: true,
+    width: '150px'
+  },
+  {
+    title: 'الحالة',
+    key: 'status',
+    sortable: false,
+    width: '100px'
+  },
+  {
+    title: 'الإجراءات',
+    key: 'actions',
+    sortable: false,
+    width: '150px',
+    align: 'center' as const
+  }
+] as const
+
+// تعريف أعمدة جدول جميع المستخدمين
+const allUsersHeaders = [
+  {
+    title: 'المستخدم',
+    key: 'user_info',
+    sortable: false,
+    width: '220px'
+  },
+  {
+    title: 'الدور',
+    key: 'primary_role',
+    sortable: true,
+    width: '130px'
+  },
+  {
+    title: 'الحالة',
+    key: 'status',
+    sortable: true,
+    width: '120px'
+  },
+  {
+    title: 'الهاتف',
+    key: 'phone',
+    sortable: false,
+    width: '120px'
+  },
+  {
+    title: 'تاريخ التسجيل',
+    key: 'created_at',
+    sortable: true,
+    width: '140px'
+  },
+  {
+    title: 'الإجراءات',
+    key: 'actions',
+    sortable: false,
+    width: '120px',
+    align: 'center' as const
+  }
+] as const
+
+// === Computed Properties ===
+const stats = computed(() => ({
+  total: allUsers.value.length,
+  active: activeUsers.value.length,
+  pending: pendingUsers.value.length
+}))
+
+// === جديد: Computed Properties للجداول الجديدة ===
+// فلترة المستخدمين لجدول "جميع المستخدمين"
+const filteredAllUsers = computed(() => {
+  let filtered = [...allUsers.value]
+  
+  // فلترة حسب الحالة
+  if (statusFilter.value) {
+    filtered = filtered.filter(user => user.status === statusFilter.value)
+  }
+  
+  // فلترة حسب الدور
+  if (roleFilter.value) {
+    filtered = filtered.filter(user => user.primary_role === roleFilter.value)
+  }
+  
+  return filtered
+})
+
+// إحصائيات إضافية للجدول الشامل
+const photographersCount = computed(() => 
+  allUsers.value.filter(user => user.primary_role === 'photographer').length
+)
+
+const coordinatorsCount = computed(() => 
+  allUsers.value.filter(user => 
+    user.primary_role === 'brand_coordinator' || 
+    user.primary_role === 'marketing_coordinator'
+  ).length
+)
+
+// === Methods ===
+// جلب جميع المستخدمين
+const loadAllUsers = async () => {
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'users'))
+    allUsers.value = usersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    
+    // تصنيف المستخدمين
+    pendingUsers.value = allUsers.value.filter(user => user.status === 'pending_approval')
+    activeUsers.value = allUsers.value.filter(user => user.status === 'active')
+    
+    console.log(`📊 تم جلب ${allUsers.value.length} مستخدم`)
+  } catch (error) {
+    console.error('خطأ في جلب المستخدمين:', error)
+  }
+}
+
+// الحصول على لون الدور
+const getRoleColor = (role: string) => {
+  switch (role) {
+    case 'photographer': return 'primary'
+    case 'brand_coordinator': return 'warning'
+    case 'marketing_coordinator': return 'error'
+    case 'super_admin': return 'purple'
+    default: return 'grey'
+  }
+}
+
+// الحصول على أيقونة الدور
+const getRoleIcon = (role: string) => {
+  switch (role) {
+    case 'photographer': return 'mdi-camera'
+    case 'brand_coordinator': return 'mdi-domain'
+    case 'marketing_coordinator': return 'mdi-bullhorn'
+    case 'super_admin': return 'mdi-crown'
+    default: return 'mdi-account'
+  }
+}
+
+// الحصول على اسم الدور
+const getRoleName = (role: string) => {
+  switch (role) {
+    case 'photographer': return 'مصور'
+    case 'brand_coordinator': return 'منسق براند'
+    case 'marketing_coordinator': return 'منسق تسويق'
+    case 'super_admin': return 'مدير عام'
+    default: return 'غير محدد'
+  }
+}
+
+// الحصول على اسم البراند
+const getBrandName = (brandId: string) => {
+  // TODO: جلب اسم البراند من قاعدة البيانات
+  return brandId || 'غير محدد'
+}
+
+// الحصول على اسم التخصص
+const getSpecializationName = (spec: string) => {
+  const specializations: { [key: string]: string } = {
+    'social_media': 'السوشال ميديا',
+    'content_creation': 'إنشاء المحتوى',
+    'campaign_management': 'إدارة الحملات',
+    'analytics': 'التحليلات',
+    'brand_management': 'إدارة البراندات'
+  }
+  return specializations[spec] || spec
+}
+
+// الحصول على اسم تخصص المصور
+const getPhotographerSpecialization = (spec: string) => {
+  const specializations: { [key: string]: string } = {
+    'product_photography': 'تصوير المنتجات',
+    'portrait_photography': 'تصوير الأشخاص',
+    'video_production': 'إنتاج الفيديو',
+    'graphic_design': 'التصميم الجرافيكي',
+    'social_media_content': 'محتوى السوشال ميديا',
+    'commercial_photography': 'التصوير التجاري'
+  }
+  return specializations[spec] || spec
+}
+
+// الحصول على وقت التوفر
+const getAvailabilityTime = (time: string) => {
+  const times: { [key: string]: string } = {
+    'morning': 'الفترة الصباحية (8ص - 12ظ)',
+    'afternoon': 'فترة بعد الظهر (12ظ - 6م)',
+    'evening': 'الفترة المسائية (6م - 10م)',
+    'weekend': 'عطلة نهاية الأسبوع'
+  }
+  return times[time] || time
+}
+
+// تنسيق التاريخ
+const formatDate = (date: any) => {
+  if (!date) return 'غير محدد'
+  
+  let dateObj
+  if (date.toDate) {
+    dateObj = date.toDate()
+  } else if (date instanceof Date) {
+    dateObj = date
+  } else {
+    dateObj = new Date(date)
+  }
+  
+  return dateObj.toLocaleDateString('ar-EG', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+// موافقة على مستخدم واحد - نظام شامل
+const approveUser = async (user: any) => {
+  try {
+    processingUsers.value.push(user.id)
+    isProcessing.value = true
+    
+    console.log(`🔄 بدء عملية الموافقة الشاملة لـ ${user.display_name}...`)
+    
+    // 1. تحديث حالة المستخدم في users collection
+    await updateDoc(doc(db, 'users', user.id), {
+      status: 'active',
+      approved_at: new Date(),
+      approved_by: 'current_admin_uid', // TODO: استخدام UID الحقيقي
+      updated_at: new Date()
+    })
+    
+    console.log(`✅ تم تحديث حالة المستخدم في users`)
+    
+    // 2. إنشاء الصلاحيات الأساسية للمستخدم
+    await createUserPermissions(user)
+    
+    // 3. إنشاء الوثائق المرتبطة بالدور
+    await createRoleSpecificDocuments(user)
+    
+    // 4. تحديث القوائم المحلية
+    const userIndex = pendingUsers.value.findIndex(u => u.id === user.id)
+    if (userIndex > -1) {
+      const approvedUser = { ...pendingUsers.value[userIndex], status: 'active' }
+      pendingUsers.value.splice(userIndex, 1)
+      activeUsers.value.push(approvedUser)
+    }
+    
+    console.log(`✅ تم تفعيل ${user.display_name} بالكامل مع جميع المستندات المرتبطة`)
+    
+  } catch (error: any) {
+    console.error('❌ خطأ في الموافقة الشاملة:', error)
+    alert(`خطأ في تفعيل ${user.display_name}: ${error?.message || 'خطأ غير معروف'}`)
+  } finally {
+    processingUsers.value = processingUsers.value.filter(id => id !== user.id)
+    isProcessing.value = false
+  }
+}
+
+// إنشاء صلاحيات المستخدم
+const createUserPermissions = async (user: any) => {
+  try {
+    console.log(`📋 إنشاء صلاحيات لـ ${user.primary_role}...`)
+    
+    // صلاحيات أساسية حسب الدور
+    let permissions = {
+      user_id: user.id,
+      role: user.primary_role,
+      crud_permissions: {
+        users: { read: false, create: false, update: false, delete: false },
+        brands: { read: false, create: false, update: false, delete: false },
+        campaigns: { read: false, create: false, update: false, delete: false },
+        content: { read: false, create: false, update: false, delete: false },
+        tasks: { read: false, create: false, update: false, delete: false },
+        reports: { read: false, create: false, update: false, delete: false }
+      },
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+    
+    // تخصيص الصلاحيات حسب الدور
+    switch (user.primary_role) {
+      case 'photographer':
+        permissions.crud_permissions = {
+          users: { read: false, create: false, update: false, delete: false },
+          brands: { read: true, create: false, update: false, delete: false },
+          campaigns: { read: true, create: false, update: false, delete: false },
+          content: { read: true, create: true, update: true, delete: true },
+          tasks: { read: true, create: false, update: true, delete: false },
+          reports: { read: true, create: false, update: false, delete: false }
+        }
+        break
+        
+      case 'brand_coordinator':
+        permissions.crud_permissions = {
+          users: { read: true, create: false, update: false, delete: false },
+          brands: { read: true, create: false, update: true, delete: false },
+          campaigns: { read: true, create: true, update: true, delete: false },
+          content: { read: true, create: false, update: true, delete: false },
+          tasks: { read: true, create: true, update: true, delete: false },
+          reports: { read: true, create: true, update: false, delete: false }
+        }
+        break
+        
+      case 'marketing_coordinator':
+        permissions.crud_permissions = {
+          users: { read: true, create: true, update: true, delete: false },
+          brands: { read: true, create: true, update: true, delete: false },
+          campaigns: { read: true, create: true, update: true, delete: true },
+          content: { read: true, create: true, update: true, delete: true },
+          tasks: { read: true, create: true, update: true, delete: true },
+          reports: { read: true, create: true, update: true, delete: false }
+        }
+        break
+    }
+    
+    // إنشاء وثيقة الصلاحيات
+    await setDoc(doc(db, 'user_permissions', user.id), permissions)
+    console.log(`✅ تم إنشاء صلاحيات ${user.primary_role}`)
+    
+  } catch (error) {
+    console.error(`❌ خطأ في إنشاء الصلاحيات:`, error)
+    throw error
+  }
+}
+
+// إنشاء الوثائق المرتبطة بالدور
+const createRoleSpecificDocuments = async (user: any) => {
+  try {
+    console.log(`📝 إنشاء وثائق خاصة بدور ${user.primary_role}...`)
+    
+    switch (user.primary_role) {
+      case 'photographer':
+        await createPhotographerProfile(user)
+        break
+        
+      case 'brand_coordinator':
+        await createBrandCoordinatorProfile(user)
+        break
+        
+      case 'marketing_coordinator':
+        // منسق التسويق لا يحتاج وثائق إضافية في الوقت الحالي
+        console.log(`ℹ️ منسق التسويق لا يحتاج وثائق إضافية`)
+        break
+    }
+    
+  } catch (error) {
+    console.error(`❌ خطأ في إنشاء وثائق الدور:`, error)
+    throw error
+  }
+}
+
+// إنشاء ملف المصور
+const createPhotographerProfile = async (user: any) => {
+  try {
+    const photographerProfile = {
+      user_id: user.id,
+      contract_type: user.photographer_contract_type || 'freelancer',
+      specializations: (user.photographer_specializations || []).map((spec: string) => ({
+        category_id: spec,
+        skill_level: 'intermediate',
+        years_experience: 1
+      })),
+      availability_hours: user.photographer_availability || [],
+      notes: user.photographer_notes || '',
+      performance_stats: {
+        total_tasks_completed: 0,
+        average_rating: 0,
+        total_content_uploaded: 0,
+        on_time_delivery_rate: 0
+      },
+      financial_info: {
+        hourly_rate: user.photographer_contract_type === 'freelancer' ? 50 : null,
+        monthly_salary: user.photographer_contract_type === 'salary' ? 3000 : null,
+        total_earnings: 0,
+        payment_method: 'bank_transfer'
+      },
+      status: 'active',
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+    
+    await addDoc(collection(db, 'photographer_profiles'), photographerProfile)
+    console.log(`✅ تم إنشاء ملف المصور`)
+    
+  } catch (error) {
+    console.error(`❌ خطأ في إنشاء ملف المصور:`, error)
+    throw error
+  }
+}
+
+// إنشاء ملف منسق البراند
+const createBrandCoordinatorProfile = async (user: any) => {
+  try {
+    const coordinatorProfile = {
+      user_id: user.id,
+      brand_id: user.requested_brand_id,
+      experience_description: user.brand_experience || '',
+      previous_experience_years: user.previous_experience_years || 0,
+      access_level: 'standard', // يمكن تعديله لاحقاً
+      brand_specific_permissions: {
+        content_approval: true,
+        campaign_management: true,
+        photographer_assignment: false,
+        budget_access: false
+      },
+      performance_metrics: {
+        campaigns_managed: 0,
+        content_pieces_approved: 0,
+        average_campaign_success_rate: 0
+      },
+      status: 'active',
+      assigned_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+    
+    await addDoc(collection(db, 'brand_coordinators'), coordinatorProfile)
+    console.log(`✅ تم إنشاء ملف منسق البراند`)
+    
+  } catch (error) {
+    console.error(`❌ خطأ في إنشاء ملف منسق البراند:`, error)
+    throw error
+  }
+}
+
+// رفض مستخدم
+const showRejectDialog = (user: any) => {
+  userToReject.value = user
+  rejectReason.value = ''
+  rejectDialog.value = true
+}
+
+const confirmReject = async () => {
+  if (!userToReject.value) return
+  
+  try {
+    isProcessing.value = true
+    
+    // حذف المستخدم من قاعدة البيانات
+    await deleteDoc(doc(db, 'users', userToReject.value.id))
+    
+    // تحديث القائمة المحلية
+    const userIndex = pendingUsers.value.findIndex(u => u.id === userToReject.value.id)
+    if (userIndex > -1) {
+      pendingUsers.value.splice(userIndex, 1)
+    }
+    
+    console.log(`❌ تم رفض طلب ${userToReject.value.display_name}`)
+    
+    rejectDialog.value = false
+    userToReject.value = null
+    
+  } catch (error) {
+    console.error('خطأ في الرفض:', error)
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// موافقة جماعية - محدثة لتستخدم النظام الشامل
+const approveBulk = async () => {
+  if (selectedUsers.value.length === 0) return
+  
+  try {
+    isProcessing.value = true
+    
+    console.log(`🔄 بدء الموافقة الجماعية على ${selectedUsers.value.length} مستخدم...`)
+    
+    // معالجة كل مستخدم بشكل فردي لضمان إنشاء جميع الوثائق المرتبطة
+    for (const userId of selectedUsers.value) {
+      const user = pendingUsers.value.find(u => u.id === userId)
+      if (user) {
+        console.log(`📋 معالجة ${user.display_name}...`)
+        
+        // 1. تحديث حالة المستخدم
+        await updateDoc(doc(db, 'users', userId), {
+          status: 'active',
+          approved_at: new Date(),
+          approved_by: 'current_admin_uid',
+          updated_at: new Date()
+        })
+        
+        // 2. إنشاء الصلاحيات
+        await createUserPermissions(user)
+        
+        // 3. إنشاء الوثائق المرتبطة بالدور
+        await createRoleSpecificDocuments(user)
+        
+        console.log(`✅ تم تفعيل ${user.display_name}`)
+      }
+    }
+    
+    // تحديث القوائم المحلية
+    const approvedUsers = pendingUsers.value.filter(user => 
+      selectedUsers.value.includes(user.id)
+    )
+    
+    pendingUsers.value = pendingUsers.value.filter(user => 
+      !selectedUsers.value.includes(user.id)
+    )
+    
+    activeUsers.value.push(...approvedUsers.map(user => ({ ...user, status: 'active' })))
+    
+    console.log(`🎉 تم تفعيل ${selectedUsers.value.length} مستخدم بالكامل`)
+    selectedUsers.value = []
+    
+  } catch (error: any) {
+    console.error('❌ خطأ في الموافقة الجماعية:', error)
+    alert(`خطأ في الموافقة الجماعية: ${error?.message || 'خطأ غير معروف'}`)
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// رفض جماعي
+const rejectBulk = async () => {
+  if (selectedUsers.value.length === 0) return
+  
+  if (!confirm(`هل أنت متأكد من رفض ${selectedUsers.value.length} طلب؟`)) {
+    return
+  }
+  
+  try {
+    isProcessing.value = true
+    
+    const batch = writeBatch(db)
+    
+    selectedUsers.value.forEach(userId => {
+      const userRef = doc(db, 'users', userId)
+      batch.delete(userRef)
+    })
+    
+    await batch.commit()
+    
+    // تحديث القائمة المحلية
+    pendingUsers.value = pendingUsers.value.filter(user => 
+      !selectedUsers.value.includes(user.id)
+    )
+    
+    console.log(`❌ تم رفض ${selectedUsers.value.length} طلب`)
+    selectedUsers.value = []
+    
+  } catch (error) {
+    console.error('خطأ في الرفض الجماعي:', error)
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// عرض تفاصيل المستخدم
+const viewUserDetails = (user: any) => {
+  selectedUserForDetails.value = user
+  detailsDialog.value = true
+}
+
+// Approve user from details dialog
+const approveUserFromDetails = async () => {
+  if (!selectedUserForDetails.value) return
+  
+  // استخدام نفس دالة الموافقة الشاملة
+  await approveUser(selectedUserForDetails.value)
+  detailsDialog.value = false
+}
+
+// === جديد: وظائف الجداول الجديدة ===
+
+// الحصول على لون الحالة
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'active': return 'success'
+    case 'pending_approval': return 'warning'
+    case 'suspended': return 'error'
+    case 'deleted': return 'grey'
+    default: return 'grey'
+  }
+}
+
+// الحصول على أيقونة الحالة
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'active': return 'mdi-check-circle'
+    case 'pending_approval': return 'mdi-clock-alert'
+    case 'suspended': return 'mdi-pause-circle'
+    case 'deleted': return 'mdi-delete'
+    default: return 'mdi-help-circle'
+  }
+}
+
+// الحصول على اسم الحالة
+const getStatusName = (status: string) => {
+  switch (status) {
+    case 'active': return 'نشط'
+    case 'pending_approval': return 'في انتظار الموافقة'
+    case 'suspended': return 'معلق'
+    case 'deleted': return 'محذوف'
+    default: return 'غير محدد'
+  }
+}
+
+// حساب الفرق الزمني
+const getTimeDifference = (date: any) => {
+  if (!date) return ''
+  
+  const now = new Date()
+  const targetDate = date.toDate ? date.toDate() : new Date(date)
+  const diffTime = Math.abs(now.getTime() - targetDate.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 1) return 'أمس'
+  if (diffDays < 7) return `منذ ${diffDays} أيام`
+  if (diffDays < 30) return `منذ ${Math.ceil(diffDays / 7)} أسابيع`
+  if (diffDays < 365) return `منذ ${Math.ceil(diffDays / 30)} أشهر`
+  return `منذ ${Math.ceil(diffDays / 365)} سنوات`
+}
+
+// تعديل بيانات المستخدم
+const editUser = async (user: any) => {
+  console.log('🔧 فتح نافذة تعديل المستخدم:', user.display_name)
+  // TODO: فتح نافذة تعديل البيانات
+  alert(`تعديل بيانات ${user.display_name}\nهذه الميزة قيد التطوير...`)
+}
+
+// تعليق/إيقاف مستخدم
+const suspendUser = async (user: any) => {
+  if (!confirm(`هل أنت متأكد من تعليق حساب ${user.display_name}؟`)) {
+    return
+  }
+  
+  try {
+    console.log('⏸️ تعليق المستخدم:', user.display_name)
+    
+    // تحديث حالة المستخدم في Firestore
+    await updateDoc(doc(db, 'users', user.id), {
+      status: 'suspended',
+      suspended_at: new Date(),
+      suspended_by: 'current_admin_uid', // TODO: استخدام UID الحقيقي
+      updated_at: new Date()
+    })
+    
+    // تحديث القوائم المحلية
+    const userIndex = activeUsers.value.findIndex(u => u.id === user.id)
+    if (userIndex > -1) {
+      activeUsers.value[userIndex].status = 'suspended'
+    }
+    
+    const allUserIndex = allUsers.value.findIndex(u => u.id === user.id)
+    if (allUserIndex > -1) {
+      allUsers.value[allUserIndex].status = 'suspended'
+    }
+    
+    console.log(`✅ تم تعليق حساب ${user.display_name}`)
+    
+  } catch (error: any) {
+    console.error('❌ خطأ في تعليق المستخدم:', error)
+    alert(`خطأ في تعليق الحساب: ${error?.message || 'خطأ غير معروف'}`)
+  }
+}
+
+// تبديل حالة المستخدم (تفعيل/تعليق)
+const toggleUserStatus = async (user: any) => {
+  const newStatus = user.status === 'active' ? 'suspended' : 'active'
+  const actionText = newStatus === 'active' ? 'تفعيل' : 'تعليق'
+  
+  if (!confirm(`هل أنت متأكد من ${actionText} حساب ${user.display_name}؟`)) {
+    return
+  }
+  
+  try {
+    console.log(`🔄 ${actionText} المستخدم:`, user.display_name)
+    
+    // تحديث حالة المستخدم في Firestore
+    const updateData: any = {
+      status: newStatus,
+      updated_at: new Date()
+    }
+    
+    if (newStatus === 'suspended') {
+      updateData.suspended_at = new Date()
+      updateData.suspended_by = 'current_admin_uid'
+    } else {
+      updateData.reactivated_at = new Date()
+      updateData.reactivated_by = 'current_admin_uid'
+    }
+    
+    await updateDoc(doc(db, 'users', user.id), updateData)
+    
+    // تحديث القوائم المحلية
+    const allUserIndex = allUsers.value.findIndex(u => u.id === user.id)
+    if (allUserIndex > -1) {
+      allUsers.value[allUserIndex].status = newStatus
+    }
+    
+    // إعادة تصنيف المستخدمين
+    if (newStatus === 'active') {
+      const userIndex = activeUsers.value.findIndex(u => u.id === user.id)
+      if (userIndex === -1) {
+        activeUsers.value.push({ ...user, status: newStatus })
+      }
+    } else {
+      const userIndex = activeUsers.value.findIndex(u => u.id === user.id)
+      if (userIndex > -1) {
+        activeUsers.value.splice(userIndex, 1)
+      }
+    }
+    
+    console.log(`✅ تم ${actionText} حساب ${user.display_name}`)
+    
+  } catch (error: any) {
+    console.error(`❌ خطأ في ${actionText} المستخدم:`, error)
+    alert(`خطأ في ${actionText} الحساب: ${error?.message || 'خطأ غير معروف'}`)
+  }
+}
+
+// إجراءات جماعية - تعليق المحدد
+const bulkSuspendUsers = async () => {
+  if (selectedAllUsers.value.length === 0) return
+  
+  if (!confirm(`هل أنت متأكد من تعليق ${selectedAllUsers.value.length} مستخدم؟`)) {
+    return
+  }
+  
+  try {
+    isProcessing.value = true
+    console.log(`⏸️ بدء تعليق ${selectedAllUsers.value.length} مستخدم...`)
+    
+    const batch = writeBatch(db)
+    
+    selectedAllUsers.value.forEach(userId => {
+      const userRef = doc(db, 'users', userId)
+      batch.update(userRef, {
+        status: 'suspended',
+        suspended_at: new Date(),
+        suspended_by: 'current_admin_uid',
+        updated_at: new Date()
+      })
+    })
+    
+    await batch.commit()
+    
+    // تحديث القوائم المحلية
+    selectedAllUsers.value.forEach(userId => {
+      const allUserIndex = allUsers.value.findIndex(u => u.id === userId)
+      if (allUserIndex > -1) {
+        allUsers.value[allUserIndex].status = 'suspended'
+      }
+      
+      const activeUserIndex = activeUsers.value.findIndex(u => u.id === userId)
+      if (activeUserIndex > -1) {
+        activeUsers.value.splice(activeUserIndex, 1)
+      }
+    })
+    
+    console.log(`✅ تم تعليق ${selectedAllUsers.value.length} مستخدم`)
+    selectedAllUsers.value = []
+    
+  } catch (error: any) {
+    console.error('❌ خطأ في التعليق الجماعي:', error)
+    alert(`خطأ في التعليق الجماعي: ${error?.message || 'خطأ غير معروف'}`)
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// إجراءات جماعية - تفعيل المحدد
+const bulkActivateUsers = async () => {
+  if (selectedAllUsers.value.length === 0) return
+  
+  if (!confirm(`هل أنت متأكد من تفعيل ${selectedAllUsers.value.length} مستخدم؟`)) {
+    return
+  }
+  
+  try {
+    isProcessing.value = true
+    console.log(`✅ بدء تفعيل ${selectedAllUsers.value.length} مستخدم...`)
+    
+    const batch = writeBatch(db)
+    
+    selectedAllUsers.value.forEach(userId => {
+      const userRef = doc(db, 'users', userId)
+      batch.update(userRef, {
+        status: 'active',
+        reactivated_at: new Date(),
+        reactivated_by: 'current_admin_uid',
+        updated_at: new Date()
+      })
+    })
+    
+    await batch.commit()
+    
+    // تحديث القوائم المحلية
+    selectedAllUsers.value.forEach(userId => {
+      const allUserIndex = allUsers.value.findIndex(u => u.id === userId)
+      if (allUserIndex > -1) {
+        allUsers.value[allUserIndex].status = 'active'
+        
+        // إضافة للمستخدمين النشطين إذا لم يكن موجوداً
+        const activeUserIndex = activeUsers.value.findIndex(u => u.id === userId)
+        if (activeUserIndex === -1) {
+          activeUsers.value.push(allUsers.value[allUserIndex])
+        }
+      }
+    })
+    
+    console.log(`✅ تم تفعيل ${selectedAllUsers.value.length} مستخدم`)
+    selectedAllUsers.value = []
+    
+  } catch (error: any) {
+    console.error('❌ خطأ في التفعيل الجماعي:', error)
+    alert(`خطأ في التفعيل الجماعي: ${error?.message || 'خطأ غير معروف'}`)
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+// === Lifecycle ===
+onMounted(async () => {
+  // التحقق من الـ tab المطلوب من الـ URL
+  if (route.query.tab) {
+    currentTab.value = route.query.tab as string
+  }
+  
+  await loadAllUsers()
+})
+</script>
+
+<style scoped>
+.user-management-container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.pending-user-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pending-user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.pending-user-card.selected {
+  border: 2px solid rgb(var(--v-theme-primary));
+  background: rgba(var(--v-theme-primary), 0.05);
+}
+
+.bulk-action-bar {
+  background: rgba(var(--v-theme-primary), 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.role-chip {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+.user-avatar {
+  border: 2px solid rgba(var(--v-theme-surface), 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.details-section {
+  margin-bottom: 24px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: rgba(var(--v-theme-on-surface), 0.8);
+  margin-bottom: 4px;
+}
+
+.detail-value {
+  color: rgba(var(--v-theme-on-surface), 1);
+}
+
+/* === جديد: أنماط الجداول الجديدة === */
+
+.users-table-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.users-table-card .v-data-table {
+  background: transparent;
+}
+
+.users-table-card .v-toolbar {
+  background: rgba(var(--v-theme-surface), 1) !important;
+  border-bottom: 1px solid rgba(var(--v-theme-outline), 0.12);
+}
+
+.users-table-card .v-data-table__wrapper {
+  border-radius: 0;
+}
+
+/* تحسين عرض صفوف الجدول */
+.users-table-card :deep(.v-data-table__tr) {
+  transition: background-color 0.2s ease;
+}
+
+.users-table-card :deep(.v-data-table__tr:hover) {
+  background: rgba(var(--v-theme-primary), 0.04) !important;
+}
+
+/* تحسين عرض خانات الاختيار */
+.users-table-card :deep(.v-selection-control) {
+  justify-content: center;
+}
+
+/* تحسين الأزرار في الجداول */
+.users-table-card .v-btn--icon {
+  transition: all 0.2s ease;
+}
+
+.users-table-card .v-btn--icon:hover {
+  transform: scale(1.1);
+}
+
+/* تحسين عرض الـ chips */
+.users-table-card .v-chip {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+/* تحسين Pagination */
+.users-table-card :deep(.v-data-table-footer) {
+  border-top: 1px solid rgba(var(--v-theme-outline), 0.12);
+  background: rgba(var(--v-theme-surface-variant), 0.3);
+}
+
+/* تحسين محاذاة العناصر */
+.users-table-card :deep(.v-data-table__td) {
+  vertical-align: middle;
+}
+
+/* تحسين عرض رسائل عدم وجود بيانات */
+.users-table-card :deep(.v-data-table__empty-wrapper) {
+  padding: 40px 20px;
+}
+
+/* تحسين responsive design */
+@media (max-width: 768px) {
+  .users-table-card :deep(.v-data-table__wrapper) {
+    overflow-x: auto;
+  }
+  
+  .users-table-card :deep(.v-data-table__table) {
+    min-width: 800px;
+  }
+}
+
+/* تحسين التبديل بين التبويبات */
+.v-tabs-window-item {
+  padding-top: 0;
+}
+
+/* تحسين أدوات التحكم العلوية */
+.d-flex.ga-2 {
+  gap: 8px;
+}
+
+.d-flex.ga-2.flex-wrap {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* تحسين كروت الإحصائيات */
+.v-card.pa-3.text-center {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.v-card.pa-3.text-center:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+</style> 

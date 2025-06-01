@@ -1,0 +1,30 @@
+{
+  "name": "depth-studio-seeder",
+  "version": "1.0.0",
+  "description": "زراعة البيانات الأولية لمشروع Depth Studio",
+  "main": "seed-database.js",
+  "scripts": {
+    "seed": "node seed-database.js",
+    "seed-with-key": "node seed-with-service-account.js",
+    "upload": "node upload-data.js",
+    "start": "node seed-database.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "depth-studio",
+    "firebase",
+    "firestore",
+    "seeding",
+    "database"
+  ],
+  "author": "علي جودت <alijawdat4@gmail.com>",
+  "license": "Private",
+  "dependencies": {
+    "firebase": "^10.14.1",
+    "firebase-admin": "^12.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true
+}

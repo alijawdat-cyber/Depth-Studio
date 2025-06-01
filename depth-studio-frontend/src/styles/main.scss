@@ -1,0 +1,194 @@
+/**
+ * ====================================
+ * DEPTH STUDIO - MAIN STYLES ENTRY POINT
+ * ====================================
+ * 
+ * نقطة الدخول المركزية لجميع أنماط نظام التصميم الموحد
+ * يتم استيراد هذا الملف في main.ts لتفعيل النظام بالكامل
+ * 
+ * الترتيب مهم جداً - لا تغير ترتيب الاستيرادات
+ */
+
+/* ===== CORE SYSTEM VARIABLES ===== */
+/* يجب أن تكون المتغيرات أولاً قبل أي شيء آخر */
+
+@import './design-system/variables';
+@import './design-system/colors';
+@import './design-system/typography';
+@import './design-system/breakpoints';
+
+/* ===== FOUNDATION SYSTEMS ===== */
+/* الأنظمة الأساسية للتصميم */
+
+@import './design-system/elevation';
+
+/* ===== LAYOUT & BEHAVIOR SYSTEMS ===== */
+/* أنظمة التخطيط والسلوك */
+
+@import './design-system/rtl';
+@import './design-system/animations';
+
+/* ===== UTILITY SYSTEMS ===== */
+/* الأدوات المساعدة - يجب أن تكون بعد الأنظمة الأساسية */
+
+@import './design-system/utilities/mixins';
+@import './design-system/utilities/helpers';
+@import './design-system/utilities/print';
+
+/* ===== COMPONENT STYLES ===== */
+/* أنماط المكونات الموجودة */
+
+@import './components/userManagement.styles';
+
+/* ===== CUSTOM OVERRIDES ===== */
+/* تعديلات مخصصة لـ Vuetify إذا لزم الأمر */
+
+// === VUETIFY COLOR SYSTEM OVERRIDES ===
+// إصلاح شامل لضمان استخدام نظام الألوان المحسن في جميع المكونات
+
+.v-application {
+  // إصلاح ألوان النصوص العامة
+  color: var(--color-text-primary) !important;
+  font-family: var(--font-family-primary) !important;
+  
+  // إصلاح البطاقات
+  .v-card {
+    background-color: var(--color-surface-card) !important;
+    color: var(--color-text-primary) !important;
+    
+    .v-card-title {
+      color: var(--color-text-primary) !important;
+      font-weight: var(--font-weight-semibold) !important;
+    }
+    
+    .v-card-subtitle {
+      color: var(--color-text-secondary) !important;
+    }
+    
+    .v-card-text {
+      color: var(--color-text-primary) !important;
+      
+      // إصلاح النصوص الفرعية
+      .text-muted {
+        color: var(--color-text-secondary) !important;
+      }
+      
+      .text-caption {
+        color: var(--color-text-tertiary) !important;
+      }
+    }
+  }
+  
+  // إصلاح الأزرار
+  .v-btn {
+    font-family: var(--font-family-primary) !important;
+    
+    &:not(.v-btn--icon) {
+      text-transform: none !important;
+    }
+  }
+  
+  // إصلاح الحقول
+  .v-field {
+    color: var(--color-text-primary) !important;
+    
+    .v-field__input {
+      color: var(--color-text-primary) !important;
+    }
+    
+    .v-label {
+      color: var(--color-text-secondary) !important;
+    }
+  }
+  
+  // إصلاح القوائم
+  .v-list {
+    background-color: var(--color-surface-primary) !important;
+    
+    .v-list-item {
+      color: var(--color-text-primary) !important;
+      
+      .v-list-item-title {
+        color: var(--color-text-primary) !important;
+      }
+      
+      .v-list-item-subtitle {
+        color: var(--color-text-secondary) !important;
+      }
+    }
+  }
+  
+  // إصلاح شريط التطبيق
+  .v-app-bar {
+    background-color: var(--color-surface-elevated) !important;
+    color: var(--color-text-primary) !important;
+    
+    .v-toolbar-title {
+      color: var(--color-text-primary) !important;
+    }
+  }
+  
+  // إصلاح الدرج الجانبي
+  .v-navigation-drawer {
+    background-color: var(--color-surface-secondary) !important;
+    
+    .v-list {
+      background-color: transparent !important;
+    }
+  }
+  
+  // إصلاح الرقائق
+  .v-chip {
+    font-family: var(--font-family-primary) !important;
+  }
+  
+  // إصلاح الرموز
+  .v-icon {
+    opacity: 1 !important;
+  }
+}
+
+// Vuetify RTL enhancements
+.v-application {
+  &[dir="rtl"] {
+    // تحسينات إضافية للـ RTL
+    .v-navigation-drawer {
+      border-radius: 0 16px 16px 0 !important;
+    }
+    
+    .v-app-bar {
+      .v-toolbar__content {
+        flex-direction: row-reverse;
+      }
+    }
+  }
+}
+
+// Performance optimizations
+.v-application {
+  // تحسين الأداء للحركات
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 0.15s ease-in-out;
+  }
+  
+  .fade-enter-from, .fade-leave-to {
+    opacity: 0;
+  }
+}
+
+/* ===== SUCCESS MESSAGE ===== */
+/* رسالة تأكيد أن النظام تم تحميله بنجاح */
+
+html {
+  // إضافة خاصية مخصصة للتأكد من تحميل النظام
+  --depth-studio-system: 'loaded';
+}
+
+// إخفاء رسالة التحميل عند جاهزية النظام
+body.depth-studio-ready {
+  .loading-splash {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-out;
+  }
+} 

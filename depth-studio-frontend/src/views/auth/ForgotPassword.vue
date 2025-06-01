@@ -1,0 +1,19 @@
+<template>
+  <div>
+    <v-card class="ma-4">
+      <v-card-title>
+        <h1>نسيت كلمة المرور</h1>
+      </v-card-title>
+      <v-card-text>
+        <p>هذه الصفحة قيد التطوير حالياً - استعادة كلمة المرور</p>
+        <v-alert type="info" class="mt-4">
+          سيتم تفعيل هذه الميزة لاحقاً
+        </v-alert>
+      </v-card-text>
+    </v-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+// صفحة نسيت كلمة المرور
+</script> 

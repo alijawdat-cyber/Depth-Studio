@@ -1,0 +1,33 @@
+/* ==============================================
+ * Vuetify-specific overrides only
+ * جميع الخطوط والأنماط الأساسية موجودة في design-system
+ * ============================================== */
+
+/* الستايلات الأساسية للروابط - Vuetify override */
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+/* Vuetify-specific RTL adjustments (متخصص - لا يوجد في design system) */
+[dir="rtl"] .v-icon.v-icon--start {
+  margin-inline-start: 8px;
+  margin-inline-end: 0;
+}
+
+[dir="rtl"] .v-icon.v-icon--end {
+  margin-inline-start: 0;
+  margin-inline-end: 8px;
+}
+
+/* تم إزالة جميع تعريفات الخطوط - موجودة في design-system/_typography.scss */
+/* تم إزالة جميع القيود على #app - Vuetify يدير التخطيط بنفسه */

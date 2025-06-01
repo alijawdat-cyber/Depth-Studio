@@ -1,0 +1,836 @@
+{
+  "users": {
+    "temp-admin-001": {
+      "email": "alijawdat4@gmail.com",
+      "display_name": "علي جودت",
+      "first_name": "علي",
+      "last_name": "جودت",
+      "primary_role": "super_admin",
+      "is_active": true,
+      "is_verified": true,
+      "bio": "مؤسس ومالك Depth Studio - خبير في إدارة المحتوى الرقمي",
+      "location": "بغداد، العراق",
+      "timezone": "Asia/Baghdad",
+      "language": "ar",
+      "firebase_uid": "temp-admin-001",
+      "auth_providers": [
+        "email"
+      ],
+      "total_login_count": 0,
+      "is_online": false,
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "updated_by": "temp-admin-001"
+    },
+    "temp-marketing-001": {
+      "email": "hassan.hashim@depthstudio.iq",
+      "display_name": "حسن هاشم",
+      "first_name": "حسن",
+      "last_name": "هاشم",
+      "primary_role": "marketing_coordinator",
+      "is_active": true,
+      "is_verified": true,
+      "bio": "منسق التسويق - خبير في الحملات الرقمية والتواصل",
+      "location": "بغداد، العراق",
+      "timezone": "Asia/Baghdad",
+      "language": "ar",
+      "firebase_uid": "temp-marketing-001",
+      "auth_providers": [
+        "email"
+      ],
+      "total_login_count": 0,
+      "is_online": false,
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "updated_by": "temp-admin-001"
+    },
+    "temp-coordinator-001": {
+      "email": "ali.hazim@depthstudio.iq",
+      "display_name": "علي حازم",
+      "first_name": "علي",
+      "last_name": "حازم",
+      "primary_role": "brand_coordinator",
+      "is_active": true,
+      "is_verified": true,
+      "bio": "منسق براند NAVA - خبير في إدارة الهوية البصرية",
+      "location": "بغداد، العراق",
+      "timezone": "Asia/Baghdad",
+      "language": "ar",
+      "firebase_uid": "temp-coordinator-001",
+      "auth_providers": [
+        "email"
+      ],
+      "total_login_count": 0,
+      "is_online": false,
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "updated_by": "temp-admin-001"
+    },
+    "temp-photographer-001": {
+      "email": "hiba.mohamed@depthstudio.iq",
+      "display_name": "هبة محمد",
+      "first_name": "هبة",
+      "last_name": "محمد",
+      "primary_role": "photographer",
+      "is_active": true,
+      "is_verified": true,
+      "bio": "مصورة محترفة - راتب ثابت - تخصص التصوير والمراجعة والتصميم",
+      "location": "بغداد، العراق",
+      "timezone": "Asia/Baghdad",
+      "language": "ar",
+      "firebase_uid": "temp-photographer-001",
+      "auth_providers": [
+        "email"
+      ],
+      "total_login_count": 0,
+      "is_online": false,
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "updated_by": "temp-admin-001"
+    },
+    "temp-photographer-002": {
+      "email": "mohammed.qasim@depthstudio.iq",
+      "display_name": "محمد قاسم",
+      "first_name": "محمد",
+      "last_name": "قاسم",
+      "primary_role": "photographer",
+      "is_active": true,
+      "is_verified": true,
+      "bio": "مصور فريلانسر محترف - تخصص التصوير الفوتوغرافي",
+      "location": "بغداد، العراق",
+      "timezone": "Asia/Baghdad",
+      "language": "ar",
+      "firebase_uid": "temp-photographer-002",
+      "auth_providers": [
+        "email"
+      ],
+      "total_login_count": 0,
+      "is_online": false,
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "updated_by": "temp-admin-001"
+    }
+  },
+  "brands": {
+    "brand-nava-001": {
+      "name_ar": "نافا",
+      "name_en": "NAVA",
+      "company_name": "شركة نافا للذهب والمجوهرات",
+      "display_name": "نافا",
+      "description": "براند فاخر متخصص في الذهب والمجوهرات عالية الجودة",
+      "business_type": {
+        "category": "clothing_fashion",
+        "subcategory": "jewelry",
+        "custom_description": "ذهب ومجوهرات فاخرة"
+      },
+      "visual_identity": {
+        "primary_colors": [
+          {
+            "color_name": "ذهبي فاخر",
+            "hex_code": "#D4AF37",
+            "usage": "اللون الرئيسي للبراند",
+            "is_main": true
+          },
+          {
+            "color_name": "أسود أنيق",
+            "hex_code": "#1C1C1C",
+            "usage": "للنصوص والخلفيات الأنيقة",
+            "is_main": false
+          }
+        ],
+        "photography_style": "luxury",
+        "brand_personality": [
+          "elegant",
+          "professional",
+          "trustworthy"
+        ]
+      },
+      "contact_info": {
+        "country": "Iraq",
+        "city": "بغداد"
+      },
+      "status": "active",
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    },
+    "brand-sport-001": {
+      "name_ar": "رياضة وأكثر",
+      "name_en": "Sport&More",
+      "company_name": "شركة الرياضة والصحة",
+      "display_name": "Sport&More",
+      "description": "براند رياضي متخصص في المعدات والملابس الرياضية",
+      "business_type": {
+        "category": "sports_fitness",
+        "subcategory": "equipment",
+        "custom_description": "معدات وملابس رياضية"
+      },
+      "visual_identity": {
+        "primary_colors": [
+          {
+            "color_name": "أزرق رياضي",
+            "hex_code": "#0066CC",
+            "usage": "اللون الرئيسي النشط",
+            "is_main": true
+          },
+          {
+            "color_name": "أبيض نظيف",
+            "hex_code": "#FFFFFF",
+            "usage": "للنظافة والوضوح",
+            "is_main": false
+          }
+        ],
+        "photography_style": "sporty",
+        "brand_personality": [
+          "friendly",
+          "bold",
+          "innovative"
+        ]
+      },
+      "contact_info": {
+        "country": "Iraq",
+        "city": "بغداد"
+      },
+      "status": "active",
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    }
+  },
+  "content_categories": {
+    "category-photo-001": {
+      "name_ar": "التصوير الفوتوغرافي",
+      "name_en": "Photography",
+      "category_type": "main",
+      "parent_category_id": null,
+      "sort_order": 1,
+      "pricing": {
+        "base_price": 50000,
+        "currency": "IQD",
+        "pricing_type": "per_piece"
+      },
+      "time_settings": {
+        "execution_time_raw": 1,
+        "execution_time_processed": 2
+      },
+      "status": "active",
+      "tags": [
+        "تصوير",
+        "فوتوغرافي",
+        "صور"
+      ],
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    },
+    "category-video-001": {
+      "name_ar": "إنتاج الفيديو",
+      "name_en": "Video Production",
+      "category_type": "main",
+      "parent_category_id": null,
+      "sort_order": 2,
+      "pricing": {
+        "base_price": 150000,
+        "currency": "IQD",
+        "pricing_type": "per_piece"
+      },
+      "time_settings": {
+        "execution_time_raw": 3,
+        "execution_time_processed": 6
+      },
+      "status": "active",
+      "tags": [
+        "فيديو",
+        "إنتاج",
+        "تصوير فيديو"
+      ],
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    },
+    "category-design-001": {
+      "name_ar": "التصميم الجرافيكي",
+      "name_en": "Graphic Design",
+      "category_type": "main",
+      "parent_category_id": null,
+      "sort_order": 3,
+      "pricing": {
+        "base_price": 75000,
+        "currency": "IQD",
+        "pricing_type": "per_piece"
+      },
+      "time_settings": {
+        "execution_time_raw": 2,
+        "execution_time_processed": 3
+      },
+      "status": "active",
+      "tags": [
+        "تصميم",
+        "جرافيك",
+        "إبداع"
+      ],
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    }
+  },
+  "equipment": {
+    "equip-camera-001": {
+      "name_ar": "كاميرا DSLR أساسية",
+      "name_en": "Basic DSLR Camera",
+      "display_name": "كاميرا DSLR أساسية",
+      "description": "كاميرا رقمية أساسية مناسبة للتصوير العادي",
+      "equipment_category": "camera_dslr",
+      "subcategory": "basic",
+      "availability": {
+        "total_quantity": 3,
+        "available_quantity": 3,
+        "reserved_quantity": 0,
+        "maintenance_quantity": 0
+      },
+      "specifications": {
+        "brand": "Canon",
+        "model": "EOS 2000D",
+        "technical_specs": {
+          "resolution": "24MP",
+          "sensor_size": "APS-C",
+          "iso_range": "100-6400"
+        }
+      },
+      "status": "active",
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    },
+    "equip-lighting-001": {
+      "name_ar": "إضاءة استوديو أساسية",
+      "name_en": "Basic Studio Lighting",
+      "display_name": "إضاءة استوديو أساسية",
+      "description": "طقم إضاءة استوديو أساسي للتصوير الداخلي",
+      "equipment_category": "lighting_studio",
+      "subcategory": "basic",
+      "availability": {
+        "total_quantity": 2,
+        "available_quantity": 2,
+        "reserved_quantity": 0,
+        "maintenance_quantity": 0
+      },
+      "specifications": {
+        "brand": "Godox",
+        "model": "SK400II",
+        "technical_specs": {
+          "power": "400W",
+          "color_temperature": "5600K"
+        }
+      },
+      "status": "active",
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_updated_by": "temp-admin-001"
+    }
+  },
+  "user_permissions": {
+    "temp-admin-001": {
+      "user_id": "temp-admin-001",
+      "roles": [
+        {
+          "role_type": "super_admin",
+          "is_primary": true,
+          "granted_at": {
+            "_seconds": 1717128000,
+            "_nanoseconds": 0
+          },
+          "granted_by": "temp-admin-001",
+          "expires_at": null
+        }
+      ],
+      "screen_permissions": {
+        "dashboard": true,
+        "users_management": true,
+        "brands_management": true,
+        "campaigns_management": true,
+        "content_review": true,
+        "financial_reports": true,
+        "analytics": true,
+        "settings": true
+      },
+      "crud_permissions": {
+        "users": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        },
+        "brands": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        },
+        "campaigns": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        },
+        "tasks": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        },
+        "content": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        },
+        "payments": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        },
+        "reports": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true
+        }
+      },
+      "brand_permissions": [],
+      "custom_permissions": {},
+      "is_active": true,
+      "last_updated_by": "temp-admin-001",
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "changelog": []
+    },
+    "temp-marketing-001": {
+      "user_id": "temp-marketing-001",
+      "roles": [
+        {
+          "role_type": "marketing_coordinator",
+          "is_primary": true,
+          "granted_at": {
+            "_seconds": 1717128000,
+            "_nanoseconds": 0
+          },
+          "granted_by": "temp-admin-001",
+          "expires_at": null
+        }
+      ],
+      "screen_permissions": {
+        "dashboard": true,
+        "users_management": false,
+        "brands_management": true,
+        "campaigns_management": true,
+        "content_review": true,
+        "financial_reports": true,
+        "analytics": true,
+        "settings": false
+      },
+      "crud_permissions": {
+        "users": {
+          "create": false,
+          "read": true,
+          "update": false,
+          "delete": false
+        },
+        "brands": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": false
+        },
+        "campaigns": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": false
+        },
+        "tasks": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": false
+        },
+        "content": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": false
+        },
+        "payments": {
+          "create": false,
+          "read": true,
+          "update": false,
+          "delete": false
+        },
+        "reports": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false
+        }
+      },
+      "brand_permissions": [],
+      "custom_permissions": {},
+      "is_active": true,
+      "last_updated_by": "temp-admin-001",
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "changelog": []
+    }
+  },
+  "photographer_profiles": {
+    "profile-hiba-001": {
+      "user_id": "temp-photographer-001",
+      "contract_type": "salary",
+      "salary_info": {
+        "monthly_salary": 800000,
+        "monthly_target_tasks": 20,
+        "bonus_per_extra_task": 15000,
+        "performance_bonus_rate": 0.1,
+        "current_month_completed": 0,
+        "current_month_target": 20,
+        "total_bonus_earned": 0,
+        "performance_rating": 3
+      },
+      "specializations": [],
+      "work_preferences": {
+        "preferred_brands": [],
+        "max_concurrent_tasks": 5,
+        "preferred_work_hours": {
+          "start_time": "09:00",
+          "end_time": "18:00",
+          "timezone": "Asia/Baghdad"
+        },
+        "available_days": [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ],
+        "preferred_locations": [
+          "studio",
+          "client_location"
+        ],
+        "max_travel_distance": 50
+      },
+      "owned_equipment": [],
+      "performance_stats": {
+        "total_tasks_completed": 0,
+        "average_rating": 0,
+        "on_time_completion_rate": 0,
+        "client_satisfaction_score": 0,
+        "quality_score_average": 0,
+        "brand_performance": {},
+        "category_performance": {}
+      },
+      "availability": {
+        "is_currently_available": true,
+        "unavailable_periods": [],
+        "max_daily_hours": 8,
+        "preferred_break_duration": 60
+      },
+      "financial_info": {
+        "currency": "IQD"
+      },
+      "contact_preferences": {
+        "preferred_contact_method": "email"
+      },
+      "is_active": true,
+      "verification_status": "verified",
+      "verification_date": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "verified_by": "temp-admin-001",
+      "hire_date": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "last_activity": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      }
+    },
+    "profile-mohammed-001": {
+      "user_id": "temp-photographer-002",
+      "contract_type": "freelancer",
+      "freelancer_info": {
+        "base_rate_percentage": 0.7,
+        "preferred_payment_method": "bank_transfer",
+        "payment_schedule": "per_task",
+        "total_earnings_ytd": 0,
+        "pending_payments": 0
+      },
+      "specializations": [],
+      "work_preferences": {
+        "preferred_brands": [],
+        "max_concurrent_tasks": 5,
+        "preferred_work_hours": {
+          "start_time": "09:00",
+          "end_time": "18:00",
+          "timezone": "Asia/Baghdad"
+        },
+        "available_days": [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ],
+        "preferred_locations": [
+          "studio",
+          "client_location"
+        ],
+        "max_travel_distance": 50
+      },
+      "owned_equipment": [],
+      "performance_stats": {
+        "total_tasks_completed": 0,
+        "average_rating": 0,
+        "on_time_completion_rate": 0,
+        "client_satisfaction_score": 0,
+        "quality_score_average": 0,
+        "brand_performance": {},
+        "category_performance": {}
+      },
+      "availability": {
+        "is_currently_available": true,
+        "unavailable_periods": [],
+        "max_daily_hours": 8,
+        "preferred_break_duration": 60
+      },
+      "financial_info": {
+        "currency": "IQD"
+      },
+      "contact_preferences": {
+        "preferred_contact_method": "email"
+      },
+      "is_active": true,
+      "verification_status": "verified",
+      "verification_date": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "verified_by": "temp-admin-001",
+      "hire_date": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "last_activity": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      }
+    }
+  },
+  "brand_coordinators": {
+    "coordinator-nava-001": {
+      "user_id": "temp-coordinator-001",
+      "brand_id": "brand-nava-001",
+      "coordinator_title": "منسق براند رئيسي",
+      "job_description": "مسؤول عن إدارة وتنسيق جميع أنشطة براند NAVA وضمان جودة المحتوى",
+      "responsibilities": [
+        "content_approval",
+        "task_coordination",
+        "client_communication",
+        "quality_control",
+        "brand_compliance"
+      ],
+      "brand_permissions": {
+        "can_approve_content": true,
+        "can_reject_content": true,
+        "can_assign_tasks": true,
+        "can_modify_deadlines": false,
+        "can_view_financials": false,
+        "can_communicate_with_client": true,
+        "max_budget_authority": 500000
+      },
+      "client_contact_info": {
+        "client_primary_contact": "مدير التسويق - NAVA",
+        "preferred_communication_hours": {
+          "start_time": "09:00",
+          "end_time": "17:00",
+          "timezone": "Asia/Baghdad"
+        },
+        "communication_language": "arabic"
+      },
+      "performance_metrics": {
+        "total_projects_managed": 0,
+        "client_satisfaction_rating": 0,
+        "average_response_time": 0,
+        "content_approval_rate": 0,
+        "on_time_delivery_rate": 0,
+        "monthly_stats": {}
+      },
+      "work_schedule": {
+        "working_days": [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday"
+        ],
+        "working_hours": {
+          "start_time": "09:00",
+          "end_time": "17:00"
+        },
+        "timezone": "Asia/Baghdad",
+        "is_available": true,
+        "unavailable_periods": []
+      },
+      "employment_info": {
+        "start_date": {
+          "_seconds": 1717128000,
+          "_nanoseconds": 0
+        },
+        "contract_type": "full_time",
+        "compensation_type": "salary",
+        "is_exclusive": true
+      },
+      "notes": {
+        "management_notes": "منسق ممتاز مع خبرة واسعة في إدارة البراندات الفاخرة",
+        "areas_for_improvement": [],
+        "strengths": [
+          "تواصل ممتاز",
+          "إدارة وقت فعالة",
+          "فهم عميق للهوية البصرية"
+        ]
+      },
+      "status": "active",
+      "is_primary_coordinator": true,
+      "created_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "updated_at": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      },
+      "created_by": "temp-admin-001",
+      "last_activity": {
+        "_seconds": 1717128000,
+        "_nanoseconds": 0
+      }
+    }
+  }
+}

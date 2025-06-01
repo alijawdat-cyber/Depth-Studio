@@ -1,0 +1,34 @@
+/* إزالة جميع القيود التي تؤثر على نظام Vuetify */
+
+/* الستايلات الأساسية للروابط - Vuetify override */
+a,
+.green {
+  text-decoration: none;
+  color: hsla(160, 100%, 37%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+/* تحسين الخطوط العربية - معظم RTL support موجود في design-system */
+html[dir="rtl"] {
+  font-family: 'Cairo', 'Tajawal', 'Noto Sans Arabic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Vuetify-specific RTL adjustments (لا توجد في design system) */
+[dir="rtl"] .v-icon.v-icon--start {
+  margin-inline-start: 8px;
+  margin-inline-end: 0;
+}
+
+[dir="rtl"] .v-icon.v-icon--end {
+  margin-inline-start: 0;
+  margin-inline-end: 8px;
+}
+
+/* تم إزالة جميع القيود على #app لأن Vuetify يدير التخطيط بنفسه */
