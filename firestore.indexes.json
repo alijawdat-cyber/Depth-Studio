@@ -1,4 +1,106 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "is_active", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "primary_role", "order": "ASCENDING" },
+        { "fieldPath": "last_login", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "user_permissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "updated_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "brands",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "brands",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "industry", "order": "ASCENDING" },
+        { "fieldPath": "brand_type", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "smart_campaigns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "campaign_info.brand_id", "order": "ASCENDING" },
+        { "fieldPath": "campaign_status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "smart_campaigns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "campaign_status", "order": "ASCENDING" },
+        { "fieldPath": "timeline.campaign_end_date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "campaign_notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipient_info.recipient_id", "order": "ASCENDING" },
+        { "fieldPath": "notification_status.is_read", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "content_library",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "content_info.brand_id", "order": "ASCENDING" },
+        { "fieldPath": "approval_info.approval_status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "photographer_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "contract_type", "order": "ASCENDING" },
+        { "fieldPath": "verification_status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "campaign_tasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "campaign_id", "order": "ASCENDING" },
+        { "fieldPath": "status_tracking.current_status", "order": "ASCENDING" },
+        { "fieldPath": "timeline.due_date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipient_info.recipient_id", "order": "ASCENDING" },
+        { "fieldPath": "status_tracking.current_status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
-}
+} 

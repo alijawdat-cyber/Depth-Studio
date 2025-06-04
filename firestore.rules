@@ -9,6 +9,50 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ==========================================
+    // 🌱 TEMPORARY SEEDING RULES (قواعد الزراعة المؤقتة)
+    // ==========================================
+    // السماح بالكتابة للمجموعات الأساسية بدون مصادقة للزراعة الأولية فقط
+    match /roles/{document} {
+      allow read, write: if true;
+    }
+    match /templates/{document} {
+      allow read, write: if true;
+    }
+    match /content/{document} {
+      allow read, write: if true;
+    }
+    match /campaigns/{document} {
+      allow read, write: if true;
+    }
+    match /settings/{document} {
+      allow read, write: if true;
+    }
+    match /notifications/{document} {
+      allow read, write: if true;
+    }
+    match /users/{document} {
+      allow read, write: if true;
+    }
+    match /user_permissions/{document} {
+      allow read, write: if true;
+    }
+    match /brands/{document} {
+      allow read, write: if true;
+    }
+    match /brand_coordinators/{document} {
+      allow read, write: if true;
+    }
+    match /photographer_profiles/{document} {
+      allow read, write: if true;
+    }
+    match /content_categories/{document} {
+      allow read, write: if true;
+    }
+    match /equipment/{document} {
+      allow read, write: if true;
+    }
+    
+    // ==========================================
     // 🛠️ HELPER FUNCTIONS (دوال مساعدة)
     // ==========================================
     
@@ -85,8 +129,8 @@ service cloud.firestore {
                        // شرط خاص للمستخدمين الجدد أثناء التسجيل
                        (request.auth != null && 
                         request.auth.uid == userId &&
-                        request.resource.data.primary_role == 'new_user' &&
-                        request.resource.data.status == 'pending_role_setup' &&
+                        (request.resource.data.primary_role == 'new_user' || 
+                         request.resource.data.primary_role == 'photographer') && // مؤقت للتوافق
                         request.resource.data.firebase_uid == request.auth.uid);
       
       // التحديث: المستخدم نفسه لبياناته الأساسية، أو Super Admin للكل
@@ -99,7 +143,7 @@ service cloud.firestore {
                         (resource.data.primary_role == 'new_user' && 
                          resource.data.status == 'pending_role_setup' &&
                          request.resource.data.primary_role in ['photographer', 'brand_coordinator', 'marketing_coordinator'] &&
-                         request.resource.data.status in ['active', 'pending_approval'])
+                         request.resource.data.status in ['pending_approval'])
                       )) ||
                        isSuperAdmin() ||
                        hasPermission('users', 'update');

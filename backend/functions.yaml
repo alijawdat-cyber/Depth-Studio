@@ -1,0 +1,16 @@
+specVersion: v1alpha1
+requiredAPIs: []
+endpoints:
+  health:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 256
+    timeoutSeconds: 30
+    httpsTrigger: {}
+    entryPoint: health
+  test:
+    platform: gcfv2  
+    region: [us-central1]
+    availableMemoryMb: 256
+    httpsTrigger: {}
+    entryPoint: test 
