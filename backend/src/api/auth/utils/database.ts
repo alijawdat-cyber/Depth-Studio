@@ -1,11 +1,15 @@
-import { db } from '../../config/firebase'
+/**
+ * Auth Database Operations - Depth Studio Backend
+ * Handles database operations for authentication
+ */
+
+import { db } from '../../../config/firebase'
 import { FieldValue } from 'firebase-admin/firestore'
 
 // ======================================
-// Auth Utilities
+// Type Definitions
 // ======================================
 
-// Type definitions
 interface UserData {
   uid: string
   display_name?: string
@@ -32,7 +36,7 @@ interface UserPermissions {
 }
 
 // ======================================
-// Login/Logout Functions
+// User Data Operations
 // ======================================
 
 /**
@@ -148,55 +152,36 @@ export const verifyUserStatus = async (uid: string) => {
 }
 
 // ======================================
-// Permission Functions
+// User Permissions Database Operations
 // ======================================
 
 /**
- * Get user permissions
+ * Get user permissions from database
  */
-export const getUserPermissions = async (uid: string) => {
+export const fetchUserPermissions = async (uid: string) => {
   try {
     if (!uid) {
       throw new Error('معرف المستخدم مطلوب')
     }
 
-    // جلب صلاحيات المستخدم
     const permissionsDoc = await db.collection('user_permissions').doc(uid).get()
     
     if (!permissionsDoc.exists) {
-      // إنشاء صلاحيات افتراضية إذا لم تكن موجودة
-      const userDoc = await db.collection('users').doc(uid).get()
-      if (!userDoc.exists) {
-        throw new Error('المستخدم غير موجود')
-      }
-
-      const userData = userDoc.data()
-      const role = userData?.primary_role
-
-      await createDefaultPermissions(uid, role)
-      const newPermissionsDoc = await db.collection('user_permissions').doc(uid).get()
-      
-      return {
-        permissions: newPermissionsDoc.data(),
-        created: true
-      }
+      return null
     }
 
-    return {
-      permissions: permissionsDoc.data(),
-      created: false
-    }
+    return permissionsDoc.data()
 
   } catch (error) {
-    console.error('Get user permissions error:', error)
+    console.error('Fetch user permissions error:', error)
     throw error
   }
 }
 
 /**
- * Update user permissions
+ * Save user permissions to database
  */
-export const updateUserPermissions = async (uid: string, permissions: any, updatedBy: string) => {
+export const saveUserPermissions = async (uid: string, permissions: any, updatedBy: string) => {
   try {
     if (!uid || !permissions || !updatedBy) {
       throw new Error('البيانات المطلوبة مفقودة')
@@ -233,59 +218,20 @@ export const updateUserPermissions = async (uid: string, permissions: any, updat
     }
 
   } catch (error) {
-    console.error('Update user permissions error:', error)
+    console.error('Save user permissions error:', error)
     throw error
   }
 }
 
 /**
- * Check specific permission
+ * Create default permissions in database
  */
-export const checkPermission = async (uid: string, permission: string, context?: any) => {
-  try {
-    if (!uid || !permission) {
-      throw new Error('معرف المستخدم والصلاحية مطلوبان')
-    }
-
-    // جلب صلاحيات المستخدم
-    const permissionsDoc = await db.collection('user_permissions').doc(uid).get()
-    
-    if (!permissionsDoc.exists) {
-      return {
-        hasPermission: false,
-        reason: 'الصلاحيات غير موجودة'
-      }
-    }
-
-    const userPermissions = permissionsDoc.data()
-    const hasPermission = evaluatePermission(userPermissions, permission, context)
-
-    return {
-      hasPermission,
-      permission,
-      context,
-      reason: hasPermission ? 'المستخدم لديه الصلاحية' : 'المستخدم ليس لديه الصلاحية'
-    }
-
-  } catch (error) {
-    console.error('Check permission error:', error)
-    throw error
-  }
-}
-
-// ======================================
-// Helper Functions
-// ======================================
-
-/**
- * Create default permissions for user
- */
-async function createDefaultPermissions(uid: string, role: string) {
+export const createDefaultPermissions = async (uid: string, role: string, screenPermissions: any, crudPermissions: any) => {
   try {
     const defaultPermissions = {
       uid,
-      screen_permissions: getDefaultScreenPermissions(role),
-      crud_permissions: getDefaultCrudPermissions(role),
+      screen_permissions: screenPermissions,
+      crud_permissions: crudPermissions,
       brand_permissions: {},
       special_permissions: {},
       created_at: FieldValue.serverTimestamp(),
@@ -295,116 +241,10 @@ async function createDefaultPermissions(uid: string, role: string) {
     await db.collection('user_permissions').doc(uid).set(defaultPermissions)
     console.log(`Default permissions created for user: ${uid} with role: ${role}`)
 
+    return defaultPermissions
+
   } catch (error) {
     console.error('Create default permissions error:', error)
     throw error
-  }
-}
-
-/**
- * Get default screen permissions based on role
- */
-function getDefaultScreenPermissions(role: string): any {
-  const basePermissions = {
-    profile: true,
-    dashboard: true,
-    notifications: true
-  }
-
-  switch (role) {
-    case 'super_admin':
-      return {
-        ...basePermissions,
-        users: true,
-        campaigns: true,
-        tasks: true,
-        brands: true,
-        reports: true,
-        settings: true
-      }
-    case 'marketing_coordinator':
-      return {
-        ...basePermissions,
-        campaigns: true,
-        tasks: true,
-        brands: true,
-        reports: true
-      }
-    case 'brand_coordinator':
-      return {
-        ...basePermissions,
-        tasks: true,
-        campaigns: false,
-        reports: false
-      }
-    case 'photographer':
-      return {
-        ...basePermissions,
-        tasks: true,
-        uploads: true
-      }
-    default:
-      return basePermissions
-  }
-}
-
-/**
- * Get default CRUD permissions based on role
- */
-function getDefaultCrudPermissions(role: string): any {
-  switch (role) {
-    case 'super_admin':
-      return {
-        users: { create: true, read: true, update: true, delete: true },
-        campaigns: { create: true, read: true, update: true, delete: true },
-        tasks: { create: true, read: true, update: true, delete: true },
-        brands: { create: true, read: true, update: true, delete: true }
-      }
-    case 'marketing_coordinator':
-      return {
-        campaigns: { create: true, read: true, update: true, delete: false },
-        tasks: { create: true, read: true, update: true, delete: false },
-        brands: { create: false, read: true, update: false, delete: false }
-      }
-    case 'brand_coordinator':
-      return {
-        tasks: { create: true, read: true, update: true, delete: false }
-      }
-    case 'photographer':
-      return {
-        tasks: { create: false, read: true, update: true, delete: false }
-      }
-    default:
-      return {}
-  }
-}
-
-/**
- * Evaluate if user has specific permission
- */
-function evaluatePermission(userPermissions: any, permission: string, context?: any): boolean {
-  try {
-    // Split permission path (e.g., "campaigns.create", "tasks.read")
-    const permissionParts = permission.split('.')
-    
-    if (permissionParts.length === 1) {
-      // Screen permission
-      return userPermissions.screen_permissions?.[permission] === true
-    }
-    
-    if (permissionParts.length === 2) {
-      // CRUD permission
-      const [resource, action] = permissionParts
-      return userPermissions.crud_permissions?.[resource]?.[action] === true
-    }
-    
-    // Complex permission with context
-    // TODO: Implement more complex permission evaluation
-    
-    return false
-    
-  } catch (error) {
-    console.error('Evaluate permission error:', error)
-    return false
   }
 } 
