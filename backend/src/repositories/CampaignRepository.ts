@@ -1,470 +1,567 @@
 /**
- * 📱 Campaign Repository
+ * 📱 Campaign Repository - إدارة الحملات
+ * =====================================
  * 
- * تطوير علي جودت - Depth Studio
- * آخر تحديث: يونيو 2025
- * 
- * @description Repository pattern for campaign operations
- * @version 1.0.0
+ * مستودع الحملات مع CRUD كامل + استعلامات متقدمة
+ * محكم الأنواع 100% ومتوافق مع types/src/campaigns.ts
  */
 
-import { BaseRepository, QueryFilter, BaseEntity } from './BaseRepository';
-import { SmartCampaign, CampaignStatus } from '../../types/types';
-import { Timestamp } from 'firebase-admin/firestore';
+import { 
+  Query, 
+  WhereFilterOp, 
+  OrderByDirection,
+  FieldValue 
+} from 'firebase-admin/firestore';
+import { BaseRepository } from './BaseRepository';
+import { Campaign } from '../../../types/src/campaigns';
+import { CampaignStatus, CampaignType, PriorityLevel } from '../../../types/src/core/enums';
+import { ID, FirebaseTimestamp } from '../../../types/src/core/base';
+
+// ======================================
+// 🎯 أنواع خاصة بـ Repository
+// ======================================
 
 /**
- * Campaign entity interface extending BaseEntity
+ * 📋 خيارات الـ Pagination الاحترافية - استخدام OrderByDirection
+ * ================================================================
+ * 
+ * الفائدة من OrderByDirection:
+ * ✅ Type Safety: يمنع الأخطاء في كتابة direction ('asc'/'desc')  
+ * ✅ Firebase Compatibility: متوافق 100% مع Firebase types
+ * ✅ IntelliSense: autocomplete للـ directions المتاحة
+ * ✅ Future Proof: إذا أضاف Firebase directions جديدة، سنحصل عليها تلقائياً
  */
-export interface CampaignEntity extends BaseEntity {
-  campaign_info: {
-    name: string;
-    description: string;
-    brand_id: string;
-    campaign_type: string;
-    priority_level: string;
-  };
-  campaign_goals: {
-    total_content_pieces: number;
-    target_completion_date: Timestamp;
-    expected_roi: number;
-    success_metrics: string[];
-  };
-  timeline: {
-    campaign_start_date: Timestamp;
-    campaign_end_date: Timestamp;
-    key_milestones: any[];
-    buffer_days: number;
-  };
-  content_requirements: any[];
-  ai_configuration: any;
-  budget_management: {
-    total_budget: number;
-    currency: string;
-    budget_allocation: any[];
-    spending_alerts: any[];
-  };
-  quality_settings: {
-    quality_checkpoints: any[];
-    approval_requirements: any[];
-    revision_limits: number;
-  };
-  approval_workflow: {
-    workflow_steps: any[];
-    escalation_rules: any[];
-  };
-  progress_tracking: {
-    overall_progress_percentage: number;
-    tasks_completed: number;
-    tasks_in_progress: number;
-    tasks_pending: number;
-    quality_score: number;
-    timeline_adherence: number;
-    budget_utilization: number;
-  };
-  campaign_status: CampaignStatus;
+interface PaginationOptions {
+  limit?: number;
+  orderBy?: string;
+  orderDirection?: OrderByDirection;
 }
 
 /**
- * Campaign search filters interface
+ * 🎯 خيارات الترتيب المتقدم - استخدام احترافي لـ OrderByDirection
  */
-export interface CampaignSearchFilters {
-  status?: CampaignStatus;
-  brand_id?: string;
-  campaign_type?: string;
-  priority_level?: string;
-  created_by?: string;
-  created_after?: string;
-  created_before?: string;
-  start_date_after?: string;
-  start_date_before?: string;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+interface SortOption {
+  field: keyof Campaign;
+  direction: OrderByDirection;
+}
+
+/** قيم حالات الحملة للاستخدام مع Object.values */
+const CAMPAIGN_STATUS_VALUES: CampaignStatus[] = [
+  'draft', 'scheduled', 'active', 'paused', 'completed', 'cancelled'
+];
+
+/**
+ * 🔧 أنواع التحديث - حل احترافي لمشكلة FieldValue
+ * ===================================================
+ * 
+ * الفائدة: الفصل بين أنواع القراءة وأنواع الكتابة
+ * - Campaign: للقراءة (يحتوي updated_at: Timestamp)
+ * - CampaignUpdateData: للكتابة (يحتوي updated_at: FieldValue)
+ * 
+ * هذا يحل مشكلة TypeScript مع Firebase FieldValue.serverTimestamp()
+ */
+type CampaignUpdateData = Partial<Omit<Campaign, 'id' | 'created_at' | 'updated_at'>> & {
+  updated_at?: FieldValue;
+  updated_by?: ID;
+};
+
+/**
+ * 🎯 فلتر احترافي للاستعلامات - استخدام WhereFilterOp
+ * ====================================================
+ * 
+ * الفائدة من WhereFilterOp:
+ * ✅ Type Safety: يمنع الأخطاء في كتابة operators
+ * ✅ IntelliSense: autocomplete للـ operators المتاحة  
+ * ✅ Maintainability: خطأ TypeScript إذا تغيرت operators في Firebase
+ * ✅ Code Quality: أوضح من string literals
+ */
+interface CampaignFilter {
+  field: keyof Campaign;
+  operator: WhereFilterOp;
+  value: any;
 }
 
 /**
- * Campaign Repository Class
+ * استعلام متقدم مع فلاتر متعددة - استخدام احترافي لـ WhereFilterOp
  */
-export class CampaignRepository extends BaseRepository<CampaignEntity> {
+async function applyCampaignFilters(
+  baseQuery: Query, 
+  filters: CampaignFilter[]
+): Promise<Query> {
+  let query = baseQuery;
   
+  for (const filter of filters) {
+    query = query.where(filter.field as string, filter.operator, filter.value);
+  }
+  
+  return query;
+}
+
+/**
+ * مستودع الحملات - CRUD + استعلامات متقدمة
+ */
+export class CampaignRepository extends BaseRepository<Campaign> {
   constructor() {
     super('campaigns');
   }
 
-  /**
-   * Find campaigns by brand
-   */
-  async findByBrand(brandId: string): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'campaign_info.brand_id', operator: '==', value: brandId }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'desc' }]
-    });
-  }
+  // ======================================
+  // 🔍 استعلامات متقدمة للحملات
+  // ======================================
 
   /**
-   * Find campaigns by status
+   * جلب حملات حسب البراند
    */
-  async findByStatus(status: CampaignStatus): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'campaign_status', operator: '==', value: status }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'desc' }]
-    });
-  }
-
-  /**
-   * Find active campaigns
-   */
-  async findActiveCampaigns(): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'campaign_status', operator: '==', value: 'active' }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'timeline.campaign_start_date', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Find campaigns by creator
-   */
-  async findByCreator(creatorId: string): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'created_by', operator: '==', value: creatorId }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'desc' }]
-    });
-  }
-
-  /**
-   * Find campaigns by type
-   */
-  async findByType(campaignType: string): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'campaign_info.campaign_type', operator: '==', value: campaignType }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'desc' }]
-    });
-  }
-
-  /**
-   * Find campaigns by priority
-   */
-  async findByPriority(priorityLevel: string): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'campaign_info.priority_level', operator: '==', value: priorityLevel }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'timeline.campaign_start_date', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Search campaigns with filters and pagination
-   */
-  async searchCampaigns(searchFilters: CampaignSearchFilters, page: number = 1, limit: number = 20): Promise<any> {
-    const filters: QueryFilter[] = [];
-
-    // Apply filters
-    if (searchFilters.status) {
-      filters.push({ field: 'campaign_status', operator: '==', value: searchFilters.status });
-    }
-
-    if (searchFilters.brand_id) {
-      filters.push({ field: 'campaign_info.brand_id', operator: '==', value: searchFilters.brand_id });
-    }
-
-    if (searchFilters.campaign_type) {
-      filters.push({ field: 'campaign_info.campaign_type', operator: '==', value: searchFilters.campaign_type });
-    }
-
-    if (searchFilters.priority_level) {
-      filters.push({ field: 'campaign_info.priority_level', operator: '==', value: searchFilters.priority_level });
-    }
-
-    if (searchFilters.created_by) {
-      filters.push({ field: 'created_by', operator: '==', value: searchFilters.created_by });
-    }
-
-    if (searchFilters.created_after) {
-      filters.push({ field: 'created_at', operator: '>=', value: new Date(searchFilters.created_after) });
-    }
-
-    if (searchFilters.created_before) {
-      filters.push({ field: 'created_at', operator: '<=', value: new Date(searchFilters.created_before) });
-    }
-
-    if (searchFilters.start_date_after) {
-      filters.push({ field: 'timeline.campaign_start_date', operator: '>=', value: new Date(searchFilters.start_date_after) });
-    }
-
-    if (searchFilters.start_date_before) {
-      filters.push({ field: 'timeline.campaign_start_date', operator: '<=', value: new Date(searchFilters.start_date_before) });
-    }
-
-    // Apply ordering
-    const orderBy = [{
-      field: searchFilters.sort_by || 'created_at',
-      direction: (searchFilters.sort_order === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc'
-    }];
-
-    return await this.findWithPagination(page, limit, { filters, orderBy });
-  }
-
-  /**
-   * Search campaigns by text (name, description)
-   */
-  async searchByText(searchTerm: string, searchFilters?: CampaignSearchFilters): Promise<CampaignEntity[]> {
-    // للبحث النصي، نحتاج جلب جميع الحملات وفلترتهم محلياً
-    // في الإنتاج، استخدم Elasticsearch أو Algolia
-    
-    const filters: QueryFilter[] = [];
-    
-    // Apply additional filters if provided
-    if (searchFilters?.status) {
-      filters.push({ field: 'campaign_status', operator: '==', value: searchFilters.status });
-    }
-
-    if (searchFilters?.brand_id) {
-      filters.push({ field: 'campaign_info.brand_id', operator: '==', value: searchFilters.brand_id });
-    }
-
-    const allCampaigns = await this.findAll({ filters });
-    const searchTermLower = searchTerm.toLowerCase();
-
-    return allCampaigns.filter(campaign => 
-      campaign.campaign_info.name.toLowerCase().includes(searchTermLower) ||
-      campaign.campaign_info.description.toLowerCase().includes(searchTermLower)
-    );
-  }
-
-  /**
-   * Update campaign status
-   */
-  async updateStatus(campaignId: string, status: CampaignStatus, updatedBy?: string): Promise<CampaignEntity | null> {
-    return await this.update(campaignId, { 
-      campaign_status: status 
-    }, updatedBy);
-  }
-
-  /**
-   * Update campaign progress
-   */
-  async updateProgress(campaignId: string, progress: Partial<CampaignEntity['progress_tracking']>): Promise<CampaignEntity | null> {
-    const campaign = await this.findById(campaignId);
-    if (!campaign) return null;
-
-    const updatedProgress = {
-      ...campaign.progress_tracking,
-      ...progress
-    };
-
-    return await this.update(campaignId, {
-      progress_tracking: updatedProgress
-    });
-  }
-
-  /**
-   * Start campaign
-   */
-  async startCampaign(campaignId: string, updatedBy?: string): Promise<CampaignEntity | null> {
-    return await this.update(campaignId, {
-      campaign_status: 'active',
-      timeline: {
-        ...((await this.findById(campaignId))?.timeline || {}),
-        actual_start_date: Timestamp.now()
+  async findByBrand(brandId: ID, options?: PaginationOptions): Promise<Campaign[]> {
+    try {
+      let query = this.collection.where('brand_id', '==', brandId);
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
       }
-    }, updatedBy);
-  }
 
-  /**
-   * Pause campaign
-   */
-  async pauseCampaign(campaignId: string, updatedBy?: string): Promise<CampaignEntity | null> {
-    return await this.updateStatus(campaignId, 'paused', updatedBy);
-  }
-
-  /**
-   * Complete campaign
-   */
-  async completeCampaign(campaignId: string, updatedBy?: string): Promise<CampaignEntity | null> {
-    const now = Timestamp.now();
-    
-    return await this.update(campaignId, {
-      campaign_status: 'completed',
-      progress_tracking: {
-        ...((await this.findById(campaignId))?.progress_tracking || {}),
-        overall_progress_percentage: 100
-      },
-      timeline: {
-        ...((await this.findById(campaignId))?.timeline || {}),
-        actual_completion_date: now
+      if (options?.orderBy) {
+        query = query.orderBy(options.orderBy, options.orderDirection || 'desc');
+      } else {
+        query = query.orderBy('created_at', 'desc');
       }
-    }, updatedBy);
+
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    } catch (error) {
+      throw new Error(`خطأ في جلب حملات البراند: ${error}`);
+    }
   }
 
   /**
-   * Cancel campaign
+   * جلب حملات حسب الحالة
    */
-  async cancelCampaign(campaignId: string, updatedBy?: string): Promise<CampaignEntity | null> {
-    return await this.updateStatus(campaignId, 'cancelled', updatedBy);
+  async findByStatus(status: CampaignStatus, options?: PaginationOptions): Promise<Campaign[]> {
+    try {
+      let query = this.collection.where('status', '==', status);
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+
+      query = query.orderBy('created_at', 'desc');
+      
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    } catch (error) {
+      throw new Error(`خطأ في جلب الحملات حسب الحالة: ${error}`);
+    }
   }
 
   /**
-   * Increment completed tasks
+   * جلب حملات في نطاق تاريخي
    */
-  async incrementCompletedTasks(campaignId: string): Promise<CampaignEntity | null> {
-    const campaign = await this.findById(campaignId);
-    if (!campaign) return null;
+  async findByDateRange(
+    startDate: FirebaseTimestamp, 
+    endDate: FirebaseTimestamp,
+    options?: PaginationOptions
+  ): Promise<Campaign[]> {
+    try {
+      let query = this.collection
+        .where('timeline.start_date', '>=', startDate)
+        .where('timeline.start_date', '<=', endDate);
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
 
-    const newCompleted = campaign.progress_tracking.tasks_completed + 1;
-    const newInProgress = Math.max(0, campaign.progress_tracking.tasks_in_progress - 1);
-    const totalTasks = newCompleted + newInProgress + campaign.progress_tracking.tasks_pending;
-    const newPercentage = totalTasks > 0 ? Math.round((newCompleted / totalTasks) * 100) : 0;
-
-    return await this.updateProgress(campaignId, {
-      tasks_completed: newCompleted,
-      tasks_in_progress: newInProgress,
-      overall_progress_percentage: newPercentage
-    });
+      query = query.orderBy('timeline.start_date', 'asc');
+      
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    } catch (error) {
+      throw new Error(`خطأ في جلب الحملات حسب التاريخ: ${error}`);
+    }
   }
 
   /**
-   * Add task to campaign
+   * جلب حملات المصور
    */
-  async addTask(campaignId: string): Promise<CampaignEntity | null> {
-    const campaign = await this.findById(campaignId);
-    if (!campaign) return null;
+  async findByPhotographer(photographerId: ID, options?: PaginationOptions): Promise<Campaign[]> {
+    try {
+      let query = this.collection.where('assigned_photographers', 'array-contains', photographerId);
+      
+      if (options?.limit) {
+        query = query.limit(options.limit);
+      }
 
-    return await this.updateProgress(campaignId, {
-      tasks_pending: campaign.progress_tracking.tasks_pending + 1
-    });
+      query = query.orderBy('created_at', 'desc');
+      
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    } catch (error) {
+      throw new Error(`خطأ في جلب حملات المصور: ${error}`);
+    }
   }
 
   /**
-   * Start task (move from pending to in_progress)
+   * تحديث حالة الحملة
    */
-  async startTask(campaignId: string): Promise<CampaignEntity | null> {
-    const campaign = await this.findById(campaignId);
-    if (!campaign) return null;
+  async updateStatus(campaignId: ID, status: CampaignStatus, updatedBy: ID): Promise<Campaign> {
+    try {
+      const updateData: CampaignUpdateData = {
+        status,
+        updated_by: updatedBy,
+        updated_at: FieldValue.serverTimestamp()
+      };
 
-    return await this.updateProgress(campaignId, {
-      tasks_pending: Math.max(0, campaign.progress_tracking.tasks_pending - 1),
-      tasks_in_progress: campaign.progress_tracking.tasks_in_progress + 1
-    });
+      await this.update(campaignId, updateData as any);
+      
+      const updatedCampaign = await this.findById(campaignId);
+      if (!updatedCampaign) {
+        throw new Error('الحملة غير موجودة بعد التحديث');
+      }
+
+      return updatedCampaign;
+    } catch (error) {
+      throw new Error(`خطأ في تحديث حالة الحملة: ${error}`);
+    }
   }
 
   /**
-   * Update budget utilization
+   * بحث متقدم في الحملات
    */
-  async updateBudgetUtilization(campaignId: string, spentAmount: number): Promise<CampaignEntity | null> {
-    const campaign = await this.findById(campaignId);
-    if (!campaign) return null;
+  async searchCampaigns(searchOptions: {
+    name?: string;
+    brandId?: ID;
+    status?: CampaignStatus;
+    type?: CampaignType;
+    priority?: PriorityLevel;
+    assignedPhotographer?: ID;
+    startDate?: FirebaseTimestamp;
+    endDate?: FirebaseTimestamp;
+    limit?: number;
+  }): Promise<Campaign[]> {
+    try {
+      let query: Query = this.collection;
 
-    const totalBudget = campaign.budget_management.total_budget;
-    const utilization = totalBudget > 0 ? Math.round((spentAmount / totalBudget) * 100) : 0;
+      // فلترة حسب البراند
+      if (searchOptions.brandId) {
+        query = query.where('brand_id', '==', searchOptions.brandId);
+      }
 
-    return await this.updateProgress(campaignId, {
-      budget_utilization: utilization
-    });
+      // فلترة حسب الحالة
+      if (searchOptions.status) {
+        query = query.where('status', '==', searchOptions.status);
+      }
+
+      // فلترة حسب النوع
+      if (searchOptions.type) {
+        query = query.where('type', '==', searchOptions.type);
+      }
+
+      // فلترة حسب الأولوية
+      if (searchOptions.priority) {
+        query = query.where('priority', '==', searchOptions.priority);
+      }
+
+      // فلترة حسب المصور المخصص
+      if (searchOptions.assignedPhotographer) {
+        query = query.where('assigned_photographers', 'array-contains', searchOptions.assignedPhotographer);
+      }
+
+      // فلترة حسب تاريخ البدء
+      if (searchOptions.startDate) {
+        query = query.where('timeline.start_date', '>=', searchOptions.startDate);
+      }
+
+      // فلترة حسب تاريخ الانتهاء
+      if (searchOptions.endDate) {
+        query = query.where('timeline.end_date', '<=', searchOptions.endDate);
+      }
+
+      // ترتيب وحد النتائج
+      query = query.orderBy('created_at', 'desc');
+      
+      if (searchOptions.limit) {
+        query = query.limit(searchOptions.limit);
+      }
+
+      const snapshot = await query.get();
+      let campaigns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+
+      // فلترة الاسم (بعد الجلب لأن Firestore لا يدعم البحث النصي المتقدم)
+      if (searchOptions.name) {
+        const searchTerm = searchOptions.name.toLowerCase();
+        campaigns = campaigns.filter(campaign => 
+          campaign.name.toLowerCase().includes(searchTerm) ||
+          campaign.description.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      return campaigns;
+    } catch (error) {
+      throw new Error(`خطأ في البحث في الحملات: ${error}`);
+    }
   }
 
   /**
-   * Update quality score
+   * 🎯 بحث متقدم مع فلاتر احترافية - استخدام WhereFilterOp
+   * ========================================================
+   * 
+   * مثال الاستخدام:
+   * const filters: CampaignFilter[] = [
+   *   { field: 'budget', operator: '>=', value: 1000 },
+   *   { field: 'status', operator: '==', value: 'active' },
+   *   { field: 'priority', operator: 'in', value: ['high', 'urgent'] }
+   * ];
    */
-  async updateQualityScore(campaignId: string, qualityScore: number): Promise<CampaignEntity | null> {
-    return await this.updateProgress(campaignId, {
-      quality_score: Math.max(0, Math.min(100, qualityScore))
-    });
+  async advancedSearch(filters: CampaignFilter[], limit?: number): Promise<Campaign[]> {
+    try {
+      let query = await applyCampaignFilters(this.collection, filters);
+      
+      if (limit) {
+        query = query.limit(limit);
+      }
+      
+      query = query.orderBy('created_at', 'desc');
+      
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    } catch (error) {
+      throw new Error(`خطأ في البحث المتقدم: ${error}`);
+    }
   }
 
   /**
-   * Get campaigns ending soon
+   * 📊 بحث مع ترتيب متقدم - استخدام OrderByDirection  
+   * =================================================
+   * 
+   * مثال الاستخدام:
+   * const sortOptions: SortOption[] = [
+   *   { field: 'priority', direction: 'desc' },
+   *   { field: 'created_at', direction: 'asc' }
+   * ];
    */
-  async getCampaignsEndingSoon(daysAhead: number = 7): Promise<CampaignEntity[]> {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + daysAhead);
+  async searchWithAdvancedSorting(
+    filters: CampaignFilter[],
+    sortOptions: SortOption[],
+    limit?: number
+  ): Promise<Campaign[]> {
+    try {
+      let query = await applyCampaignFilters(this.collection, filters);
+      
+      // تطبيق ترتيب متعدد باستخدام OrderByDirection
+      for (const sort of sortOptions) {
+        query = query.orderBy(sort.field as string, sort.direction);
+      }
+      
+      if (limit) {
+        query = query.limit(limit);
+      }
+      
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    } catch (error) {
+      throw new Error(`خطأ في البحث مع الترتيب المتقدم: ${error}`);
+    }
+  }
 
-    const filters: QueryFilter[] = [
-      { field: 'campaign_status', operator: 'in', value: ['active', 'scheduled'] },
-      { field: 'timeline.campaign_end_date', operator: '<=', value: futureDate }
-    ];
+  // ======================================
+  // 📊 استعلامات إحصائية
+  // ======================================
 
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'timeline.campaign_end_date', direction: 'asc' }]
-    });
+  /**
+   * إحصائيات الحملات حسب الحالة
+   */
+  async getStatusStats(): Promise<Record<CampaignStatus, number>> {
+    try {
+      const stats: Record<CampaignStatus, number> = {} as Record<CampaignStatus, number>;
+
+      for (const status of CAMPAIGN_STATUS_VALUES) {
+        const snapshot = await this.collection
+          .where('status', '==', status)
+          .get();
+        stats[status] = snapshot.size;
+      }
+
+      return stats;
+    } catch (error) {
+      throw new Error(`خطأ في جلب إحصائيات الحالة: ${error}`);
+    }
   }
 
   /**
-   * Get overdue campaigns
+   * إحصائيات الحملات حسب البراند
    */
-  async getOverdueCampaigns(): Promise<CampaignEntity[]> {
-    const now = new Date();
+  async getBrandStats(brandId: ID): Promise<{
+    total: number;
+    byStatus: Record<CampaignStatus, number>;
+    totalBudget: number;
+    avgProgress: number;
+  }> {
+    try {
+      const campaigns = await this.findByBrand(brandId);
+      
+      const stats = {
+        total: campaigns.length,
+        byStatus: {} as Record<CampaignStatus, number>,
+        totalBudget: 0,
+        avgProgress: 0
+      };
 
-    const filters: QueryFilter[] = [
-      { field: 'campaign_status', operator: 'in', value: ['active', 'scheduled'] },
-      { field: 'timeline.campaign_end_date', operator: '<', value: now }
-    ];
+      // إحصائيات الحالة
+      for (const status of CAMPAIGN_STATUS_VALUES) {
+        stats.byStatus[status] = campaigns.filter(c => c.status === status).length;
+      }
 
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'timeline.campaign_end_date', direction: 'asc' }]
-    });
+      // الميزانية الإجمالية ومتوسط التقدم
+      if (campaigns.length > 0) {
+        stats.totalBudget = campaigns.reduce((sum, campaign) => sum + campaign.budget, 0);
+        stats.avgProgress = campaigns.reduce((sum, campaign) => sum + campaign.progress_percentage, 0) / campaigns.length;
+      }
+
+      return stats;
+    } catch (error) {
+      throw new Error(`خطأ في جلب إحصائيات البراند: ${error}`);
+    }
   }
 
   /**
-   * Get campaigns by brand with status filter
+   * إحصائيات المصور
    */
-  async getCampaignsByBrandAndStatus(brandId: string, status: CampaignStatus): Promise<CampaignEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'campaign_info.brand_id', operator: '==', value: brandId },
-      { field: 'campaign_status', operator: '==', value: status }
-    ];
+  async getPhotographerStats(photographerId: ID): Promise<{
+    activeCampaigns: number;
+    completedCampaigns: number;
+    totalTasks: number;
+    completedTasks: number;
+    averageProgress: number;
+  }> {
+    try {
+      const allCampaigns = await this.findByPhotographer(photographerId);
+      
+      const activeCampaigns = allCampaigns.filter(c => 
+        c.status !== 'completed' && c.status !== 'cancelled'
+      );
+      
+      const completedCampaigns = allCampaigns.filter(c => 
+        c.status === 'completed'
+      );
 
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'desc' }]
-    });
+      const totalTasks = allCampaigns.reduce((sum, campaign) => sum + campaign.total_tasks, 0);
+      const completedTasks = allCampaigns.reduce((sum, campaign) => sum + campaign.completed_tasks, 0);
+      const averageProgress = allCampaigns.length > 0 
+        ? allCampaigns.reduce((sum, campaign) => sum + campaign.progress_percentage, 0) / allCampaigns.length 
+        : 0;
+
+      return {
+        activeCampaigns: activeCampaigns.length,
+        completedCampaigns: completedCampaigns.length,
+        totalTasks,
+        completedTasks,
+        averageProgress
+      };
+    } catch (error) {
+      throw new Error(`خطأ في جلب إحصائيات المصور: ${error}`);
+    }
+  }
+
+  // ======================================
+  // 🎯 عمليات متقدمة
+  // ======================================
+
+  /**
+   * تعيين مصور للحملة
+   */
+  async assignPhotographer(campaignId: ID, photographerId: ID, assignedBy: ID): Promise<Campaign> {
+    try {
+      const campaign = await this.findById(campaignId);
+      if (!campaign) {
+        throw new Error('الحملة غير موجودة');
+      }
+
+      // التحقق من عدم وجود المصور مسبقاً
+      if (campaign.assigned_photographers.includes(photographerId)) {
+        throw new Error('المصور مخصص للحملة مسبقاً');
+      }
+
+      const updateData: CampaignUpdateData = {
+        assigned_photographers: [...campaign.assigned_photographers, photographerId],
+        updated_by: assignedBy,
+        updated_at: FieldValue.serverTimestamp()
+      };
+
+      await this.update(campaignId, updateData as any);
+      
+      const updatedCampaign = await this.findById(campaignId);
+      if (!updatedCampaign) {
+        throw new Error('خطأ في جلب الحملة بعد التحديث');
+      }
+
+      return updatedCampaign;
+    } catch (error) {
+      throw new Error(`خطأ في تعيين المصور: ${error}`);
+    }
   }
 
   /**
-   * Get campaign statistics
+   * إزالة مصور من الحملة
    */
-  async getCampaignStats(campaignId: string): Promise<any> {
-    const campaign = await this.findById(campaignId);
-    if (!campaign) return null;
+  async removePhotographer(campaignId: ID, photographerId: ID, removedBy: ID): Promise<Campaign> {
+    try {
+      const campaign = await this.findById(campaignId);
+      if (!campaign) {
+        throw new Error('الحملة غير موجودة');
+      }
 
-    const now = Date.now();
-    const startTime = campaign.timeline.campaign_start_date?.toMillis() || now;
-    const endTime = campaign.timeline.campaign_end_date?.toMillis() || now;
-    const duration = endTime - startTime;
-    const elapsed = now - startTime;
-    const timeProgress = duration > 0 ? Math.min(100, Math.max(0, (elapsed / duration) * 100)) : 0;
+      const updatedPhotographers = campaign.assigned_photographers.filter(id => id !== photographerId);
 
-    return {
-      ...campaign.progress_tracking,
-      time_progress_percentage: Math.round(timeProgress),
-      days_remaining: endTime > now ? Math.ceil((endTime - now) / (1000 * 60 * 60 * 24)) : 0,
-      is_overdue: now > endTime && campaign.campaign_status === 'active',
-      total_tasks: campaign.progress_tracking.tasks_completed + 
-                  campaign.progress_tracking.tasks_in_progress + 
-                  campaign.progress_tracking.tasks_pending
-    };
+            const updateData: CampaignUpdateData = {
+        assigned_photographers: updatedPhotographers,
+        updated_by: removedBy,
+        updated_at: FieldValue.serverTimestamp()
+      };
+
+      await this.update(campaignId, updateData as any);
+
+      const updatedCampaign = await this.findById(campaignId);
+      if (!updatedCampaign) {
+        throw new Error('خطأ في جلب الحملة بعد التحديث');
+      }
+
+      return updatedCampaign;
+    } catch (error) {
+      throw new Error(`خطأ في إزالة المصور: ${error}`);
+    }
+  }
+
+  /**
+   * تحديث تقدم الحملة
+   */
+  async updateProgress(
+    campaignId: ID, 
+    completedTasks: number, 
+    totalTasks: number,
+    updatedBy: ID
+  ): Promise<Campaign> {
+    try {
+      const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      const pendingTasks = totalTasks - completedTasks;
+
+      const updateData: CampaignUpdateData = {
+        completed_tasks: completedTasks,
+        total_tasks: totalTasks,
+        pending_tasks: pendingTasks,
+        progress_percentage: progressPercentage,
+        updated_by: updatedBy,
+        updated_at: FieldValue.serverTimestamp()
+      };
+
+      await this.update(campaignId, updateData as any);
+      
+      const updatedCampaign = await this.findById(campaignId);
+      if (!updatedCampaign) {
+        throw new Error('خطأ في جلب الحملة بعد تحديث التقدم');
+      }
+
+      return updatedCampaign;
+    } catch (error) {
+      throw new Error(`خطأ في تحديث تقدم الحملة: ${error}`);
+    }
   }
 } 

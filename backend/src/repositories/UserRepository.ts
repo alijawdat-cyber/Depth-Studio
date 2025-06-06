@@ -1,334 +1,219 @@
 /**
- * 👥 User Repository
+ * 👥 User Repository - Depth Studio
+ * =================================
  * 
- * تطوير علي جودت - Depth Studio
- * آخر تحديث: يونيو 2025
- * 
- * @description Repository pattern for user operations
- * @version 1.0.0
+ * 📅 محدث: ديسمبر 2024
+ * 👨‍💻 المطور: علي جودت
+ * 🎯 الهدف: إدارة المستخدمين بأنواع محكمة 100%
  */
 
-import { BaseRepository, QueryFilter, BaseEntity } from './BaseRepository';
-import { User, UserRole, UserStatus } from '../../types/types';
-import { Timestamp } from 'firebase-admin/firestore';
-
-/**
- * User entity interface extending BaseEntity
- */
-export interface UserEntity extends BaseEntity {
-  email: string;
-  phone?: string;
-  display_name: string;
-  first_name: string;
-  last_name: string;
-  profile_photo_url?: string;
-  primary_role: UserRole;
-  status?: UserStatus;
-  is_active: boolean;
-  is_verified: boolean;
-  last_login?: Timestamp;
-  bio?: string;
-  location?: string;
-  timezone: string;
-  language: string;
-  firebase_uid: string;
-  auth_providers: string[];
-  total_login_count: number;
-  last_seen?: Timestamp;
-  is_online: boolean;
-  assigned_brands: string[];
-  preferences: Record<string, any>;
-}
+import { User, UserRole, UserStatus, ID, FirebaseTimestamp } from "@/types";
+import { BaseRepository, QueryOptions } from "./BaseRepository";
+import { DATABASE_CONFIG } from "../config/firebase";
+import { logger } from "firebase-functions";
+import { FieldValue } from "firebase-admin/firestore";
 
 /**
- * User search filters interface
+ * 👥 مستودع المستخدمين
  */
-export interface UserSearchFilters {
-  role?: UserRole;
-  status?: UserStatus;
-  is_active?: boolean;
-  brand_id?: string;
-  created_after?: string;
-  created_before?: string;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
-}
-
-/**
- * User Repository Class
- */
-export class UserRepository extends BaseRepository<UserEntity> {
-  
+export class UserRepository extends BaseRepository<User> {
   constructor() {
-    super('users');
+    super(DATABASE_CONFIG.COLLECTIONS.USERS);
   }
 
   /**
-   * Find user by email
+   * 🔍 البحث عن مستخدم بالبريد الإلكتروني
    */
-  async findByEmail(email: string): Promise<UserEntity | null> {
-    const filters: QueryFilter[] = [
-      { field: 'email', operator: '==', value: email }
-    ];
-
-    return await this.findOne({ filters });
-  }
-
-  /**
-   * Find user by Firebase UID
-   */
-  async findByFirebaseUID(firebase_uid: string): Promise<UserEntity | null> {
-    const filters: QueryFilter[] = [
-      { field: 'firebase_uid', operator: '==', value: firebase_uid }
-    ];
-
-    return await this.findOne({ filters });
-  }
-
-  /**
-   * Find users by role
-   */
-  async findByRole(role: UserRole): Promise<UserEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'primary_role', operator: '==', value: role }
-    ];
-
-    return await this.findAll({ filters });
-  }
-
-  /**
-   * Find active users
-   */
-  async findActiveUsers(): Promise<UserEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'is_active', operator: '==', value: true }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'last_seen', direction: 'desc' }]
-    });
-  }
-
-  /**
-   * Find users by brand
-   */
-  async findByBrand(brand_id: string): Promise<UserEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'assigned_brands', operator: 'array-contains', value: brand_id }
-    ];
-
-    return await this.findAll({ filters });
-  }
-
-  /**
-   * Search users with filters and pagination
-   */
-  async searchUsers(searchFilters: UserSearchFilters, page: number = 1, limit: number = 20): Promise<any> {
-    const filters: QueryFilter[] = [];
-
-    // Apply filters
-    if (searchFilters.role) {
-      filters.push({ field: 'primary_role', operator: '==', value: searchFilters.role });
+  async findByEmail(email: string): Promise<User | null> {
+    try {
+      const users = await this.findAll({
+        where: [{ field: "email", operator: "==", value: email }],
+        limit: 1
+      });
+      
+      const user = users[0] || null;
+      if (user) {
+        logger.info("🔍 User found by email", { email, userId: user.id });
+      }
+      
+      return user;
+    } catch (error) {
+      logger.error("❌ Error finding user by email", { email, error });
+      throw new Error(`Failed to find user by email: ${error}`);
     }
+  }
 
-    if (searchFilters.status) {
-      filters.push({ field: 'status', operator: '==', value: searchFilters.status });
+  /**
+   * 🔍 البحث عن مستخدم بـ Firebase UID
+   */
+  async findByFirebaseUid(firebaseUid: string): Promise<User | null> {
+    try {
+      const users = await this.findAll({
+        where: [{ field: "firebase_uid", operator: "==", value: firebaseUid }],
+        limit: 1
+      });
+      
+      const user = users[0] || null;
+      if (user) {
+        logger.info("🔍 User found by Firebase UID", { firebaseUid, userId: user.id });
+      }
+      
+      return user;
+    } catch (error) {
+      logger.error("❌ Error finding user by Firebase UID", { firebaseUid, error });
+      throw new Error(`Failed to find user by Firebase UID: ${error}`);
     }
+  }
 
-    if (searchFilters.is_active !== undefined) {
-      filters.push({ field: 'is_active', operator: '==', value: searchFilters.is_active });
+  /**
+   * 👑 البحث عن المستخدمين حسب الدور
+   */
+  async findByRole(role: UserRole, options: QueryOptions = {}): Promise<User[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "primary_role", operator: "==", value: role }
+        ]
+      };
+
+      const users = await this.findAll(queryOptions);
+      logger.info("👑 Users found by role", { role, count: users.length });
+      
+      return users;
+    } catch (error) {
+      logger.error("❌ Error finding users by role", { role, error });
+      throw new Error(`Failed to find users by role: ${error}`);
     }
+  }
 
-    if (searchFilters.brand_id) {
-      filters.push({ field: 'assigned_brands', operator: 'array-contains', value: searchFilters.brand_id });
+  /**
+   * 📊 البحث عن المستخدمين حسب الحالة
+   */
+  async findByStatus(status: UserStatus, options: QueryOptions = {}): Promise<User[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "status", operator: "==", value: status }
+        ]
+      };
+
+      const users = await this.findAll(queryOptions);
+      logger.info("📊 Users found by status", { status, count: users.length });
+      
+      return users;
+    } catch (error) {
+      logger.error("❌ Error finding users by status", { status, error });
+      throw new Error(`Failed to find users by status: ${error}`);
     }
+  }
 
-    if (searchFilters.created_after) {
-      filters.push({ field: 'created_at', operator: '>=', value: new Date(searchFilters.created_after) });
+  /**
+   * 🔄 تحديث حالة المستخدم
+   */
+  async updateStatus(userId: ID, status: UserStatus): Promise<User> {
+    try {
+      const updatedUser = await this.update(userId, { status });
+      logger.info("🔄 User status updated", { userId, status });
+      
+      return updatedUser;
+    } catch (error) {
+      logger.error("❌ Error updating user status", { userId, status, error });
+      throw new Error(`Failed to update user status: ${error}`);
     }
+  }
 
-    if (searchFilters.created_before) {
-      filters.push({ field: 'created_at', operator: '<=', value: new Date(searchFilters.created_before) });
+  /**
+   * 👑 تحديث دور المستخدم
+   */
+  async updateRole(userId: ID, role: UserRole): Promise<User> {
+    try {
+      const updatedUser = await this.update(userId, { primary_role: role });
+      logger.info("👑 User role updated", { userId, role });
+      
+      return updatedUser;
+    } catch (error) {
+      logger.error("❌ Error updating user role", { userId, role, error });
+      throw new Error(`Failed to update user role: ${error}`);
     }
-
-    // Apply ordering
-    const orderBy = [{
-      field: searchFilters.sort_by || 'created_at',
-      direction: (searchFilters.sort_order === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc'
-    }];
-
-    return await this.findWithPagination(page, limit, { filters, orderBy });
   }
 
   /**
-   * Search users by text (name, email, phone)
+   * 🟢 تحديث حالة النشاط
    */
-  async searchByText(searchTerm: string, searchFilters?: UserSearchFilters): Promise<UserEntity[]> {
-    // للبحث النصي، نحتاج جلب جميع المستخدمين وفلترتهم محلياً
-    // في الإنتاج، استخدم Elasticsearch أو Algolia
-    
-    const filters: QueryFilter[] = [];
-    
-    // Apply additional filters if provided
-    if (searchFilters?.role) {
-      filters.push({ field: 'primary_role', operator: '==', value: searchFilters.role });
+  async updateOnlineStatus(userId: ID, isOnline: boolean): Promise<User> {
+    try {
+      const baseUpdateData = { is_online: isOnline };
+      const updateData = isOnline 
+        ? baseUpdateData 
+        : { 
+            ...baseUpdateData, 
+            last_seen: FieldValue.serverTimestamp() as unknown as FirebaseTimestamp 
+          };
+
+      const updatedUser = await this.update(userId, updateData);
+      logger.info("🟢 User online status updated", { userId, isOnline });
+      
+      return updatedUser;
+    } catch (error) {
+      logger.error("❌ Error updating user online status", { userId, isOnline, error });
+      throw new Error(`Failed to update user online status: ${error}`);
     }
+  }
 
-    if (searchFilters?.is_active !== undefined) {
-      filters.push({ field: 'is_active', operator: '==', value: searchFilters.is_active });
+  /**
+   * 🔍 البحث النصي في المستخدمين
+   */
+  async searchUsers(searchTerm: string, options: QueryOptions = {}): Promise<User[]> {
+    try {
+      // البحث في الاسم الأول، الاسم الأخير، والبريد الإلكتروني
+      const searchQueries = [
+        this.findAll({
+          ...options,
+          where: [
+            ...(options.where || []),
+            { field: "first_name", operator: ">=", value: searchTerm },
+            { field: "first_name", operator: "<=", value: searchTerm + '\uf8ff' }
+          ]
+        }),
+        this.findAll({
+          ...options,
+          where: [
+            ...(options.where || []),
+            { field: "last_name", operator: ">=", value: searchTerm },
+            { field: "last_name", operator: "<=", value: searchTerm + '\uf8ff' }
+          ]
+        }),
+        this.findAll({
+          ...options,
+          where: [
+            ...(options.where || []),
+            { field: "email", operator: ">=", value: searchTerm },
+            { field: "email", operator: "<=", value: searchTerm + '\uf8ff' }
+          ]
+        })
+      ];
+
+      const results = await Promise.all(searchQueries);
+      const allUsers = results.flat();
+      
+      // إزالة المكررات
+      const uniqueUsers = allUsers.filter((user, index, self) => 
+        index === self.findIndex(u => u.id === user.id)
+      );
+
+      logger.info("🔍 User search completed", { 
+        searchTerm, 
+        totalFound: uniqueUsers.length 
+      });
+      
+      return uniqueUsers;
+    } catch (error) {
+      logger.error("❌ Error searching users", { searchTerm, error });
+      throw new Error(`Failed to search users: ${error}`);
     }
-
-    const allUsers = await this.findAll({ filters });
-    const searchTermLower = searchTerm.toLowerCase();
-
-    return allUsers.filter(user => 
-      user.first_name.toLowerCase().includes(searchTermLower) ||
-      user.last_name.toLowerCase().includes(searchTermLower) ||
-      user.email.toLowerCase().includes(searchTermLower) ||
-      (user.phone && user.phone.includes(searchTerm))
-    );
-  }
-
-  /**
-   * Update user last seen timestamp
-   */
-  async updateLastSeen(userId: string): Promise<UserEntity | null> {
-    return await this.update(userId, {
-      last_seen: Timestamp.now(),
-      is_online: true
-    });
-  }
-
-  /**
-   * Set user offline
-   */
-  async setUserOffline(userId: string): Promise<UserEntity | null> {
-    return await this.update(userId, {
-      is_online: false
-    });
-  }
-
-  /**
-   * Update user login count
-   */
-  async incrementLoginCount(userId: string): Promise<UserEntity | null> {
-    const user = await this.findById(userId);
-    if (!user) return null;
-
-    return await this.update(userId, {
-      total_login_count: user.total_login_count + 1,
-      last_login: Timestamp.now(),
-      last_seen: Timestamp.now(),
-      is_online: true
-    });
-  }
-
-  /**
-   * Assign brand to user
-   */
-  async assignBrand(userId: string, brandId: string): Promise<UserEntity | null> {
-    const user = await this.findById(userId);
-    if (!user) return null;
-
-    const assignedBrands = [...user.assigned_brands];
-    if (!assignedBrands.includes(brandId)) {
-      assignedBrands.push(brandId);
-    }
-
-    return await this.update(userId, {
-      assigned_brands: assignedBrands
-    });
-  }
-
-  /**
-   * Remove brand from user
-   */
-  async removeBrand(userId: string, brandId: string): Promise<UserEntity | null> {
-    const user = await this.findById(userId);
-    if (!user) return null;
-
-    const assignedBrands = user.assigned_brands.filter(id => id !== brandId);
-
-    return await this.update(userId, {
-      assigned_brands: assignedBrands
-    });
-  }
-
-  /**
-   * Update user status
-   */
-  async updateStatus(userId: string, status: UserStatus, updatedBy?: string): Promise<UserEntity | null> {
-    return await this.update(userId, { status }, updatedBy);
-  }
-
-  /**
-   * Activate user
-   */
-  async activateUser(userId: string, updatedBy?: string): Promise<UserEntity | null> {
-    return await this.update(userId, {
-      is_active: true,
-      status: 'active'
-    }, updatedBy);
-  }
-
-  /**
-   * Deactivate user
-   */
-  async deactivateUser(userId: string, updatedBy?: string): Promise<UserEntity | null> {
-    return await this.update(userId, {
-      is_active: false,
-      status: 'suspended'
-    }, updatedBy);
-  }
-
-  /**
-   * Get user statistics
-   */
-  async getUserStats(userId: string): Promise<any> {
-    const user = await this.findById(userId);
-    if (!user) return null;
-
-    // يمكن إضافة إحصائيات أكثر تفصيلاً هنا
-    return {
-      total_login_count: user.total_login_count,
-      last_login: user.last_login,
-      last_seen: user.last_seen,
-      is_online: user.is_online,
-      assigned_brands_count: user.assigned_brands.length,
-      account_age_days: user.created_at ? 
-        Math.floor((Date.now() - user.created_at.toMillis()) / (1000 * 60 * 60 * 24)) : 0
-    };
-  }
-
-  /**
-   * Check if email exists
-   */
-  async emailExists(email: string, excludeUserId?: string): Promise<boolean> {
-    const filters: QueryFilter[] = [
-      { field: 'email', operator: '==', value: email }
-    ];
-
-    const users = await this.findAll({ filters });
-    
-    if (excludeUserId) {
-      return users.some(user => user.id !== excludeUserId);
-    }
-    
-    return users.length > 0;
-  }
-
-  /**
-   * Get users requiring approval
-   */
-  async getUsersPendingApproval(): Promise<UserEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'status', operator: '==', value: 'pending_approval' }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'asc' }]
-    });
   }
 } 

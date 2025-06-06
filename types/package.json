@@ -1,0 +1,60 @@
+{
+  "name": "@depth-studio/types",
+  "version": "2.0.0",
+  "description": "📦 مصدر موحد لجميع الأنواع في Depth Studio - نسخة مبسطة محسنة",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "typescript",
+    "types",
+    "depth-studio",
+    "simplified",
+    "optimized"
+  ],
+  "author": "Ali Jawdat",
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "firebase": "^10.0.0",
+    "firebase-admin": "^12.7.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "default": "./dist/core.js"
+    },
+    "./database": {
+      "types": "./dist/database.d.ts",
+      "default": "./dist/database.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "default": "./dist/api.js"
+    }
+  },
+  "changelog": {
+    "v2.0.0": {
+      "date": "2024-12-19",
+      "changes": [
+        "تم تبسيط users.ts من 189 إلى 60 سطر (-68%)",
+        "تم تبسيط equipment.ts من 97 إلى 25 سطر (-75%)",
+        "تم تبسيط notifications.ts من 132 إلى 30 سطر (-77%)",
+        "تم تبسيط payments.ts من 102 إلى 35 سطر (-66%)",
+        "تم تبسيط campaigns.ts من 115 إلى 50 سطر (-57%)",
+        "إجمالي التوفير: -69% من الكود مع المحافظة على كل الوظائف"
+      ]
+    }
+  }
+}

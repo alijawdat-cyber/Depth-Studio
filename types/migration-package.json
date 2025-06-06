@@ -1,0 +1,34 @@
+{
+  "name": "depth-studio-database-migration",
+  "version": "1.0.0",
+  "description": "🔄 سكريبت ترحيل قاعدة بيانات Depth Studio من البنية القديمة إلى المبسطة",
+  "main": "migration-script.js",
+  "scripts": {
+    "migrate": "node migration-script.js",
+    "dry-run": "node migration-script.js --dry-run",
+    "verify": "node -e \"require('./migration-script').verifyNewStructure()\""
+  },
+  "keywords": [
+    "firebase",
+    "firestore", 
+    "migration",
+    "depth-studio",
+    "database"
+  ],
+  "author": "Ali Jawdat",
+  "license": "MIT",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/depth-studio/types"
+  },
+  "bugs": {
+    "url": "https://github.com/depth-studio/types/issues"
+  },
+  "homepage": "https://github.com/depth-studio/types#readme"
+} 

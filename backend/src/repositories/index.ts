@@ -1,86 +1,102 @@
 /**
- * 📂 Repository Index
+ * 📦 Repository Index - Depth Studio
+ * ==================================
  * 
- * تطوير علي جودت - Depth Studio
- * آخر تحديث: يونيو 2025
- * 
- * @description Central export point for all repositories
- * @version 1.0.0
+ * 📅 محدث: ديسمبر 2024
+ * 👨‍💻 المطور: علي جودت
+ * 🎯 الهدف: تجميع جميع Repositories مع Type Safety كامل
  */
 
-// Base Repository exports
-export { BaseRepository, BaseEntity, QueryFilter, QueryOptions, PaginationResult } from './BaseRepository';
+// 🏗️ Base Repository
+export { BaseRepository, QueryOptions, PaginatedResult } from "./BaseRepository";
 
-// Specific Repository exports
-export { UserRepository, UserEntity, UserSearchFilters } from './UserRepository';
-export { BrandRepository, BrandEntity, BrandSearchFilters } from './BrandRepository';
-export { CampaignRepository, CampaignEntity, CampaignSearchFilters } from './CampaignRepository';
+// 👥 User Repository
+export { UserRepository } from "./UserRepository";
 
-// Repository instances (Singleton pattern)
-let userRepository: UserRepository;
-let brandRepository: BrandRepository;
-let campaignRepository: CampaignRepository;
+// 🏢 Brand Repository  
+export { BrandRepository } from "./BrandRepository";
+
+// 📱 Campaign Repository
+export { CampaignRepository } from "./CampaignRepository";
+
+// 📁 Content Repository
+export { ContentRepository } from "./ContentRepository";
+
+// Import للاستخدام الداخلي
+import { UserRepository } from "./UserRepository";
+import { BrandRepository } from "./BrandRepository";
+import { CampaignRepository } from "./CampaignRepository";
+import { ContentRepository } from "./ContentRepository";
 
 /**
- * Get User Repository instance
+ * 🏭 Repository Factory
+ * إنشاء instances من Repositories مع Singleton pattern
  */
-export const getUserRepository = (): UserRepository => {
-  if (!userRepository) {
-    userRepository = new UserRepository();
+class RepositoryFactory {
+  private static userRepository: UserRepository | null = null;
+  private static brandRepository: BrandRepository | null = null;
+  private static campaignRepository: CampaignRepository | null = null;
+  private static contentRepository: ContentRepository | null = null;
+
+  /**
+   * 👥 الحصول على User Repository
+   */
+  static getUserRepository(): UserRepository {
+    if (!this.userRepository) {
+      this.userRepository = new UserRepository();
+    }
+    return this.userRepository;
   }
-  return userRepository;
-};
 
-/**
- * Get Brand Repository instance
- */
-export const getBrandRepository = (): BrandRepository => {
-  if (!brandRepository) {
-    brandRepository = new BrandRepository();
+  /**
+   * 🏢 الحصول على Brand Repository
+   */
+  static getBrandRepository(): BrandRepository {
+    if (!this.brandRepository) {
+      this.brandRepository = new BrandRepository();
+    }
+    return this.brandRepository;
   }
-  return brandRepository;
-};
 
-/**
- * Get Campaign Repository instance
- */
-export const getCampaignRepository = (): CampaignRepository => {
-  if (!campaignRepository) {
-    campaignRepository = new CampaignRepository();
+  /**
+   * 📱 الحصول على Campaign Repository
+   */
+  static getCampaignRepository(): CampaignRepository {
+    if (!this.campaignRepository) {
+      this.campaignRepository = new CampaignRepository();
+    }
+    return this.campaignRepository;
   }
-  return campaignRepository;
-};
 
-/**
- * Repository factory for getting any repository by name
- */
-export const getRepository = (repositoryName: 'user' | 'brand' | 'campaign') => {
-  switch (repositoryName) {
-    case 'user':
-      return getUserRepository();
-    case 'brand':
-      return getBrandRepository();
-    case 'campaign':
-      return getCampaignRepository();
-    default:
-      throw new Error(`Unknown repository: ${repositoryName}`);
+  /**
+   * 📁 الحصول على Content Repository
+   */
+  static getContentRepository(): ContentRepository {
+    if (!this.contentRepository) {
+      this.contentRepository = new ContentRepository();
+    }
+    return this.contentRepository;
   }
-};
+
+  /**
+   * 🧹 تنظيف جميع الـ instances (للاختبارات)
+   */
+  static clearInstances(): void {
+    this.userRepository = null;
+    this.brandRepository = null;
+    this.campaignRepository = null;
+    this.contentRepository = null;
+  }
+}
+
+export { RepositoryFactory };
 
 /**
- * Reset all repository instances (useful for testing)
+ * 🎯 Repositories للاستخدام المباشر
  */
-export const resetRepositories = (): void => {
-  userRepository = undefined as any;
-  brandRepository = undefined as any;
-  campaignRepository = undefined as any;
-};
-
-// Default exports for convenience
-export default {
-  getUserRepository,
-  getBrandRepository,
-  getCampaignRepository,
-  getRepository,
-  resetRepositories
-}; 
+export const repositories = {
+  users: RepositoryFactory.getUserRepository(),
+  brands: RepositoryFactory.getBrandRepository(),
+  campaigns: RepositoryFactory.getCampaignRepository(),
+  content: RepositoryFactory.getContentRepository(),
+} as const; 

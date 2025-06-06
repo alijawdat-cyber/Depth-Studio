@@ -1,423 +1,248 @@
 /**
- * 🏢 Brand Repository
+ * 🏢 Brand Repository - Depth Studio
+ * ==================================
  * 
- * تطوير علي جودت - Depth Studio
- * آخر تحديث: يونيو 2025
- * 
- * @description Repository pattern for brand operations
- * @version 1.0.0
+ * 📅 محدث: ديسمبر 2024
+ * 👨‍💻 المطور: علي جودت
+ * 🎯 الهدف: إدارة البراندات بأنواع محكمة 100%
  */
 
-import { BaseRepository, QueryFilter, BaseEntity } from './BaseRepository';
-import { Brand, BrandStatus } from '../../types/types';
-
-/**
- * Brand entity interface extending BaseEntity
- */
-export interface BrandEntity extends BaseEntity {
-  name: {
-    ar: string;
-    en: string;
-  };
-  description: {
-    ar: string;
-    en: string;
-  };
-  brand_type: string;
-  industry: string;
-  status: BrandStatus;
-  brand_identity: {
-    logo_url: string | null;
-    primary_color: string;
-    secondary_color: string;
-    font_family: string;
-    brand_guidelines_url: string | null;
-  };
-  contact_info: {
-    primary_contact_name: string;
-    primary_contact_email: string;
-    primary_contact_phone: string | null;
-    company_address: string;
-    website_url: string | null;
-    social_media: Record<string, string>;
-  };
-  assigned_coordinator: string | null;
-  budget_settings: {
-    monthly_budget: number;
-    currency: string;
-    pricing_tier: string;
-    payment_terms: string;
-    budget_alerts_enabled: boolean;
-  };
-  content_preferences: {
-    preferred_styles: string[];
-    content_categories: string[];
-    quality_requirements: string;
-    delivery_format: string[];
-    usage_rights: string;
-  };
-  statistics: {
-    total_campaigns: number;
-    total_content_pieces: number;
-    average_project_rating: number;
-    total_spent: number;
-    active_campaigns: number;
-  };
-  is_active: boolean;
-}
+import { Brand, BrandStatus, BrandType, Industry, ID } from "@/types";
+import { BaseRepository, QueryOptions } from "./BaseRepository";
+import { DATABASE_CONFIG } from "../config/firebase";
+import { logger } from "firebase-functions";
 
 /**
- * Brand search filters interface
+ * 🏢 مستودع البراندات
  */
-export interface BrandSearchFilters {
-  status?: BrandStatus;
-  brand_type?: string;
-  industry?: string;
-  assigned_coordinator?: string;
-  created_after?: string;
-  created_before?: string;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
-}
-
-/**
- * Brand Repository Class
- */
-export class BrandRepository extends BaseRepository<BrandEntity> {
-  
+export class BrandRepository extends BaseRepository<Brand> {
   constructor() {
-    super('brands');
+    super(DATABASE_CONFIG.COLLECTIONS.BRANDS);
   }
 
   /**
-   * Find brand by name (Arabic)
+   * 📊 البحث عن البراندات حسب الحالة
    */
-  async findByNameAr(name: string): Promise<BrandEntity | null> {
-    const filters: QueryFilter[] = [
-      { field: 'name.ar', operator: '==', value: name }
-    ];
+  async findByStatus(status: BrandStatus, options: QueryOptions = {}): Promise<Brand[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "status", operator: "==", value: status }
+        ]
+      };
 
-    return await this.findOne({ filters });
-  }
-
-  /**
-   * Find brand by name (English)
-   */
-  async findByNameEn(name: string): Promise<BrandEntity | null> {
-    const filters: QueryFilter[] = [
-      { field: 'name.en', operator: '==', value: name }
-    ];
-
-    return await this.findOne({ filters });
-  }
-
-  /**
-   * Find brands by status
-   */
-  async findByStatus(status: BrandStatus): Promise<BrandEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'status', operator: '==', value: status }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'desc' }]
-    });
-  }
-
-  /**
-   * Find active brands
-   */
-  async findActiveBrands(): Promise<BrandEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'is_active', operator: '==', value: true },
-      { field: 'status', operator: '==', value: 'active' }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'name.ar', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Find brands by coordinator
-   */
-  async findByCoordinator(coordinatorId: string): Promise<BrandEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'assigned_coordinator', operator: '==', value: coordinatorId }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'name.ar', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Find brands by industry
-   */
-  async findByIndustry(industry: string): Promise<BrandEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'industry', operator: '==', value: industry }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'name.ar', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Find brands by type
-   */
-  async findByType(brand_type: string): Promise<BrandEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'brand_type', operator: '==', value: brand_type }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'name.ar', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Search brands with filters and pagination
-   */
-  async searchBrands(searchFilters: BrandSearchFilters, page: number = 1, limit: number = 20): Promise<any> {
-    const filters: QueryFilter[] = [];
-
-    // Apply filters
-    if (searchFilters.status) {
-      filters.push({ field: 'status', operator: '==', value: searchFilters.status });
+      const brands = await this.findAll(queryOptions);
+      logger.info("📊 Brands found by status", { status, count: brands.length });
+      
+      return brands;
+    } catch (error) {
+      logger.error("❌ Error finding brands by status", { status, error });
+      throw new Error(`Failed to find brands by status: ${error}`);
     }
+  }
 
-    if (searchFilters.brand_type) {
-      filters.push({ field: 'brand_type', operator: '==', value: searchFilters.brand_type });
+  /**
+   * 🏭 البحث عن البراندات حسب النوع
+   */
+  async findByType(type: BrandType, options: QueryOptions = {}): Promise<Brand[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "brand_type", operator: "==", value: type }
+        ]
+      };
+
+      const brands = await this.findAll(queryOptions);
+      logger.info("🏭 Brands found by type", { type, count: brands.length });
+      
+      return brands;
+    } catch (error) {
+      logger.error("❌ Error finding brands by type", { type, error });
+      throw new Error(`Failed to find brands by type: ${error}`);
     }
+  }
 
-    if (searchFilters.industry) {
-      filters.push({ field: 'industry', operator: '==', value: searchFilters.industry });
+  /**
+   * 🏭 البحث عن البراندات حسب الصناعة
+   */
+  async findByIndustry(industry: Industry, options: QueryOptions = {}): Promise<Brand[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "industry", operator: "==", value: industry }
+        ]
+      };
+
+      const brands = await this.findAll(queryOptions);
+      logger.info("🏭 Brands found by industry", { industry, count: brands.length });
+      
+      return brands;
+    } catch (error) {
+      logger.error("❌ Error finding brands by industry", { industry, error });
+      throw new Error(`Failed to find brands by industry: ${error}`);
     }
+  }
 
-    if (searchFilters.assigned_coordinator) {
-      filters.push({ field: 'assigned_coordinator', operator: '==', value: searchFilters.assigned_coordinator });
+  /**
+   * 👨‍💼 البحث عن البراندات حسب المنسق
+   */
+  async findByCoordinator(coordinatorId: ID, options: QueryOptions = {}): Promise<Brand[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "assigned_coordinator", operator: "==", value: coordinatorId }
+        ]
+      };
+
+      const brands = await this.findAll(queryOptions);
+      logger.info("👨‍💼 Brands found by coordinator", { coordinatorId, count: brands.length });
+      
+      return brands;
+    } catch (error) {
+      logger.error("❌ Error finding brands by coordinator", { coordinatorId, error });
+      throw new Error(`Failed to find brands by coordinator: ${error}`);
     }
+  }
 
-    if (searchFilters.created_after) {
-      filters.push({ field: 'created_at', operator: '>=', value: new Date(searchFilters.created_after) });
+  /**
+   * 💰 البحث عن البراندات حسب نطاق الميزانية
+   */
+  async findByBudgetRange(
+    minBudget: number, 
+    maxBudget: number, 
+    options: QueryOptions = {}
+  ): Promise<Brand[]> {
+    try {
+      const queryOptions: QueryOptions = {
+        ...options,
+        where: [
+          ...(options.where || []),
+          { field: "monthly_budget", operator: ">=", value: minBudget },
+          { field: "monthly_budget", operator: "<=", value: maxBudget }
+        ]
+      };
+
+      const brands = await this.findAll(queryOptions);
+      logger.info("💰 Brands found by budget range", { 
+        minBudget, 
+        maxBudget, 
+        count: brands.length 
+      });
+      
+      return brands;
+    } catch (error) {
+      logger.error("❌ Error finding brands by budget range", { 
+        minBudget, 
+        maxBudget, 
+        error 
+      });
+      throw new Error(`Failed to find brands by budget range: ${error}`);
     }
+  }
 
-    if (searchFilters.created_before) {
-      filters.push({ field: 'created_at', operator: '<=', value: new Date(searchFilters.created_before) });
+  /**
+   * 🔄 تحديث حالة البراند
+   */
+  async updateStatus(brandId: ID, status: BrandStatus): Promise<Brand> {
+    try {
+      const updatedBrand = await this.update(brandId, { status });
+      logger.info("🔄 Brand status updated", { brandId, status });
+      
+      return updatedBrand;
+    } catch (error) {
+      logger.error("❌ Error updating brand status", { brandId, status, error });
+      throw new Error(`Failed to update brand status: ${error}`);
     }
-
-    // Apply ordering
-    const orderBy = [{
-      field: searchFilters.sort_by || 'created_at',
-      direction: (searchFilters.sort_order === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc'
-    }];
-
-    return await this.findWithPagination(page, limit, { filters, orderBy });
   }
 
   /**
-   * Search brands by text (name, description)
+   * 👨‍💼 تحديث منسق البراند
    */
-  async searchByText(searchTerm: string, searchFilters?: BrandSearchFilters): Promise<BrandEntity[]> {
-    // للبحث النصي، نحتاج جلب جميع البراندات وفلترتهم محلياً
-    // في الإنتاج، استخدم Elasticsearch أو Algolia
-    
-    const filters: QueryFilter[] = [];
-    
-    // Apply additional filters if provided
-    if (searchFilters?.status) {
-      filters.push({ field: 'status', operator: '==', value: searchFilters.status });
+  async updateCoordinator(brandId: ID, coordinatorId: ID): Promise<Brand> {
+    try {
+      const updatedBrand = await this.update(brandId, { assigned_coordinator: coordinatorId });
+      logger.info("👨‍💼 Brand coordinator updated", { brandId, coordinatorId });
+      
+      return updatedBrand;
+    } catch (error) {
+      logger.error("❌ Error updating brand coordinator", { brandId, coordinatorId, error });
+      throw new Error(`Failed to update brand coordinator: ${error}`);
     }
+  }
 
-    if (searchFilters?.industry) {
-      filters.push({ field: 'industry', operator: '==', value: searchFilters.industry });
+  /**
+   * 💰 تحديث ميزانية البراند
+   */
+  async updateBudget(brandId: ID, monthlyBudget: number, currency: string): Promise<Brand> {
+    try {
+      const updatedBrand = await this.update(brandId, { 
+        monthly_budget: monthlyBudget,
+        currency 
+      });
+      logger.info("💰 Brand budget updated", { brandId, monthlyBudget, currency });
+      
+      return updatedBrand;
+    } catch (error) {
+      logger.error("❌ Error updating brand budget", { 
+        brandId, 
+        monthlyBudget, 
+        currency, 
+        error 
+      });
+      throw new Error(`Failed to update brand budget: ${error}`);
     }
-
-    const allBrands = await this.findAll({ filters });
-    const searchTermLower = searchTerm.toLowerCase();
-
-    return allBrands.filter(brand => 
-      brand.name.ar.toLowerCase().includes(searchTermLower) ||
-      brand.name.en.toLowerCase().includes(searchTermLower) ||
-      brand.description.ar.toLowerCase().includes(searchTermLower) ||
-      brand.description.en.toLowerCase().includes(searchTermLower) ||
-      brand.contact_info.primary_contact_name.toLowerCase().includes(searchTermLower) ||
-      brand.contact_info.primary_contact_email.toLowerCase().includes(searchTermLower)
-    );
   }
 
   /**
-   * Assign coordinator to brand
+   * 🔍 البحث النصي في البراندات
    */
-  async assignCoordinator(brandId: string, coordinatorId: string, updatedBy?: string): Promise<BrandEntity | null> {
-    return await this.update(brandId, {
-      assigned_coordinator: coordinatorId
-    }, updatedBy);
-  }
+  async searchBrands(searchTerm: string, options: QueryOptions = {}): Promise<Brand[]> {
+    try {
+      // البحث في أسماء البراندات (العربي والإنجليزي)
+      const searchQueries = [
+        this.findAll({
+          ...options,
+          where: [
+            ...(options.where || []),
+            { field: "name.ar", operator: ">=", value: searchTerm },
+            { field: "name.ar", operator: "<=", value: searchTerm + '\uf8ff' }
+          ]
+        }),
+        this.findAll({
+          ...options,
+          where: [
+            ...(options.where || []),
+            { field: "name.en", operator: ">=", value: searchTerm },
+            { field: "name.en", operator: "<=", value: searchTerm + '\uf8ff' }
+          ]
+        })
+      ];
 
-  /**
-   * Remove coordinator from brand
-   */
-  async removeCoordinator(brandId: string, updatedBy?: string): Promise<BrandEntity | null> {
-    return await this.update(brandId, {
-      assigned_coordinator: null
-    }, updatedBy);
-  }
+      const results = await Promise.all(searchQueries);
+      const allBrands = results.flat();
+      
+      // إزالة المكررات
+      const uniqueBrands = allBrands.filter((brand, index, self) => 
+        index === self.findIndex(b => b.id === brand.id)
+      );
 
-  /**
-   * Update brand status
-   */
-  async updateStatus(brandId: string, status: BrandStatus, updatedBy?: string): Promise<BrandEntity | null> {
-    return await this.update(brandId, { status }, updatedBy);
-  }
-
-  /**
-   * Update brand statistics
-   */
-  async updateStatistics(brandId: string, statistics: Partial<BrandEntity['statistics']>): Promise<BrandEntity | null> {
-    const brand = await this.findById(brandId);
-    if (!brand) return null;
-
-    const updatedStats = {
-      ...brand.statistics,
-      ...statistics
-    };
-
-    return await this.update(brandId, {
-      statistics: updatedStats
-    });
-  }
-
-  /**
-   * Increment campaign count
-   */
-  async incrementCampaignCount(brandId: string): Promise<BrandEntity | null> {
-    const brand = await this.findById(brandId);
-    if (!brand) return null;
-
-    return await this.updateStatistics(brandId, {
-      total_campaigns: brand.statistics.total_campaigns + 1,
-      active_campaigns: brand.statistics.active_campaigns + 1
-    });
-  }
-
-  /**
-   * Decrement active campaign count
-   */
-  async decrementActiveCampaignCount(brandId: string): Promise<BrandEntity | null> {
-    const brand = await this.findById(brandId);
-    if (!brand) return null;
-
-    const newCount = Math.max(0, brand.statistics.active_campaigns - 1);
-
-    return await this.updateStatistics(brandId, {
-      active_campaigns: newCount
-    });
-  }
-
-  /**
-   * Update total spent
-   */
-  async updateTotalSpent(brandId: string, amount: number): Promise<BrandEntity | null> {
-    const brand = await this.findById(brandId);
-    if (!brand) return null;
-
-    return await this.updateStatistics(brandId, {
-      total_spent: brand.statistics.total_spent + amount
-    });
-  }
-
-  /**
-   * Update project rating
-   */
-  async updateAverageRating(brandId: string, newRating: number): Promise<BrandEntity | null> {
-    const brand = await this.findById(brandId);
-    if (!brand) return null;
-
-    // حساب المتوسط الجديد (simplified - يمكن تحسينه)
-    const currentRating = brand.statistics.average_project_rating;
-    const totalProjects = brand.statistics.total_campaigns;
-    
-    const newAverageRating = totalProjects > 0 
-      ? ((currentRating * totalProjects) + newRating) / (totalProjects + 1)
-      : newRating;
-
-    return await this.updateStatistics(brandId, {
-      average_project_rating: Math.round(newAverageRating * 100) / 100 // round to 2 decimal places
-    });
-  }
-
-  /**
-   * Check if brand name exists (Arabic)
-   */
-  async nameArExists(name: string, excludeBrandId?: string): Promise<boolean> {
-    const filters: QueryFilter[] = [
-      { field: 'name.ar', operator: '==', value: name }
-    ];
-
-    const brands = await this.findAll({ filters });
-    
-    if (excludeBrandId) {
-      return brands.some(brand => brand.id !== excludeBrandId);
+      logger.info("🔍 Brand search completed", { 
+        searchTerm, 
+        totalFound: uniqueBrands.length 
+      });
+      
+      return uniqueBrands;
+    } catch (error) {
+      logger.error("❌ Error searching brands", { searchTerm, error });
+      throw new Error(`Failed to search brands: ${error}`);
     }
-    
-    return brands.length > 0;
-  }
-
-  /**
-   * Check if brand name exists (English)
-   */
-  async nameEnExists(name: string, excludeBrandId?: string): Promise<boolean> {
-    const filters: QueryFilter[] = [
-      { field: 'name.en', operator: '==', value: name }
-    ];
-
-    const brands = await this.findAll({ filters });
-    
-    if (excludeBrandId) {
-      return brands.some(brand => brand.id !== excludeBrandId);
-    }
-    
-    return brands.length > 0;
-  }
-
-  /**
-   * Get brands requiring coordinator assignment
-   */
-  async getBrandsWithoutCoordinator(): Promise<BrandEntity[]> {
-    const filters: QueryFilter[] = [
-      { field: 'assigned_coordinator', operator: '==', value: null },
-      { field: 'is_active', operator: '==', value: true }
-    ];
-
-    return await this.findAll({ 
-      filters,
-      orderBy: [{ field: 'created_at', direction: 'asc' }]
-    });
-  }
-
-  /**
-   * Get brand statistics summary
-   */
-  async getBrandStats(brandId: string): Promise<any> {
-    const brand = await this.findById(brandId);
-    if (!brand) return null;
-
-    return {
-      ...brand.statistics,
-      coordinator_assigned: !!brand.assigned_coordinator,
-      budget_utilization: brand.budget_settings.monthly_budget > 0 
-        ? (brand.statistics.total_spent / brand.budget_settings.monthly_budget) * 100 
-        : 0,
-      account_age_days: brand.created_at ? 
-        Math.floor((Date.now() - brand.created_at.toMillis()) / (1000 * 60 * 60 * 24)) : 0
-    };
   }
 } 
