@@ -25,10 +25,11 @@
   "workspaces": [
     "frontend",
     "backend",
-    "database"
+    "shared"
   ],
   "keywords": [
-    "vue.js",
+    "next.js",
+    "react",
     "firebase",
     "ai",
     "content-management",

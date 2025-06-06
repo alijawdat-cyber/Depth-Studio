@@ -13,4 +13,48 @@ endpoints:
     region: [us-central1]
     availableMemoryMb: 256
     httpsTrigger: {}
-    entryPoint: test 
+    entryPoint: test
+  api:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 1024
+    timeoutSeconds: 300
+    httpsTrigger: {}
+    entryPoint: api
+  # 🔴 NEW: User Management Functions
+  getPendingUsersFunction:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 512
+    timeoutSeconds: 60
+    httpsTrigger: {}
+    entryPoint: getPendingUsersFunction
+  getUserStatsFunction:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 512
+    timeoutSeconds: 60
+    httpsTrigger: {}
+    entryPoint: getUserStatsFunction
+  approveUserFunction:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 512
+    timeoutSeconds: 60
+    httpsTrigger: {}
+    entryPoint: approveUserFunction
+  rejectUserFunction:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 512
+    timeoutSeconds: 60
+    httpsTrigger: {}
+    entryPoint: rejectUserFunction
+  # 🔴 NEW: SSR Support
+  ssrdepthstudio:
+    platform: gcfv2
+    region: [us-central1]
+    availableMemoryMb: 256
+    timeoutSeconds: 30
+    httpsTrigger: {}
+    entryPoint: ssrdepthstudio 

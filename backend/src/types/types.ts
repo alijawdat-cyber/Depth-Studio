@@ -4,7 +4,7 @@
 // Based on depth_studio_database_api_specification.md
 // Last Updated: June 3, 2025
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // ======================================
 // 👥 User & Authentication Types
@@ -819,6 +819,29 @@ export interface QueryOptions {
   filters?: Record<string, any>;
   search?: string;
   include_deleted?: boolean;
+}
+
+/**
+ * User Search Filters Interface
+ */
+export interface UserSearchFilters {
+  role?: UserRole;
+  status?: string;
+  is_active?: boolean;
+  brand_id?: string;
+  created_after?: string;
+  created_before?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
+/**
+ * Pagination Options Interface  
+ */
+export interface PaginationOptions {
+  page: number;
+  limit: number;
+  offset?: number;
 }
 
 // ======================================

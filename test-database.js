@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   try {
-    const serviceAccount = require('./database/service-account-key.json');
+    const serviceAccount = require('./service account key.json');
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });

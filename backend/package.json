@@ -14,16 +14,18 @@
     "env:check": "node -e \"console.log('Environment check:', process.env.NODE_ENV)\""
   },
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@jest/globals": "^29.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "express-validator": "^7.2.1",
     "firebase": "^10.14.1",
     "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.3.2",
+    "firebase-functions": "^5.1.1",
     "helmet": "^8.1.0"
   },
   "devDependencies": {

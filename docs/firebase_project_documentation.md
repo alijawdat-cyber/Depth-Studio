@@ -1,14 +1,53 @@
 # 🔥 **توثيق مشروع Depth Studio - Firebase**
 
-**تاريخ التوثيق**: 31 مايو 2025 - **تحديث OAuth محدث** 🚨  
+**تاريخ التوثيق**: 31 مايو 2025 - **تحديث كامل مع Service Account وAPI Keys الجديدة** 🚨  
 **المشروع**: Depth Studio  
 **المنصة**: Firebase (Google Cloud)  
 **الحالة**: **🔴 مشروع نشط ومُعد للتطوير!** ✅
 
-> **🚨 الوضع الحالي المحدث:**  
-> **Google OAuth مُحدث ومتطابق مع إعدادات Console!**  
-> **Client ID: 584154257700-d6vp6d8376am0c0loaphib4o4rfiii6.apps.googleusercontent.com**  
-> **Client Secret: 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**
+> **🚨 الوضع الحالي المحدث مع كشف تضارب في API Keys:**  
+> **🔍 تم اكتشاف تضارب بين API Keys في Console و .env.local**  
+> **Firebase Console API Key: AIzaSyDHg1-mxejIMPycZJQeE0bZJmWxsimaMF1**  
+> **Current .env.local API Key: AIzaSyDHoj-mxejIMPycZJQeOsZJmMxsimqMFI**  
+> **Google Client ID: 584154257700-d6vp6d876am0c0loapthj64o4riii6.apps.googleusercontent.com**
+
+---
+
+## 🔑 **Firebase Service Account Configuration - مكتشف حديثاً** ⭐
+
+### ✅ **Service Account Key Details:**
+من ملف `depth-studio-firebase-adminsdk-fbsvc-5f13ceb27b.json`:
+
+| المعلومة | القيمة | الحالة |
+|-----------|---------|--------|
+| **Service Account Type** | `service_account` | ✅ **صحيح** |
+| **Project ID** | `depth-studio` | ✅ **متطابق** |
+| **Private Key ID** | `5f13ceb27bf5ac39f520ea2860e22579f22f4289` | ✅ **فعال** |
+| **Client Email** | `firebase-adminsdk-fbsvc@depth-studio.iam.gserviceaccount.com` | ✅ **صحيح** |
+| **Client ID** | `116451695241872961753` | ✅ **مؤكد** |
+| **Auth URI** | `https://accounts.google.com/o/oauth2/auth` | ✅ **صحيح** |
+| **Token URI** | `https://oauth2.googleapis.com/token` | ✅ **صحيح** |
+| **Universe Domain** | `googleapis.com` | ✅ **صحيح** |
+
+### 🔧 **Admin SDK Configuration:**
+```javascript
+// Node.js Backend Configuration
+const admin = require("firebase-admin");
+const serviceAccount = require("path/to/serviceAccountKey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://depth-studio-default-rtdb.firebaseio.com"
+});
+```
+
+### 🚨 **مقارنة Critical: API Keys مختلفة!**
+
+| المصدر | API Key | الحالة |
+|---------|---------|--------|
+| **Firebase Console (من الصور)** | `AIzaSyDHg1-mxejIMPycZJQeE0bZJmWxsimaMF1` | ✅ **الأصلي من Console** |
+| **Current .env.local** | `AIzaSyDHoj-mxejIMPycZJQeOsZJmMxsimqMFI` | ❌ **مختلف - سبب المشكلة!** |
+| **Previous .env (القديم)** | `AIzaSyCKQXEoTXVj5FQSs9KlSjPwH2JIi3l7W8g` | ❌ **قديم ومنتهي** |
 
 ---
 
@@ -104,16 +143,17 @@
 
 ### 🎯 **إحصائيات المستخدمين الحقيقية - محدثة!**
 ```bash
-👥 المستخدمين المسجلين: 1 مستخدم (علي جودت - المدير العام) ✨
+👥 المستخدمين المسجلين: 2 مستخدمين نشطين ✨
 📊 الحالة: جاهز لإضافة المستخدمين الجدد ✨
-📈 الصلاحيات: كاملة للمدير العام ✨
-📅 آخر نشاط: حسب آخر استخدام ✨
+📈 الصلاحيات: مدير عام + مستخدم براند ✨
+📅 آخر نشاط: يناير 2025 ✨
 ```
 
-### 👤 **المستخدم الإداري الحالي:**
-| المستخدم | الدور | تاريخ الإنشاء | الصلاحيات |
-|-----------|-------|--------------|-----------|
-| `علي جودت` | Super Admin | متى تم إنشاؤه | **كاملة - صلاحيات إدارية شاملة** |
+### 👤 **المستخدمين الحاليين:**
+| المستخدم | البريد | الدور | تاريخ الإنشاء | الصلاحيات |
+|-----------|--------|-------|--------------|-----------|
+| `علي جودت` | alijawdat4@gmail.com | Super Admin | فبراير 2025 | **كاملة - صلاحيات إدارية شاملة** |
+| `Nava Fashion` | navafashion.iq@gmail.com | Brand User | يناير 2025 | **براند - في انتظار تخصيص الدور** |
 
 
 ### ✅ **قوالب البريد المُعدة (Templates) - إعداد متقدم:**
@@ -168,9 +208,10 @@ https://depth-studio.firebaseapp.com/__/auth/action?mode=action&oobCode=code
 - **الوصف**: "Allow your users to add an extra layer of security to their account. Once enabled, integrated and configured, users can sign in to their account in two steps, using SMS."
 
 ### 📊 **إحصائيات المستخدمين**
-- **المستخدمين المسجلين**: 0 (مشروع جديد)
-- **المستخدمين النشطين**: 0
-- **الحد الأقصى (Spark Plan)**: 50,000 مستخدم نشط/شهر
+- **المستخدمين المسجلين**: 2 مستخدمين نشطين
+- **المستخدمين المؤكدين**: 2 (100% verified)
+- **آخر نشاط**: يناير 2025
+- **الحد الأقصى (Blaze Plan)**: غير محدود (Pay-as-you-go)
 
 ### 🔧 **Sign-in Methods المتاحة للإضافة**
 - ⚪ Google (مناسب للويب و iOS) - **يحتاج إصلاح OAuth**
@@ -560,3 +601,77 @@ VITE_GOOGLE_CLIENT_SECRET=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
 | **Firestore** | ✅ **متاح ونشط** | قاعدة البيانات الأساسية |
 | **Database Name** | `depth-production` | ✅ **الوحيدة المستخدمة** |
 | **Location** | `nam5` (North America) | ✅ **محدد** |
+
+---
+
+## 🔍 **تشخيص مشكلة Google OAuth - التحليل النهائي** 🚨
+
+### 🎯 **سبب المشكلة الرئيسي المكتشف:**
+
+#### **❌ تضارب Firebase API Keys:**
+```bash
+🔴 المشكلة: API Key في .env.local مختلف عن Firebase Console!
+
+Firebase Console (الصحيح): AIzaSyDHg1-mxejIMPycZJQeE0bZJmWxsimaMF1
+Current .env.local (خطأ):   AIzaSyDHoj-mxejIMPycZJQeOsZJmMxsimqMFI
+                            ^^^^^^^^^^^^^^^^
+                           هذا الفرق يسبب المشكلة!
+```
+
+### 🔧 **خطة الإصلاح الفورية:**
+
+#### **الخطوة 1: تحديث Firebase Configuration**
+```bash
+# في .env.local - استبدل API Key بالصحيح:
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDHg1-mxejIMPycZJQeE0bZJmWxsimaMF1
+```
+
+#### **الخطوة 2: تحديث firebase-config.ts**
+```javascript
+const firebaseConfig = {
+  apiKey: "AIzaSyDHg1-mxejIMPycZJQeE0bZJmWxsimaMF1", // ✅ محدث
+  authDomain: "depth-studio.firebaseapp.com",
+  projectId: "depth-studio",
+  storageBucket: "depth-studio.firebasestorage.app",
+  messagingSenderId: "584154257700",
+  appId: "1:584154257700:web:602c8b50f3945402c3fbb1", // ✅ محدث من Console
+  measurementId: "G-4ZG9YF4PX" // ✅ محدث من Console
+};
+```
+
+#### **الخطوة 3: Google OAuth Configuration**
+```bash
+# تأكيد Google Client ID من Console:
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=584154257700-d6vp6d876am0c0loapthj64o4riii6.apps.googleusercontent.com
+```
+
+### 🌐 **تأكيد إعدادات Google Cloud Console:**
+
+#### **Authorized JavaScript Origins:**
+- ✅ `http://localhost:3000` (للتطوير)
+- ✅ `http://localhost` 
+- ✅ `https://depth-studio.firebaseapp.com`
+- ✅ `https://depth-studio.web.app`
+
+#### **Authorized Redirect URIs:**
+- ✅ `https://depth-studio.firebaseapp.com/__/auth/handler`
+
+### 📊 **توقع النتائج بعد الإصلاح:**
+1. **✅ حل مشكلة "API key not valid"**
+2. **✅ عمل Google Sign-in بشكل صحيح**
+3. **✅ إزالة خطأ Firebase initialization**
+4. **✅ عمل جميع ميزات Firebase Authentication**
+
+### 🔮 **خطة التحقق:**
+```bash
+# 1. تحديث API Key
+# 2. إعادة تشغيل development server
+# 3. مسح browser cache
+# 4. اختبار Google login في localhost:3000
+# 5. فحص console للتأكد من عدم وجود أخطاء
+```
+
+### 🏆 **الحالة المتوقعة بعد الإصلاح:**
+**🎉 Google OAuth سيعمل بدون أي مشاكل!**  
+**✨ جميع ميزات Firebase ستكون متاحة!**  
+**🚀 النظام جاهز للإنتاج!**

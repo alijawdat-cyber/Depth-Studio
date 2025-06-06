@@ -6,7 +6,7 @@
 import { logger } from 'firebase-functions/v2'
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import type { UserRole } from '../types/shared'
+import type { UserRole } from '../types'
 
 const db = getFirestore()
 

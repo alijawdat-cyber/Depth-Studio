@@ -1,8 +1,13 @@
 import { Router } from 'express'
-import { superAdminDashboard } from './superAdminStats'
-import { marketingCoordinatorDashboard } from './marketingCoordinatorStats'
-import { brandCoordinatorDashboard } from './brandCoordinatorStats'
-import { photographerDashboard } from './photographerStats'
+// import { authMiddleware } from '../../middleware/auth' // TODO: Fix import
+import { rateLimitMiddleware } from './middleware'
+import { validateDashboardRequest } from './validators'
+import {
+  getSuperAdminDashboard,
+  getMarketingCoordinatorDashboard,
+  getBrandCoordinatorDashboard,
+  getPhotographerDashboard
+} from './handlers'
 
 const router = Router()
 
@@ -10,16 +15,44 @@ const router = Router()
 // Dashboard Routes
 // ======================================
 
-// Super Admin Dashboard
-router.get('/super-admin', superAdminDashboard)
+/**
+ * Super Admin Dashboard
+ * GET /api/dashboards/super-admin
+ */
+router.get('/super-admin', [
+  // authMiddleware, // TODO: Add auth middleware
+  rateLimitMiddleware.dashboard,
+  validateDashboardRequest.superAdmin
+], getSuperAdminDashboard)
 
-// Marketing Coordinator Dashboard
-router.get('/marketing-coordinator', marketingCoordinatorDashboard)
+/**
+ * Marketing Coordinator Dashboard
+ * GET /api/dashboards/marketing-coordinator
+ */
+router.get('/marketing-coordinator', [
+  // authMiddleware, // TODO: Add auth middleware
+  rateLimitMiddleware.dashboard,
+  validateDashboardRequest.marketingCoordinator
+], getMarketingCoordinatorDashboard)
 
-// Brand Coordinator Dashboard (NAVA specific)
-router.get('/brand-coordinator/:brandId', brandCoordinatorDashboard)
+/**
+ * Brand Coordinator Dashboard
+ * GET /api/dashboards/brand-coordinator/:brandId
+ */
+router.get('/brand-coordinator/:brandId', [
+  // authMiddleware, // TODO: Add auth middleware
+  rateLimitMiddleware.dashboard,
+  validateDashboardRequest.brandCoordinator
+], getBrandCoordinatorDashboard)
 
-// Photographer Dashboard (unified)
-router.get('/photographer/:photographerId', photographerDashboard)
+/**
+ * Photographer Dashboard
+ * GET /api/dashboards/photographer/:photographerId
+ */
+router.get('/photographer/:photographerId', [
+  // authMiddleware, // TODO: Add auth middleware
+  rateLimitMiddleware.dashboard,
+  validateDashboardRequest.photographer
+], getPhotographerDashboard)
 
 export default router 

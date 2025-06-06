@@ -26,6 +26,7 @@ export interface User {
   
   // Role and Status
   primary_role: UserRole;
+  status?: UserStatus; // حالة المستخدم أثناء عملية التسجيل
   is_active: boolean;
   is_verified: boolean;
   last_login?: Timestamp;
@@ -56,7 +57,15 @@ export type UserRole =
   | 'super_admin'          // علي جودت
   | 'marketing_coordinator' // حسن هاشم
   | 'brand_coordinator'     // منسقي البراندات
-  | 'photographer';         // المصورين
+  | 'photographer'          // المصورين
+  | 'new_user';             // المستخدمين الجدد في انتظار اختيار الدور
+
+export type UserStatus = 
+  | 'pending_role_setup'    // في انتظار اختيار الدور
+  | 'pending_approval'      // في انتظار موافقة الإدارة
+  | 'active'                // مفعل ومعتمد
+  | 'suspended'             // معلق مؤقتاً
+  | 'archived';             // مؤرشف
 
 export type AuthProvider = 'email' | 'phone' | 'google';
 

@@ -2,6 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import dashboardRoutes from './api/dashboards'
+import usersRoutes from './api/users'
+import brandsRoutes from './api/brands'
+import campaignsRoutes from './api/campaigns'
+import tasksRoutes from './api/tasks'
 
 // Load environment variables
 dotenv.config()
@@ -71,8 +75,12 @@ if (process.env.NODE_ENV === 'development') {
   })
 }
 
-// Dashboard APIs
+// API Routes
 app.use('/api/dashboards', dashboardRoutes)
+app.use('/api/users', usersRoutes)
+app.use('/api/brands', brandsRoutes)
+app.use('/api/campaigns', campaignsRoutes)
+app.use('/api/tasks', tasksRoutes)
 
 // 404 handler
 app.use('*', (req, res) => {
