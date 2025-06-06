@@ -16,9 +16,14 @@ import {
   NotFoundError, 
   ConflictError,
   AuthorizationError 
-} from '../../middleware/errorHandler';
+} from '../../middleware/errors/CustomErrors';
 import { buildUsersQuery, searchUsers, paginateUsers, canAccessUser, canUpdateUser, canDeleteUser, sanitizeUserData } from './utils';
 import { getDefaultScreenPermissions, getDefaultCrudPermissions } from './permissions';
+import { 
+  CreateUserInput, 
+  UpdateUserInput, 
+  SearchUsersInput 
+} from '../../validators/schemas';
 
 const db = getFirestore();
 const auth = getAuth();
@@ -152,7 +157,7 @@ export const getUserById = async (req: AuthenticatedRequest, res: Response, next
  */
 export const createUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const userData = req.body
+    const userData: CreateUserInput = req.body
     const currentUser = req.user!
 
     // فحص إذا كان البريد موجود مسبقاً
@@ -173,7 +178,7 @@ export const createUser = async (req: AuthenticatedRequest, res: Response, next:
     })
 
     // تجهيز بيانات المستخدم للحفظ
-    const newUser: any = {
+    const newUser: Partial<User> = {
       firebase_uid: firebaseUser.uid,
       email: userData.email,
       first_name: userData.first_name,
@@ -258,7 +263,7 @@ export const createUser = async (req: AuthenticatedRequest, res: Response, next:
 export const updateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.params.id
-    const updateData = req.body
+    const updateData: UpdateUserInput = req.body
     const currentUser = req.user!
 
     // فحص الصلاحيات
@@ -301,7 +306,7 @@ export const updateUser = async (req: AuthenticatedRequest, res: Response, next:
       allowedFields.push('primary_role', 'status', 'is_active', 'assigned_brands')
     }
 
-    const updateFields: any = {
+    const updateFields: Record<string, any> = {
       updated_at: FieldValue.serverTimestamp(),
       updated_by: currentUser.id
     }
