@@ -14,11 +14,22 @@ import { Router } from 'express';
 import { authenticateToken } from '../../middleware/auth';
 import { authorize, adminOnly, superAdminOnly } from '../../middleware/authorization';
 import { requestLogger, auditLogger } from '../../middleware/logging';
-// Note: using local validators instead of global ones
+
+// New Zod validation imports
+import { 
+  validateBody, 
+  validateQuery, 
+  validateParams 
+} from '../../validators/middleware';
+import {
+  CreateUserSchema,
+  UpdateUserSchema,
+  SearchUsersSchema
+} from '../../validators/schemas';
+import { z } from 'zod';
 
 // Local imports
 import { userHandlers } from './handlers';
-import { userValidators } from './validators';
 import { userMiddleware } from './middleware';
 
 const router = Router();
@@ -30,7 +41,7 @@ router.get('/',
   userMiddleware.userGeneralRateLimit,
   authenticateToken,
   authorize(['super_admin', 'marketing_coordinator']),
-  userValidators.getUsersValidation,
+  validateQuery(SearchUsersSchema), // 🆕 Zod validation
   requestLogger(),
   userHandlers.getUsers
 );
@@ -42,7 +53,7 @@ router.get('/search',
   userMiddleware.userGeneralRateLimit,
   authenticateToken,
   authorize(['super_admin', 'marketing_coordinator', 'brand_coordinator']),
-  userValidators.searchUsersValidation,
+  validateQuery(SearchUsersSchema), // 🆕 Zod validation
   userHandlers.searchUsersHandler
 );
 
@@ -53,7 +64,6 @@ router.get('/stats',
   userMiddleware.userGeneralRateLimit,
   authenticateToken,
   adminOnly,
-  userValidators.getUserStatsValidation,
   userHandlers.getUserStats
 );
 
@@ -63,7 +73,7 @@ router.get('/stats',
 router.get('/:id',
   userMiddleware.userGeneralRateLimit,
   authenticateToken,
-  userValidators.getUserByIdValidation,
+  validateParams(z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) })), // 🆕 ID validation
   requestLogger(),
   userHandlers.getUserById
 );
@@ -75,7 +85,7 @@ router.post('/',
   userMiddleware.userAuthRateLimit,
   authenticateToken,
   adminOnly,
-  userValidators.createUserValidation,
+  validateBody(CreateUserSchema), // 🆕 Zod validation
   auditLogger('create_user'),
   userHandlers.createUser
 );
@@ -86,7 +96,8 @@ router.post('/',
 router.put('/:id',
   userMiddleware.userGeneralRateLimit,
   authenticateToken,
-  userValidators.updateUserValidation,
+  validateParams(z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) })), // 🆕 ID validation
+  validateBody(UpdateUserSchema), // 🆕 Zod validation
   auditLogger('update_user'),
   userHandlers.updateUser
 );
@@ -98,7 +109,7 @@ router.delete('/:id',
   userMiddleware.userAuthRateLimit,
   authenticateToken,
   superAdminOnly,
-  userValidators.deleteUserValidation,
+  validateParams(z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) })), // 🆕 ID validation
   auditLogger('delete_user'),
   userHandlers.deleteUser
 );
@@ -110,7 +121,7 @@ router.post('/:id/activate',
   userMiddleware.userAuthRateLimit,
   authenticateToken,
   adminOnly,
-  userValidators.toggleUserStatusValidation,
+  validateParams(z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) })), // 🆕 ID validation
   auditLogger('activate_user'),
   userHandlers.activateUser
 );
@@ -122,7 +133,7 @@ router.post('/:id/deactivate',
   userMiddleware.userAuthRateLimit,
   authenticateToken,
   adminOnly,
-  userValidators.toggleUserStatusValidation,
+  validateParams(z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) })), // 🆕 ID validation
   auditLogger('deactivate_user'),
   userHandlers.deactivateUser
 );
