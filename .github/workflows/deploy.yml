@@ -1,0 +1,203 @@
+name: 🚀 Deploy Depth Studio to Firebase
+
+on:
+  push:
+    branches: [ main, production ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  FIREBASE_PROJECT_ID: depth-studio
+
+jobs:
+  # ===========================================
+  # 🔍 Job 1: التحقق من الأمان والجودة
+  # ===========================================
+  security-check:
+    name: 🛡️ Security & Environment Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+
+    # إعداد Firebase Service Account Key
+    - name: 🔑 Setup Firebase Service Account
+      run: |
+        mkdir -p backend/keys
+        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" > backend/keys/serviceAccountKey.json
+        echo "✅ Firebase Service Account Key created"
+
+    # التحقق من متغيرات البيئة في Backend
+    - name: 🔍 Validate Backend Environment
+      working-directory: ./backend
+      env:
+        NODE_ENV: production
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+        FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+        GOOGLE_APPLICATION_CREDENTIALS: ./keys/serviceAccountKey.json
+      run: |
+        npm ci
+        npm run validate-env
+
+    # التحقق من Frontend Environment
+    - name: 🔍 Validate Frontend Environment  
+      working-directory: ./frontend
+      env:
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: depth-studio.firebaseapp.com
+        NEXT_PUBLIC_FIREBASE_DATABASE_URL: https://depth-studio-default-rtdb.firebaseio.com
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: depth-studio.firebasestorage.app
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+        NEXT_PUBLIC_FIRESTORE_DATABASE_ID: depth-production
+      run: |
+        npm ci
+        npm run build
+
+    # فحص أمني للمفاتيح المكشوفة
+    - name: 🕵️ Check for exposed secrets
+      run: |
+        echo "🔍 Checking for exposed API keys or secrets..."
+        if grep -r "AIza[0-9A-Za-z\\-_]{35}" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" .; then
+          echo "❌ Found exposed Firebase API keys in code!"
+          exit 1
+        fi
+        if grep -r "firebase-adminsdk" --include="*.ts" --include="*.js" .; then
+          echo "❌ Found service account references in code!"
+          exit 1
+        fi
+        echo "✅ No exposed secrets found"
+
+  # ===========================================
+  # 🧪 Job 2: اختبار المشروع
+  # ===========================================
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    needs: security-check
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    # اختبار Backend
+    - name: 🧪 Test Backend
+      working-directory: ./backend
+      run: |
+        npm ci
+        npm run test
+
+    # اختبار Frontend  
+    - name: 🧪 Test Frontend
+      working-directory: ./frontend
+      run: |
+        npm ci
+        npm run test
+
+  # ===========================================
+  # 🚀 Job 3: النشر للإنتاج
+  # ===========================================
+  deploy:
+    name: 🚀 Deploy to Firebase
+    runs-on: ubuntu-latest
+    needs: [security-check, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    # إعداد Firebase CLI
+    - name: 🔧 Setup Firebase CLI
+      run: |
+        npm install -g firebase-tools
+        echo "✅ Firebase CLI installed"
+
+    # إعداد مفاتيح الأمان
+    - name: 🔑 Setup Production Secrets
+      run: |
+        mkdir -p backend/keys
+        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" > backend/keys/serviceAccountKey.json
+        echo "✅ Production secrets configured"
+
+    # بناء Backend
+    - name: 🔨 Build Backend
+      working-directory: ./backend
+      env:
+        NODE_ENV: production
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+      run: |
+        npm ci
+        npm run predeploy
+
+    # بناء Frontend
+    - name: 🔨 Build Frontend
+      working-directory: ./frontend
+      env:
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: depth-studio.firebaseapp.com
+        NEXT_PUBLIC_FIREBASE_DATABASE_URL: https://depth-studio-default-rtdb.firebaseio.com
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: depth-studio.firebasestorage.app
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+        NEXT_PUBLIC_FIRESTORE_DATABASE_ID: depth-production
+      run: |
+        npm ci
+        npm run build
+
+    # نشر إلى Firebase
+    - name: 🚀 Deploy to Firebase
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      run: |
+        firebase deploy --project ${{ env.FIREBASE_PROJECT_ID }} --token "$FIREBASE_TOKEN"
+        echo "✅ Deployment completed successfully!"
+
+    # تنظيف الملفات الحساسة
+    - name: 🧹 Cleanup sensitive files
+      run: |
+        rm -f backend/keys/serviceAccountKey.json
+        echo "✅ Sensitive files cleaned up"
+
+  # ===========================================
+  # 📊 Job 4: إشعار النجاح
+  # ===========================================
+  notify:
+    name: 📢 Notify Success
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success()
+    
+    steps:
+    - name: 📢 Success Notification
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "🌐 Frontend: https://depth-studio.web.app"
+        echo "⚡ Functions: https://us-central1-depth-studio.cloudfunctions.net"
+        echo "📊 Console: https://console.firebase.google.com/project/depth-studio" 
