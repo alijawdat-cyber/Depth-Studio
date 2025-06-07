@@ -1,8 +1,18 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+
+// استخدام المسار الصحيح أو Application Default Credentials
+let credential;
+try {
+  const serviceAccount = require('../backend/keys/serviceAccountKey.json');
+  credential = admin.credential.cert(serviceAccount);
+  console.log('🔑 تم استخدام Service Account Key');
+} catch (error) {
+  credential = admin.credential.applicationDefault();
+  console.log('🔐 تم استخدام Application Default Credentials');
+}
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: credential,
   databaseURL: 'https://depth-studio-default-rtdb.firebaseio.com/'
 });
 

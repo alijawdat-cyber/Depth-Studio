@@ -23,7 +23,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "firebase": "^10.0.0",
+    "firebase": "^11.9.0",
     "firebase-admin": "^12.7.0"
   },
   "exports": {

@@ -7,7 +7,8 @@
  * 🎯 الهدف: API endpoints للنظام الكامل
  */
 
-import * as functions from "firebase-functions";
+import { onRequest } from "firebase-functions/v2/https";
+import { setGlobalOptions } from "firebase-functions/v2";
 import express from "express";
 import cors from "cors";
 import { UserController } from "./controllers/UserController";
@@ -20,7 +21,7 @@ import { NotificationController } from "./controllers/NotificationController";
 import { AuthController } from "./controllers/AuthController";
 import { RoleSelectionController } from "./controllers/RoleSelectionController";
 import { services } from "./services";
-import { logger } from "firebase-functions";
+import { logger } from "firebase-functions/v1";
 
 // Import validators
 import { validateSearchUsers } from "./validators/UserValidators";
@@ -1012,41 +1013,41 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
   });
 });
 
+// Import express types for devInfo function
+import { Request, Response } from "express";
+
 // ======================================
 // 🚀 Firebase Functions Export
 // ======================================
+
+// Set global options for all functions
+setGlobalOptions({
+  region: "us-central1",
+  memory: "512MiB",
+  timeoutSeconds: 60,
+  minInstances: 0,
+  maxInstances: 10
+});
 
 /**
  * 🎯 Main API Function
  * 
  * استخدام:
- * - التطوير: http://localhost:5001/depth-production/us-central1/api
- * - الإنتاج: https://us-central1-depth-production.cloudfunctions.net/api
+ * - التطوير: http://localhost:5001/depth-studio/us-central1/api
+ * - الإنتاج: https://us-central1-depth-studio.cloudfunctions.net/api
  */
-export const api = functions
-  .region("us-central1")
-  .runWith({
-    memory: "512MB",
-    timeoutSeconds: 60,
-    minInstances: 0,
-    maxInstances: 10
-  })
-  .https
-  .onRequest(app);
+export const api = onRequest(app);
 
 /**
  * 🧪 Development Helper Function
  */
-export const devInfo = functions
-  .region("us-central1")
-  .https
-  .onRequest((req, res) => {
-    res.json({
-      message: "🎯 Depth Studio Development Info",
-      environment: "development",
-      mainAPI: "/api",
-      documentation: "https://docs.depthstudio.app",
-      version: "2.0.0",
-      lastUpdated: "December 2024"
-    });
-  }); 
+export const devInfo = onRequest((req: Request, res: Response) => {
+  res.json({
+    message: "🎯 Depth Studio Development Info",
+    environment: "development",
+    mainAPI: "/api",
+    documentation: "https://docs.depthstudio.app",
+    version: "2.0.0",
+    lastUpdated: "December 2024"
+  });
+}); 

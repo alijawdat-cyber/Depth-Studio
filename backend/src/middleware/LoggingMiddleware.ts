@@ -1,24 +1,26 @@
 /**
- * 📝 Logging Middleware - Depth Studio
+ * 📝 Logging Middleware - مسجل طلبات شامل
  * =====================================
  * 
  * 📅 محدث: ديسمبر 2024
  * 👨‍💻 المطور: علي جودت
- * 🎯 الهدف: نظام تسجيل شامل مع مراقبة الأداء والأخطاء
+ * 🎯 الهدف: تسجيل شامل ومراقبة أداء للـ API
  * 
- * 🔍 المسؤوليات:
- * - Request/Response Logging
- * - Error Logging
- * - Performance Monitoring
- * - Security Event Logging
- * - Analytics Data Collection
+ * 🌟 المميزات:
+ * - تسجيل الطلبات والاستجابات
+ * - مراقبة الأداء المتقدم
+ * - تسجيل الأخطاء والأمان
+ * - Performance Monitoring مع Firebase
+ * - Database Operations Tracking
+ * - Authentication Events Logging
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { UserRole } from '../../../types/src/core/enums';
-import { ID } from '../../../types/src/core/base';
-import { AuthenticatedUser } from './AuthenticationMiddleware';
 import { logger } from 'firebase-functions';
+// 🔗 ربط مع Firebase Performance Service
+import { performanceService } from '../config/firebase';
+import { AuthenticatedUser } from './AuthenticationMiddleware';
+import { ID, UserRole } from '../../../types/src';
 
 /**
  * 📊 مستويات التسجيل
@@ -34,7 +36,7 @@ export type LogEventType =
   | 'database' | 'file_operation' | 'payment' | 'notification';
 
 /**
- * 📋 معلومات الطلب المفصلة
+ * 📋 معلومات الطلب
  */
 interface RequestInfo {
   method: string;
@@ -50,7 +52,7 @@ interface RequestInfo {
 }
 
 /**
- * 📤 معلومات الاستجابة المفصلة
+ * 📋 معلومات الاستجابة
  */
 interface ResponseInfo {
   statusCode: number;
@@ -62,7 +64,7 @@ interface ResponseInfo {
 }
 
 /**
- * 👤 معلومات المستخدم للتسجيل
+ * 👤 معلومات المستخدم
  */
 interface UserLogInfo {
   userId: ID;
@@ -73,7 +75,7 @@ interface UserLogInfo {
 }
 
 /**
- * 🔒 حدث أمني
+ * 🔒 أحداث الأمان
  */
 interface SecurityEvent {
   type: 'login_attempt' | 'access_denied' | 'suspicious_activity' | 'rate_limit_exceeded';
@@ -85,7 +87,7 @@ interface SecurityEvent {
 }
 
 /**
- * ⚡ معلومات الأداء
+ * ⚡ معلومات الأداء (محدثة مع Firebase Performance)
  */
 interface PerformanceMetrics {
   requestTime: number;
@@ -95,6 +97,9 @@ interface PerformanceMetrics {
   databaseQueries?: number;
   cacheHits?: number;
   cacheMisses?: number;
+  // 🆕 Firebase Performance Integration
+  firebaseTraceId?: string;
+  performanceTraceStarted?: boolean;
 }
 
 /**
@@ -106,6 +111,8 @@ export interface LoggingConfig {
   enableErrorLogging: boolean;
   enablePerformanceMonitoring: boolean;
   enableSecurityLogging: boolean;
+  // 🆕 Firebase Performance Integration
+  enableFirebasePerformance: boolean;
   logLevel: LogLevel;
   excludePaths: string[];
   includeHeaders: boolean;
@@ -129,6 +136,7 @@ export class LoggingMiddleware {
       enableErrorLogging: true,
       enablePerformanceMonitoring: true,
       enableSecurityLogging: true,
+      enableFirebasePerformance: true, // 🆕 تفعيل Firebase Performance
       logLevel: 'info',
       excludePaths: ['/health', '/metrics', '/favicon.ico'],
       includeHeaders: true,
@@ -141,7 +149,10 @@ export class LoggingMiddleware {
     this.performanceMetrics = new Map();
     this.requestIdCounter = 0;
     
-    logger.info('📝 LoggingMiddleware initialized', { config: this.config });
+    logger.info('📝 LoggingMiddleware initialized with Firebase Performance', { 
+      config: this.config,
+      firebasePerformanceEnabled: this.config.enableFirebasePerformance
+    });
   }
 
   // ======================================
@@ -242,8 +253,8 @@ export class LoggingMiddleware {
       return 'unknown';
     }
     
-         const ipParts = ip.split(',');
-     return ipParts.length > 0 && ipParts[0] ? ipParts[0].trim() : 'unknown';
+    const ipParts = ip.split(',');
+    return ipParts.length > 0 && ipParts[0] ? ipParts[0].trim() : 'unknown';
   }
 
   // ======================================
@@ -295,32 +306,60 @@ export class LoggingMiddleware {
   }
 
   // ======================================
-  // ⚡ Performance Monitoring
+  // ⚡ Performance Monitoring (محدث مع Firebase)
   // ======================================
 
   /**
-   * بدء مراقبة الأداء
+   * بدء مراقبة الأداء مع Firebase Performance
    */
-  private startPerformanceMonitoring(requestId: string): void {
+  private startPerformanceMonitoring(requestId: string, path: string, method: string): void {
     if (!this.config.enablePerformanceMonitoring) return;
 
     const startTime = process.hrtime.bigint();
     const memoryUsage = process.memoryUsage();
     
-    this.performanceMetrics.set(requestId, {
+    // 🔥 بدء Firebase Performance Trace
+    let firebaseTraceId: string | undefined;
+    let performanceTraceStarted = false;
+    
+    if (this.config.enableFirebasePerformance) {
+      try {
+        firebaseTraceId = performanceService.startTrace(`api_${method.toLowerCase()}_${path.replace(/\//g, '_')}`, {
+          method: method,
+          path: path,
+          request_id: requestId
+        });
+        performanceTraceStarted = true;
+        logger.debug('🔥 Firebase Performance trace started', { firebaseTraceId, path, method });
+      } catch (error) {
+        logger.error('❌ Failed to start Firebase Performance trace', { error, path, method });
+      }
+    }
+    
+    const perfMetrics: PerformanceMetrics = {
       requestTime: Number(startTime),
       responseTime: 0,
       memoryUsage,
       databaseQueries: 0,
       cacheHits: 0,
       cacheMisses: 0
-    });
+    };
+    
+    if (firebaseTraceId) {
+      perfMetrics.firebaseTraceId = firebaseTraceId;
+    }
+    
+    if (performanceTraceStarted !== undefined) {
+      perfMetrics.performanceTraceStarted = performanceTraceStarted;
+    }
+    
+    this.performanceMetrics.set(requestId, perfMetrics);
   }
 
   /**
-   * إنهاء مراقبة الأداء
+   * إنهاء مراقبة الأداء مع Firebase Performance
    */
-  private endPerformanceMonitoring(requestId: string): PerformanceMetrics | null {
+  private endPerformanceMonitoring(requestId: string, statusCode: number, path: string): PerformanceMetrics | null {
     if (!this.config.enablePerformanceMonitoring) return null;
 
     const metrics = this.performanceMetrics.get(requestId);
@@ -328,6 +367,28 @@ export class LoggingMiddleware {
 
     const endTime = process.hrtime.bigint();
     metrics.responseTime = Number(endTime - BigInt(metrics.requestTime)) / 1_000_000; // Convert to milliseconds
+
+    // 🔥 إنهاء Firebase Performance Trace
+    if (metrics.performanceTraceStarted && metrics.firebaseTraceId) {
+      try {
+        performanceService.stopTrace(metrics.firebaseTraceId, {
+          status_code: statusCode.toString(),
+          response_time_ms: metrics.responseTime.toString(),
+          path: path,
+          success: statusCode < 400 ? 'true' : 'false'
+        });
+        logger.debug('🔥 Firebase Performance trace completed', { 
+          firebaseTraceId: metrics.firebaseTraceId,
+          responseTime: metrics.responseTime,
+          statusCode
+        });
+      } catch (error) {
+        logger.error('❌ Failed to stop Firebase Performance trace', { 
+          error, 
+          firebaseTraceId: metrics.firebaseTraceId 
+        });
+      }
+    }
 
     this.performanceMetrics.delete(requestId);
     return metrics;
@@ -338,121 +399,85 @@ export class LoggingMiddleware {
   // ======================================
 
   /**
-   * تسجيل حدث أمني
+   * تسجيل أحداث الأمان
    */
   logSecurityEvent(event: SecurityEvent): void {
     if (!this.config.enableSecurityLogging) return;
 
-    const logEntry = {
-      category: 'SECURITY',
-      event_type: event.type,
+    logger.warn('🔒 Security Event', {
+      type: 'security',
+      event: event.type,
       severity: event.severity,
       details: event.details,
       ip: event.ip,
-      user_id: event.userId,
+      userId: event.userId,
       timestamp: event.timestamp
-    };
-
-    switch (event.severity) {
-      case 'critical':
-        logger.error('🚨 CRITICAL SECURITY EVENT', logEntry);
-        break;
-      case 'high':
-        logger.warn('⚠️ HIGH SECURITY EVENT', logEntry);
-        break;
-      case 'medium':
-        logger.warn('🔸 MEDIUM SECURITY EVENT', logEntry);
-        break;
-      case 'low':
-        logger.info('ℹ️ LOW SECURITY EVENT', logEntry);
-        break;
-    }
+    });
   }
 
   // ======================================
-  // 🌐 Main Middleware Functions
+  // 📝 Main Middleware Functions
   // ======================================
 
   /**
-   * Middleware رئيسي للتسجيل
+   * Middleware لتسجيل الطلبات والاستجابات
    */
   requestLogger(): (req: Request, res: Response, next: NextFunction) => void {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      const startTime = Date.now();
-      
-      try {
-        // التحقق من المسارات المستثناة
-        if (this.shouldSkipLogging(req.path)) {
-          return next();
-        }
-
-        // استخراج معلومات الطلب
-        const requestInfo = this.extractRequestInfo(req);
-        const requestId = requestInfo.requestId;
-
-        // بدء مراقبة الأداء
-        this.startPerformanceMonitoring(requestId);
-
-        // تسجيل الطلب
-        if (this.config.enableRequestLogging) {
-          const logData: any = {
-            category: 'REQUEST',
-            request_id: requestId,
-            ...requestInfo
-          };
-
-          // إضافة معلومات المستخدم إذا كان مصادقاً
-          if (req.user) {
-            logData.user = this.extractUserInfo(req.user);
-          }
-
-          logger.info('📥 Incoming Request', logData);
-        }
-
-        // مراقبة الاستجابة
-        const originalSend = res.send;
-        const self = this;
-        res.send = function(body: any) {
-          // تسجيل الاستجابة
-          if (self.config.enableResponseLogging) {
-            const responseInfo = self.extractResponseInfo(res, startTime);
-            const performanceMetrics = self.endPerformanceMonitoring(requestId);
-
-            const logData: any = {
-              category: 'RESPONSE',
-              request_id: requestId,
-              ...responseInfo
-            };
-
-            if (performanceMetrics) {
-              logData.performance = performanceMetrics;
-            }
-
-            // إضافة body إذا كان مسموحاً
-            if (self.config.includeBody && body) {
-              const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
-              if (bodyStr.length <= self.config.maxBodySize) {
-                logData.response_body = self.sanitizeData(body);
-              }
-            }
-
-            logger.info('📤 Outgoing Response', logData);
-          }
-
-          return originalSend.call(res, body);
-        };
-
-        next();
-      } catch (error) {
-        logger.error('💥 Logging middleware error', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          path: req.path,
-          method: req.method
-        });
-        
-        next();
+    const self = this;
+    
+    return (req: Request, res: Response, next: NextFunction) => {
+      // تجاهل المسارات المستثناة
+      if (self.shouldSkipLogging(req.path)) {
+        return next();
       }
+
+      const startTime = Date.now();
+      const requestInfo = self.extractRequestInfo(req);
+      const requestId = requestInfo.requestId;
+
+      // بدء مراقبة الأداء
+      self.startPerformanceMonitoring(requestId, req.path, req.method);
+
+      // تسجيل الطلب
+      if (self.config.enableRequestLogging) {
+        logger.info('📥 Request', {
+          type: 'request',
+          ...requestInfo,
+          body: self.config.includeBody ? self.sanitizeData(req.body) : undefined
+        });
+      }
+
+      // تخزين معلومات إضافية للاستجابة
+      (res as any).startTime = startTime;
+      (res as any).requestId = requestId;
+
+      // Intercept الاستجابة
+      const originalSend = res.send;
+      res.send = function(data: any) {
+        const responseInfo = self.extractResponseInfo(res, startTime);
+        
+        // إنهاء مراقبة الأداء
+        const performanceMetrics = self.endPerformanceMonitoring(requestId, res.statusCode, req.path);
+
+        // تسجيل الاستجابة
+        if (self.config.enableResponseLogging) {
+          logger.info('📤 Response', {
+            type: 'response',
+            requestId,
+            ...responseInfo,
+            performanceMetrics: performanceMetrics ? {
+              responseTime: performanceMetrics.responseTime,
+              memoryUsage: performanceMetrics.memoryUsage,
+              databaseQueries: performanceMetrics.databaseQueries
+            } : undefined,
+            body: self.config.includeBody ? self.sanitizeData(data) : undefined
+          });
+        }
+
+        return originalSend.call(this, data);
+      };
+
+      next();
     };
   }
 

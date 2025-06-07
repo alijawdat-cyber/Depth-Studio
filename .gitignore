@@ -182,6 +182,9 @@ firebase-debug.*.log
 lib/config/api_keys.dart
 secrets/
 config/secrets.js
+backend/keys/
+*.json
+*.env
 
 # ===========================================
 # DEVELOPMENT TOOLS & IDE
