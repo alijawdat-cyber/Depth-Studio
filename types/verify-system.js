@@ -137,11 +137,14 @@ async function analyzeSystem() {
     // 4. تحليل التوافق
     console.log('🔍 تحليل التوافق:');
     
-    // المقارنة مع Collections المتوقعة
+    // المقارنة مع Collections المتوقعة (محدث للمصادقة المتعددة)
     const expectedCollections = [
       'users', 'user_permissions', 'photographer_info', 'brands', 
       'campaigns', 'content', 'content_categories', 'payments', 
-      'equipment', 'notifications'
+      'equipment', 'notifications',
+      // المجموعات الجديدة للمصادقة المتعددة
+      'phone_verifications', 'auth_methods', 'role_applications', 
+      'otp_logs', 'auth_activity_logs'
     ];
     
     const actualCollections = Object.keys(collectionData);

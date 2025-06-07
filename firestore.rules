@@ -245,6 +245,99 @@ service cloud.firestore {
     }
     
     // ==========================================
+    // 📱 PHONE_VERIFICATIONS COLLECTION (تحقق الهواتف)
+    // ==========================================
+    match /phone_verifications/{verificationId} {
+      // القراءة: المستخدم المالك للرقم أو المدراء
+      allow read: if resource.data.user_id == request.auth.uid ||
+                     hasAdminAccess();
+      
+      // الإنشاء: أي مستخدم مصرح له للتسجيل، أو النظام
+      allow create: if isAuthenticated() || hasAdminAccess();
+      
+      // التحديث: المستخدم المالك لتحديث حالة التحقق، أو النظام
+      allow update: if resource.data.user_id == request.auth.uid ||
+                       hasAdminAccess();
+      
+      // الحذف: النظام فقط للتنظيف التلقائي
+      allow delete: if hasAdminAccess();
+    }
+    
+    // ==========================================
+    // 🔐 AUTH_METHODS COLLECTION (طرق المصادقة)
+    // ==========================================
+    match /auth_methods/{methodId} {
+      // القراءة: المستخدم المالك أو المدراء
+      allow read: if resource.data.user_id == request.auth.uid ||
+                     hasAdminAccess();
+      
+      // الإنشاء: المستخدم نفسه أو النظام
+      allow create: if request.resource.data.user_id == request.auth.uid ||
+                       hasAdminAccess();
+      
+      // التحديث: المستخدم المالك أو النظام لتحديث حالة التحقق
+      allow update: if resource.data.user_id == request.auth.uid ||
+                       hasAdminAccess();
+      
+      // الحذف: المستخدم المالك (لحذف طريقة مصادقة) أو Admin
+      allow delete: if resource.data.user_id == request.auth.uid ||
+                       isAdmin();
+    }
+    
+    // ==========================================
+    // 🎭 ROLE_APPLICATIONS COLLECTION (طلبات الأدوار)
+    // ==========================================
+    match /role_applications/{applicationId} {
+      // القراءة: مقدم الطلب أو المدراء
+      allow read: if resource.data.user_id == request.auth.uid ||
+                     hasAdminAccess();
+      
+      // الإنشاء: المستخدم نفسه لتقديم طلب دور
+      allow create: if request.resource.data.user_id == request.auth.uid;
+      
+      // التحديث: Admin فقط للموافقة أو الرفض
+      allow update: if hasAdminAccess();
+      
+      // الحذف: Admin فقط
+      allow delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // 📜 OTP_LOGS COLLECTION (سجل رموز OTP)
+    // ==========================================
+    match /otp_logs/{logId} {
+      // القراءة: Admin فقط للمراقبة والتحليل
+      allow read: if hasAdminAccess();
+      
+      // الإنشاء: النظام فقط عند إرسال OTP
+      allow create: if hasAdminAccess();
+      
+      // التحديث: النظام فقط لتحديث حالة التسليم
+      allow update: if hasAdminAccess();
+      
+      // الحذف: Admin فقط للتنظيف
+      allow delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // 📊 AUTH_ACTIVITY_LOGS COLLECTION (سجل نشاط المصادقة)
+    // ==========================================
+    match /auth_activity_logs/{activityId} {
+      // القراءة: المستخدم المالك للنشاط أو المدراء
+      allow read: if resource.data.user_id == request.auth.uid ||
+                     hasAdminAccess();
+      
+      // الإنشاء: النظام فقط لتسجيل النشاط
+      allow create: if hasAdminAccess();
+      
+      // التحديث: النظام فقط (عادة لا يُحدث)
+      allow update: if hasAdminAccess();
+      
+      // الحذف: Admin فقط للتنظيف
+      allow delete: if isAdmin();
+    }
+    
+    // ==========================================
     // 🗑️ CATCH-ALL RULE (قاعدة الأمان الافتراضية)
     // ==========================================
     // رفض الوصول لأي collection غير محدد صراحة

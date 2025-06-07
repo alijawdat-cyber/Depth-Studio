@@ -69,7 +69,13 @@ export const DATABASE_CONFIG = {
     CONTENT_CATEGORIES: "content_categories",
     PAYMENTS: "payments",
     EQUIPMENT: "equipment",
-    NOTIFICATIONS: "notifications"
+    NOTIFICATIONS: "notifications",
+    // 🆕 Multi-Auth System Collections
+    PHONE_VERIFICATIONS: "phone_verifications",
+    AUTH_METHODS: "auth_methods",
+    ROLE_APPLICATIONS: "role_applications",
+    OTP_LOGS: "otp_logs",
+    AUTH_ACTIVITY_LOGS: "auth_activity_logs"
   } as const
 } as const;
 

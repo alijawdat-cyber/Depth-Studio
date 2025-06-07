@@ -7,7 +7,9 @@
  * 🎯 الهدف: المنطق التجاري للبراندات بأنواع محكمة 100%
  */
 
-import { Brand, BrandStatus, BrandType, Industry, ID, MultiLanguageText } from "@/types";
+import { Brand } from "../../../types/src/brands";
+import { BrandStatus, BrandType, Industry } from "../../../types/src/core/enums";
+import { ID, MultiLanguageText } from "../../../types/src/core/base";
 import { BrandRepository } from "../repositories/BrandRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { logger } from "firebase-functions";

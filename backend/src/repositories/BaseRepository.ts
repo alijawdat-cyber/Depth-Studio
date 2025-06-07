@@ -18,7 +18,7 @@ import {
   FieldValue,
   WhereFilterOp
 } from "firebase-admin/firestore";
-import { BaseEntity, ID } from "@/types";
+import { BaseEntity, ID } from "../../../types/src/core/base";
 import { db } from "../config/firebase";
 import { logger } from "firebase-functions";
 

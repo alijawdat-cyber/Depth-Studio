@@ -7,7 +7,9 @@
  * 🎯 الهدف: إدارة البراندات بأنواع محكمة 100%
  */
 
-import { Brand, BrandStatus, BrandType, Industry, ID } from "@/types";
+import { Brand } from "../../../types/src/brands";
+import { BrandStatus, BrandType, Industry } from "../../../types/src/core/enums";
+import { ID } from "../../../types/src/core/base";
 import { BaseRepository, QueryOptions } from "./BaseRepository";
 import { DATABASE_CONFIG } from "../config/firebase";
 import { logger } from "firebase-functions";

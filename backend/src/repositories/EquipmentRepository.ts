@@ -7,9 +7,7 @@
  * 🎯 الهدف: Repository شامل لإدارة المعدات مع Type Safety كامل
  */
 
-import { Equipment } from '../../../types/src/equipment';
-import { EquipmentType, EquipmentCondition } from '../../../types/src/core/enums';
-import { ID, FirebaseTimestamp } from '../../../types/src/core/base';
+import { Equipment, EquipmentType, EquipmentCondition, ID, FirebaseTimestamp } from '../../../types/src';
 import { BaseRepository, QueryOptions } from './BaseRepository';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';

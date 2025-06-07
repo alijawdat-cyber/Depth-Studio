@@ -33,8 +33,23 @@ import {
   AuthMethod,
   AuthProvider,
   ID
-} from '@depth-studio/types';
+} from '../../../types/src';
 import { logger } from 'firebase-functions';
+
+// 🔐 Auth Validators
+import {
+  validateEmailRegistration,
+  validateEmailLogin,
+  validatePhoneRegistration,
+  validatePhoneLogin,
+  validateGoogleRegistration,
+  validateGoogleLogin,
+  validateOTPSend,
+  validateOTPVerify,
+  validatePhoneValidation,
+  validateLogout,
+  validateUserIdParams
+} from '../validators/AuthValidators';
 
 
 
@@ -57,26 +72,22 @@ export class AuthController {
   /**
    * POST /api/auth/register/email
    * تسجيل مستخدم جديد بالبريد الإلكتروني
+   * 🔐 Validation: validateEmailRegistration middleware
+   * 
+   * فايدة validateEmailRegistration:
+   * - التحقق من صحة البريد الإلكتروني
+   * - التحقق من قوة كلمة المرور
+   * - التحقق من تطابق كلمة المرور وتأكيدها
+   * - التحقق من قبول الشروط والأحكام
+   * - التحقق من صحة رقم الهاتف العراقي (اختياري)
    */
   async registerWithEmail(req: Request, res: Response): Promise<void> {
     try {
-      const registrationData: EmailRegistrationData = {
-        email: req.body.email,
-        password: req.body.password,
-        confirm_password: req.body.confirm_password,
-        full_name: req.body.full_name,
-        phone: req.body.phone,
-        accept_terms: req.body.accept_terms
-      };
+      // استخدام الـ validation function للتحقق من البيانات
+      validateEmailRegistration(req, res, () => {});
 
-      // التحقق من صحة البيانات
-      if (!this.validateEmailRegistrationData(registrationData)) {
-        res.status(400).json({
-          success: false,
-          message: 'بيانات غير صحيحة'
-        });
-        return;
-      }
+      // البيانات محققة بالفعل من middleware
+      const registrationData: EmailRegistrationData = req.body;
 
       const result: AuthResult = await this.authService.registerWithEmail(registrationData);
 
@@ -112,9 +123,18 @@ export class AuthController {
   /**
    * POST /api/auth/login/email
    * تسجيل دخول بالبريد الإلكتروني
+   * 🔐 Validation: validateEmailLogin middleware
+   * 
+   * فايدة validateEmailLogin:
+   * - التحقق من صحة تنسيق البريد الإلكتروني
+   * - التحقق من وجود كلمة المرور
+   * - التحقق من نوع remember_me (boolean اختياري)
    */
   async loginWithEmail(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateEmailLogin(req, res, () => {});
+
       const loginData: EmailLoginData = {
         email: req.body.email,
         password: req.body.password,
@@ -169,9 +189,19 @@ export class AuthController {
   /**
    * POST /api/auth/register/phone
    * تسجيل مستخدم جديد بالهاتف العراقي
+   * 🔐 Validation: validatePhoneRegistration middleware
+   * 
+   * فايدة validatePhoneRegistration:
+   * - التحقق من صحة رقم الهاتف العراقي (+964)
+   * - التحقق من رمز البلد (+964 فقط)
+   * - التحقق من الاسم الكامل (2-100 حرف)
+   * - التحقق من قبول الشروط والأحكام
    */
   async registerWithPhone(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validatePhoneRegistration(req, res, () => {});
+
       const registrationData: PhoneRegistrationData = {
         phone: req.body.phone,
         country_code: req.body.country_code,
@@ -222,9 +252,18 @@ export class AuthController {
   /**
    * POST /api/auth/login/phone
    * تسجيل دخول بالهاتف العراقي (يرسل OTP)
+   * 🔐 Validation: validatePhoneLogin middleware
+   * 
+   * فايدة validatePhoneLogin:
+   * - التحقق من صحة رقم الهاتف العراقي
+   * - التحقق من رمز البلد (+964 فقط)
+   * - ضمان التوافق مع نظام OTP العراقي
    */
   async loginWithPhone(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validatePhoneLogin(req, res, () => {});
+
       const loginData: PhoneLoginData = {
         phone: req.body.phone,
         country_code: req.body.country_code
@@ -273,9 +312,20 @@ export class AuthController {
   /**
    * POST /api/auth/register/google
    * تسجيل مستخدم جديد بحساب جوجل
+   * 🔐 Validation: validateGoogleRegistration middleware
+   * 
+   * فايدة validateGoogleRegistration:
+   * - التحقق من صحة Google Token
+   * - التحقق من البريد الإلكتروني
+   * - التحقق من الاسم الكامل
+   * - التحقق من رابط الصورة الشخصية (اختياري)
+   * - التحقق من قبول الشروط والأحكام
    */
   async registerWithGoogle(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateGoogleRegistration(req, res, () => {});
+
       const registrationData: GoogleRegistrationData = {
         google_token: req.body.google_token,
         full_name: req.body.full_name,
@@ -326,9 +376,17 @@ export class AuthController {
   /**
    * POST /api/auth/login/google
    * تسجيل دخول بحساب جوجل
+   * 🔐 Validation: validateGoogleLogin middleware
+   * 
+   * فايدة validateGoogleLogin:
+   * - التحقق من صحة Google Token
+   * - ضمان الأمان في عملية المصادقة
    */
   async loginWithGoogle(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateGoogleLogin(req, res, () => {});
+
       const loginData: GoogleLoginData = {
         google_token: req.body.google_token
       };
@@ -380,9 +438,19 @@ export class AuthController {
   /**
    * POST /api/auth/send-otp
    * إرسال رمز OTP للهاتف العراقي
+   * 🔐 Validation: validateOTPSend middleware
+   * 
+   * فايدة validateOTPSend:
+   * - التحقق من صحة رقم الهاتف العراقي
+   * - التحقق من رمز البلد (+964)
+   * - التحقق من غرض OTP (registration, login, phone_verification, password_reset)
+   * - التحقق من معرف المستخدم (اختياري)
    */
   async sendOTP(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateOTPSend(req, res, () => {});
+
       const otpRequest: OTPSendRequest = {
         phone: req.body.phone,
         country_code: req.body.country_code,
@@ -432,9 +500,19 @@ export class AuthController {
   /**
    * POST /api/auth/verify-otp
    * التحقق من رمز OTP
+   * 🔐 Validation: validateOTPVerify middleware
+   * 
+   * فايدة validateOTPVerify:
+   * - التحقق من صحة رقم الهاتف العراقي
+   * - التحقق من رمز البلد (+964)
+   * - التحقق من صحة رمز OTP (6 أرقام فقط)
+   * - التحقق من معرف المستخدم (اختياري)
    */
   async verifyOTP(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateOTPVerify(req, res, () => {});
+
       const verifyRequest: OTPVerifyRequest = {
         phone: req.body.phone,
         country_code: req.body.country_code,
@@ -539,9 +617,18 @@ export class AuthController {
   /**
    * GET /api/auth/methods/:userId
    * جلب طرق المصادقة لمستخدم محدد
+   * 🔐 Validation: validateUserIdParams middleware
+   * 
+   * فايدة validateUserIdParams:
+   * - التحقق من صحة معرف المستخدم في URL params
+   * - ضمان أن المعرف يتبع تنسيق ID الصحيح
+   * - منع الهجمات عبر معرفات غير صحيحة
    */
   async getUserAuthMethods(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateUserIdParams(req, res, () => {});
+
       const userId = req.params['userId'];
 
       if (!userId || typeof userId !== 'string') {
@@ -576,9 +663,18 @@ export class AuthController {
   /**
    * POST /api/auth/validate-phone
    * التحقق من صحة رقم الهاتف العراقي
+   * 🔐 Validation: validatePhoneValidation middleware
+   * 
+   * فايدة validatePhoneValidation:
+   * - التحقق من صحة رقم الهاتف العراقي
+   * - التحقق من رمز البلد (+964)
+   * - ضمان التوافق مع معايير الأرقام العراقية
    */
   async validateIraqiPhone(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validatePhoneValidation(req, res, () => {});
+
       const { phone, country_code } = req.body;
 
       if (!phone || !country_code) {
@@ -614,9 +710,17 @@ export class AuthController {
   /**
    * POST /api/auth/logout
    * تسجيل خروج المستخدم
+   * 🔐 Validation: validateLogout middleware
+   * 
+   * فايدة validateLogout:
+   * - التحقق من معرف المستخدم (اختياري)
+   * - ضمان أمان عملية تسجيل الخروج
    */
   async logout(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateLogout(req, res, () => {});
+
       const userId: ID = req.body.user_id;
 
       if (userId) {
@@ -685,6 +789,40 @@ export class AuthController {
       });
     } catch (error) {
       logger.error('❌ خطأ في جلب إحصائيات طرق المصادقة', { error });
+      res.status(500).json({
+        success: false,
+        message: 'خطأ في الخادم'
+      });
+    }
+  }
+
+  /**
+   * GET /api/auth/supported-providers
+   * جلب قائمة طرق المصادقة المدعومة
+   */
+  async getSupportedAuthProviders(req: Request, res: Response): Promise<void> {
+    try {
+      const supportedProviders: AuthProvider[] = ['email', 'phone', 'google'];
+      
+      // استخدام AUTH_PROVIDERS من validation للتأكد من التطابق
+      const providerDetails = supportedProviders.map(provider => ({
+        provider: provider as AuthProvider,
+        name: this.getProviderDisplayName(provider),
+        description: this.getProviderDescription(provider),
+        is_supported: this.isAuthProviderSupported(provider)
+      }));
+
+      logger.info('📋 جلب طرق المصادقة المدعومة', { 
+        providersCount: providerDetails.length 
+      });
+
+      res.status(200).json({
+        success: true,
+        providers: providerDetails,
+        message: 'تم جلب طرق المصادقة المدعومة بنجاح'
+      });
+    } catch (error) {
+      logger.error('❌ خطأ في جلب طرق المصادقة المدعومة', { error });
       res.status(500).json({
         success: false,
         message: 'خطأ في الخادم'
@@ -808,5 +946,31 @@ export class AuthController {
     // للعراق فقط حالياً - يمكن إضافة بلدان أخرى لاحقاً
     const supportedCountryCodes = ['+964'];
     return supportedCountryCodes.includes(countryCode);
+  }
+
+  /**
+   * 🏷️ الحصول على اسم العرض لطريقة المصادقة
+   * الفائدة: تحويل AuthProvider إلى نص قابل للقراءة باللغة العربية
+   */
+  private getProviderDisplayName(provider: AuthProvider): string {
+    const providerNames: Record<AuthProvider, string> = {
+      'email': 'البريد الإلكتروني',
+      'phone': 'الهاتف العراقي',
+      'google': 'حساب جوجل'
+    };
+    return providerNames[provider] || 'غير معروف';
+  }
+
+  /**
+   * 📝 الحصول على وصف طريقة المصادقة
+   * الفائدة: شرح مفصل لكل AuthProvider للمستخدمين
+   */
+  private getProviderDescription(provider: AuthProvider): string {
+    const providerDescriptions: Record<AuthProvider, string> = {
+      'email': 'تسجيل الدخول باستخدام عنوان البريد الإلكتروني وكلمة المرور',
+      'phone': 'تسجيل الدخول باستخدام رقم الهاتف العراقي مع رمز التحقق OTP',
+      'google': 'تسجيل الدخول السريع باستخدام حساب جوجل الخاص بك'
+    };
+    return providerDescriptions[provider] || 'طريقة مصادقة غير معروفة';
   }
 } 

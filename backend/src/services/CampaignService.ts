@@ -220,8 +220,8 @@ export class CampaignService {
 
       // 🔥 التحقق من الدور والصلاحيات باستخدام UserRole الصحيح
       const authorizedRoles: UserRole[] = ['super_admin', 'marketing_coordinator', 'brand_coordinator'];
-      if (!authorizedRoles.includes(creator.primary_role)) {
-        throw new Error(`غير مصرح للدور ${creator.primary_role} بإنشاء حملات`);
+      if (!creator.primary_role || !authorizedRoles.includes(creator.primary_role)) {
+        throw new Error(`غير مصرح للدور ${creator.primary_role || 'غير محدد'} بإنشاء حملات`);
       }
 
       // التحقق من صحة البيانات
@@ -380,8 +380,8 @@ export class CampaignService {
 
       // تحديد الأدوار المسموحة لكل حالة
       const statusPermissions = this.getCampaignStatusPermissions(newStatus);
-      if (!statusPermissions.includes(updater.primary_role)) {
-        throw new Error(`الدور ${updater.primary_role} غير مصرح له بتحديث الحالة إلى ${newStatus}`);
+      if (!updater.primary_role || !statusPermissions.includes(updater.primary_role)) {
+        throw new Error(`الدور ${updater.primary_role || 'غير محدد'} غير مصرح له بتحديث الحالة إلى ${newStatus}`);
       }
 
       const campaign = await this.campaignRepo.findById(campaignId);

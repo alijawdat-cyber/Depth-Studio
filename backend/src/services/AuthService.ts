@@ -56,7 +56,7 @@ import {
   AuthProvider,
   VerificationStatus,
   FirebaseTimestamp
-} from '@depth-studio/types';
+} from '../../../types/src';
 
 /**
  * 🔐 خدمة المصادقة الشاملة

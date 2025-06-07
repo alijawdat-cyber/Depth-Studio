@@ -7,9 +7,7 @@
  * 🎯 الهدف: Service شامل لمنطق إدارة المعدات مع Type Safety كامل
  */
 
-import { Equipment } from '../../../types/src/equipment';
-import { EquipmentType, EquipmentCondition } from '../../../types/src/core/enums';
-import { ID, FirebaseTimestamp } from '../../../types/src/core/base';
+import { Equipment, EquipmentType, EquipmentCondition, ID, FirebaseTimestamp } from '../../../types/src';
 import { 
   EquipmentRepository, 
   EquipmentSearchOptions, 

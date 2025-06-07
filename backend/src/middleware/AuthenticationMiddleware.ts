@@ -166,6 +166,12 @@ export class AuthenticationMiddleware {
     firebaseToken: auth.DecodedIdToken,
     user: User
   ): AuthenticatedUser {
+    // التحقق من وجود primary_role مع Type Safety
+    if (!user.primary_role) {
+      logger.warn('⚠️ User missing primary_role', { userId: user.id });
+      throw new Error('الدور الأساسي مطلوب للمستخدم');
+    }
+
     return {
       uid: firebaseToken.uid,
       email: firebaseToken.email || user.email,

@@ -3,7 +3,7 @@
  * ===============================================
  * 
  * تحكم شامل بـ API الحملات مع أمان كامل ومحكم الأنواع 100%
- * متوافق بالكامل مع types/src/campaigns.ts
+ * متوافق بالكامل مع types/src/campaigns.ts والـ CampaignValidators الجديدة
  */
 
 import { Request, Response } from 'express';
@@ -18,7 +18,32 @@ import {
 import { ID, FirebaseTimestamp } from '../../../types/src/core/base';
 import { Timestamp } from 'firebase-admin/firestore';
 
-// تمديد Request type لدعم user property
+// استيراد جميع validators والـ types من CampaignValidators
+import {
+  validateCreateCampaign,
+  validateGetCampaign,
+  validateSearchCampaigns,
+  validateCampaignParams,
+  validateUpdateCampaignStatus,
+  validateAssignPhotographer,
+  validateCreateCampaignTasks,
+  validateAssignTaskToPhotographer,
+  validateUpdateTaskStatus,
+  validatePhotographerParams,
+  validateTaskParams,
+  CreateCampaignInput,
+  GetCampaignInput,
+  SearchCampaignsInput,
+  UpdateCampaignStatusInput,
+  AssignPhotographerInput,
+  CreateCampaignTasksInput,
+  AssignTaskToPhotographerInput,
+  UpdateTaskStatusInput,
+  CampaignParamsInput,
+  PhotographerParamsInput
+} from '../validators/CampaignValidators';
+
+// تمديد Request type لدعم user property والـ validated data
 declare global {
   namespace Express {
     interface Request {
@@ -27,6 +52,10 @@ declare global {
         email?: string;
         role?: string;
       };
+      // إضافة البيانات المتحققة من الـ validators
+      validatedBody?: any;
+      validatedQuery?: any;
+      validatedParams?: any;
     }
   }
 }
@@ -36,17 +65,17 @@ declare global {
 // ======================================
 
 /**
- * 📝 طلب إنشاء حملة جديدة
+ * 📝 طلب إنشاء حملة جديدة (متوافق مع CampaignService)
  */
-interface CreateCampaignRequest {
+interface CreateCampaignData {
   name: string;
   description: string;
   brand_id: ID;
   type: CampaignType;
   priority: PriorityLevel;
-  start_date: string; // ISO string سيتم تحويله لـ Timestamp
-  end_date: string;
-  target_completion_date: string;
+  start_date: FirebaseTimestamp;
+  end_date: FirebaseTimestamp;
+  target_completion_date: FirebaseTimestamp;
   total_content_pieces: number;
   content_requirements: string[];
   budget: number;
@@ -91,26 +120,24 @@ interface UpdateTaskStatusRequest {
 }
 
 /**
- * 🔍 معايير البحث المتقدم
+ * 🔍 معايير البحث المتقدم (متوافق مع CampaignService)
  */
-interface CampaignSearchQuery {
+interface CampaignSearchFilters {
   name?: string;
-  brand_id?: ID;
+  brand_id?: string;
   status?: CampaignStatus;
   type?: CampaignType;
   priority?: PriorityLevel;
-  assigned_photographer?: ID;
-  created_by?: ID;
-  start_date_from?: string;
-  start_date_to?: string;
-  budget_min?: string;
-  budget_max?: string;
-  progress_min?: string;
-  progress_max?: string;
-  is_on_schedule?: string;
-  enable_smart_assignment?: string;
-  limit?: string;
-  page?: string;
+  assigned_photographer?: string;
+  created_by?: string;
+  start_date_from?: FirebaseTimestamp;
+  start_date_to?: FirebaseTimestamp;
+  budget_min?: number;
+  budget_max?: number;
+  progress_min?: number;
+  progress_max?: number;
+  is_on_schedule?: boolean;
+  enable_smart_assignment?: boolean;
 }
 
 /**
@@ -130,7 +157,7 @@ interface ApiResponse<T> {
 }
 
 /**
- * 🎮 تحكم شامل بـ API الحملات
+ * 🎮 تحكم شامل بـ API الحملات مع استخدام احترافي للـ validators
  */
 export class CampaignController {
   private campaignService: CampaignService;
@@ -139,35 +166,56 @@ export class CampaignController {
     this.campaignService = campaignService;
   }
 
+  /**
+   * 📋 إرجاع جميع المتحققات للاستخدام في الـ router
+   */
+  static getValidators() {
+    return {
+      validateCreateCampaign,
+      validateGetCampaign,
+      validateSearchCampaigns,
+      validateCampaignParams,
+      validateUpdateCampaignStatus,
+      validateAssignPhotographer,
+      validateCreateCampaignTasks,
+      validateAssignTaskToPhotographer,
+      validateUpdateTaskStatus,
+      validatePhotographerParams,
+      validateTaskParams
+    };
+  }
+
   // ======================================
   // 🚀 API Endpoints الأساسية
   // ======================================
 
   /**
    * POST /api/campaigns - إنشاء حملة جديدة
+   * يستخدم validateCreateCampaign middleware
    */
   async createCampaign(req: Request, res: Response): Promise<void> {
     try {
-      const body = req.body as CreateCampaignRequest;
+      // البيانات متحققة مسبقاً من validateCreateCampaign middleware
+      const body = req.body as CreateCampaignInput;
       const userId = req.user?.uid as ID;
 
-      // التحقق من صحة البيانات المطلوبة
-      const validationErrors = this.validateCreateCampaignRequest(body);
-      if (validationErrors.length > 0) {
-        res.status(400).json({
-          success: false,
-          error: 'بيانات غير صالحة',
-          message: validationErrors.join(', ')
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // تحويل التواريخ من strings إلى Timestamps مع cast صحيح
-      const campaignData = {
-        ...body,
-        start_date: Timestamp.fromDate(new Date(body.start_date)) as FirebaseTimestamp,
-        end_date: Timestamp.fromDate(new Date(body.end_date)) as FirebaseTimestamp,
-        target_completion_date: Timestamp.fromDate(new Date(body.target_completion_date)) as FirebaseTimestamp
+      // تحويل البيانات للنوع المطلوب من CampaignService
+      const campaignData: CreateCampaignData = {
+        name: body.name,
+        description: body.description,
+        brand_id: body.brand_id,
+        type: body.type,
+        priority: body.priority,
+        start_date: Timestamp.fromDate(new Date(body.timeline.start_date)) as FirebaseTimestamp,
+        end_date: Timestamp.fromDate(new Date(body.timeline.end_date)) as FirebaseTimestamp,
+        target_completion_date: Timestamp.fromDate(new Date(body.target_completion_date)) as FirebaseTimestamp,
+        total_content_pieces: body.total_content_pieces,
+        content_requirements: body.content_requirements,
+        budget: body.budget,
+        currency: body.currency,
+        enable_smart_assignment: body.enable_smart_assignment,
+        auto_scheduling: body.auto_scheduling,
+        key_milestones: body.key_milestones || []
       };
 
       // إنشاء الحملة
@@ -189,19 +237,13 @@ export class CampaignController {
   }
 
   /**
-   * GET /api/campaigns/:id - جلب حملة محددة
+   * GET /api/campaigns/:campaignId - جلب حملة محددة
+   * يستخدم validateCampaignParams middleware
    */
   async getCampaignById(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-
-      if (!campaignId) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة مطلوب'
-        } as ApiResponse<never>);
-        return;
-      }
+      // معرف الحملة متحقق مسبقاً من validateCampaignParams middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
 
       // استخدام Repository مباشرة للقراءة البسيطة
       const campaign = await this.campaignService['campaignRepo'].findById(campaignId);
@@ -223,57 +265,51 @@ export class CampaignController {
       console.error('خطأ في جلب الحملة:', error);
       res.status(500).json({
         success: false,
-        error: 'خطأ في الخادم'
+        error: error instanceof Error ? error.message : 'خطأ في الخادم'
       } as ApiResponse<never>);
     }
   }
 
   /**
-   * PATCH /api/campaigns/:id/status - تحديث حالة الحملة
+   * GET /api/campaigns - البحث عن حملة
+   * يستخدم validateGetCampaign middleware
    */
-  async updateCampaignStatus(req: Request, res: Response): Promise<void> {
+  async getCampaign(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-      const body = req.body as UpdateCampaignStatusRequest;
-      const userId = req.user?.uid as ID;
+      // معايير البحث متحققة مسبقاً من validateGetCampaign middleware
+      const query = req.query as GetCampaignInput;
 
-      // التحقق من البيانات
-      if (!campaignId || !body.status) {
-        res.status(400).json({
+      let campaign: Campaign | null = null;
+
+      if (query.id) {
+        campaign = await this.campaignService['campaignRepo'].findById(query.id);
+      } else if (query.brand_id) {
+        const campaigns = await this.campaignService['campaignRepo'].findByBrand(query.brand_id, { limit: 1 });
+        campaign = campaigns[0] || null;
+      } else if (query.assigned_photographer) {
+        const campaigns = await this.campaignService['campaignRepo'].findByPhotographer(query.assigned_photographer, { limit: 1 });
+        campaign = campaigns[0] || null;
+      } else if (query.name) {
+        const campaigns = await this.campaignService['campaignRepo'].searchCampaigns({ name: query.name, limit: 1 });
+        campaign = campaigns[0] || null;
+      }
+
+      if (!campaign) {
+        res.status(404).json({
           success: false,
-          error: 'معرف الحملة والحالة الجديدة مطلوبان'
+          error: 'لم يتم العثور على حملة تطابق المعايير المحددة'
         } as ApiResponse<never>);
         return;
       }
-
-      // التحقق من صحة الحالة
-      const validStatuses: CampaignStatus[] = ['draft', 'scheduled', 'active', 'paused', 'completed', 'cancelled'];
-      if (!validStatuses.includes(body.status)) {
-        res.status(400).json({
-          success: false,
-          error: `حالة غير صالحة: ${body.status}`
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // تحديث الحالة
-      const updatedCampaign: Campaign = await this.campaignService.updateCampaignStatus(
-        campaignId, 
-        body.status, 
-        userId, 
-        body.reason
-      );
 
       res.status(200).json({
         success: true,
-        data: updatedCampaign,
-        message: `تم تحديث حالة الحملة إلى ${body.status}`
+        data: campaign
       } as ApiResponse<Campaign>);
 
     } catch (error) {
-      console.error('خطأ في تحديث حالة الحملة:', error);
-      const statusCode = error instanceof Error && error.message.includes('غير مصرح') ? 403 : 500;
-      res.status(statusCode).json({
+      console.error('خطأ في البحث عن الحملة:', error);
+      res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'خطأ في الخادم'
       } as ApiResponse<never>);
@@ -281,35 +317,58 @@ export class CampaignController {
   }
 
   /**
-   * PATCH /api/campaigns/:id/photographer - تعيين مصور للحملة
+   * PATCH /api/campaigns/:campaignId/status - تحديث حالة الحملة
+   * يستخدم validateCampaignParams و validateUpdateCampaignStatus middleware
    */
-  async assignPhotographer(req: Request, res: Response): Promise<void> {
+  async updateCampaignStatus(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-      const body = req.body as AssignPhotographerRequest;
-      const userId = req.user?.uid as ID;
+      // البيانات متحققة مسبقاً من middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
+      const body = req.body as UpdateCampaignStatusInput;
 
-      // التحقق من البيانات
-      if (!campaignId || !body.photographer_id) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة ومعرف المصور مطلوبان'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // تعيين المصور
-      const updatedCampaign: Campaign = await this.campaignService.assignPhotographer(
+      const campaign = await this.campaignService.updateCampaignStatus(
         campaignId,
-        body.photographer_id,
-        userId,
-        body.skip_availability_check || false
+        body.status,
+        body.updated_by,
+        body.reason
       );
 
       res.status(200).json({
         success: true,
-        data: updatedCampaign,
-        message: 'تم تعيين المصور بنجاح'
+        data: campaign,
+        message: 'تم تحديث حالة الحملة بنجاح'
+      } as ApiResponse<Campaign>);
+
+    } catch (error) {
+      console.error('خطأ في تحديث حالة الحملة:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'خطأ في الخادم'
+      } as ApiResponse<never>);
+    }
+  }
+
+  /**
+   * POST /api/campaigns/:campaignId/assign - تعيين مصور للحملة
+   * يستخدم validateCampaignParams و validateAssignPhotographer middleware
+   */
+  async assignPhotographer(req: Request, res: Response): Promise<void> {
+    try {
+      // البيانات متحققة مسبقاً من middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
+      const body = req.body as AssignPhotographerInput;
+
+      const campaign = await this.campaignService.assignPhotographer(
+        campaignId,
+        body.photographer_id,
+        body.assigned_by,
+        false // skipAvailabilityCheck
+      );
+
+      res.status(200).json({
+        success: true,
+        data: campaign,
+        message: 'تم تعيين المصور للحملة بنجاح'
       } as ApiResponse<Campaign>);
 
     } catch (error) {
@@ -323,44 +382,62 @@ export class CampaignController {
 
   /**
    * GET /api/campaigns/search - البحث المتقدم في الحملات
+   * يستخدم validateSearchCampaigns middleware
    */
   async searchCampaigns(req: Request, res: Response): Promise<void> {
     try {
-      const query = req.query as CampaignSearchQuery;
+      // معايير البحث متحققة ومحولة مسبقاً من validateSearchCampaigns middleware
+      const query: SearchCampaignsInput = req.query as any;
 
-      // تحويل query parameters إلى فلاتر
-      const filters = this.buildSearchFilters(query);
-      const limit = query.limit ? parseInt(query.limit, 10) : 20;
-      const page = query.page ? parseInt(query.page, 10) : 1;
+      // تحويل معايير البحث للنوع المطلوب من CampaignService
+      const searchFilters: Partial<CampaignSearchFilters> = {};
+      
+      if (query.search || query.searchTerm) searchFilters.name = (query.search || query.searchTerm)!;
+      if (query.brand_id) searchFilters.brand_id = query.brand_id;
+      if (query.status) searchFilters.status = query.status;
+      if (query.type) searchFilters.type = query.type;
+      if (query.priority) searchFilters.priority = query.priority;
+      if (query.assigned_photographer) searchFilters.assigned_photographer = query.assigned_photographer;
+      if (query.created_by) searchFilters.created_by = query.created_by;
+      if (query.min_budget) searchFilters.budget_min = query.min_budget;
+      if (query.max_budget) searchFilters.budget_max = query.max_budget;
+      
+      // تحويل التواريخ إذا كانت موجودة
+      if (query.start_date_from) {
+        searchFilters.start_date_from = Timestamp.fromDate(new Date(query.start_date_from)) as FirebaseTimestamp;
+      }
+      if (query.start_date_to) {
+        searchFilters.start_date_to = Timestamp.fromDate(new Date(query.start_date_to)) as FirebaseTimestamp;
+      }
 
-      // تنفيذ البحث
-      const campaigns: Campaign[] = await this.campaignService.searchCampaigns(filters, limit);
+      const campaigns = await this.campaignService.searchCampaigns(searchFilters, query.limit);
 
-      // معلومات pagination بسيطة
-      const meta = {
-        total: campaigns.length,
-        page,
-        limit,
-        has_next: campaigns.length === limit
-      };
+      // حساب pagination metadata
+      const total = campaigns.length;
+      const hasNext = query.limit ? campaigns.length === query.limit : false;
 
       res.status(200).json({
         success: true,
         data: campaigns,
-        meta
+        meta: {
+          total,
+          page: query.page || 1,
+          limit: query.limit || 10,
+          has_next: hasNext
+        }
       } as ApiResponse<Campaign[]>);
 
     } catch (error) {
       console.error('خطأ في البحث في الحملات:', error);
       res.status(500).json({
         success: false,
-        error: 'خطأ في الخادم'
+        error: error instanceof Error ? error.message : 'خطأ في الخادم'
       } as ApiResponse<never>);
     }
   }
 
   /**
-   * GET /api/campaigns/stats - إحصائيات عامة للحملات
+   * GET /api/campaigns/stats - إحصائيات الحملات
    */
   async getCampaignStats(req: Request, res: Response): Promise<void> {
     try {
@@ -369,41 +446,34 @@ export class CampaignController {
       res.status(200).json({
         success: true,
         data: stats
-      } as ApiResponse<typeof stats>);
+      } as ApiResponse<any>);
 
     } catch (error) {
       console.error('خطأ في جلب إحصائيات الحملات:', error);
       res.status(500).json({
         success: false,
-        error: 'خطأ في الخادم'
+        error: error instanceof Error ? error.message : 'خطأ في الخادم'
       } as ApiResponse<never>);
     }
   }
 
   /**
-   * GET /api/campaigns/:id/analytics - تحليلات حملة محددة
+   * GET /api/campaigns/:campaignId/analytics - تحليلات الحملات
+   * يستخدم validateCampaignParams middleware
    */
   async getCampaignAnalytics(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-
-      if (!campaignId) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة مطلوب'
-        } as ApiResponse<never>);
-        return;
-      }
-
+      const { campaignId }: CampaignParamsInput = req.params as any;
+      
       const analytics = await this.campaignService.getCampaignAnalytics(campaignId);
 
       res.status(200).json({
         success: true,
         data: analytics
-      } as ApiResponse<typeof analytics>);
+      } as ApiResponse<any>);
 
     } catch (error) {
-      console.error('خطأ في جلب تحليلات الحملة:', error);
+      console.error('خطأ في جلب تحليلات الحملات:', error);
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'خطأ في الخادم'
@@ -412,49 +482,31 @@ export class CampaignController {
   }
 
   /**
-   * DELETE /api/campaigns/:id - حذف/أرشفة حملة
+   * DELETE /api/campaigns/:campaignId - حذف حملة (إيقاف فقط)
+   * يستخدم validateCampaignParams middleware
    */
   async deleteCampaign(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
+      // معرف الحملة متحقق مسبقاً من validateCampaignParams middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
       const userId = req.user?.uid as ID;
 
-      if (!campaignId) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة مطلوب'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // التحقق من وجود الحملة أولاً
-      const campaign = await this.campaignService['campaignRepo'].findById(campaignId);
-      if (!campaign) {
-        res.status(404).json({
-          success: false,
-          error: 'الحملة غير موجودة'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // أرشفة الحملة بدلاً من الحذف الفعلي
-      const archivedCampaign = await this.campaignService.updateCampaignStatus(
+      // نظراً لعدم وجود deleteCampaign في Service، نستخدم updateStatus لإلغاء الحملة
+      await this.campaignService.updateCampaignStatus(
         campaignId,
-        'cancelled',
+        'cancelled' as CampaignStatus,
         userId,
-        'تم حذف الحملة من قبل المستخدم'
+        'تم حذف الحملة بواسطة المستخدم'
       );
 
       res.status(200).json({
         success: true,
-        data: archivedCampaign,
-        message: 'تم أرشفة الحملة بنجاح'
-      } as ApiResponse<Campaign>);
+        message: 'تم إلغاء الحملة بنجاح'
+      } as ApiResponse<never>);
 
     } catch (error) {
       console.error('خطأ في حذف الحملة:', error);
-      const statusCode = error instanceof Error && error.message.includes('غير مصرح') ? 403 : 500;
-      res.status(statusCode).json({
+      res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : 'خطأ في الخادم'
       } as ApiResponse<never>);
@@ -462,61 +514,38 @@ export class CampaignController {
   }
 
   // ======================================
-  // 📋 Task Management Endpoints - استخدام احترافي لـ TaskInfo
+  // 📋 Task Management Endpoints
   // ======================================
 
   /**
-   * POST /api/campaigns/:id/tasks - إنشاء مهام للحملة
-   * ==============================================
-   * 
-   * 🎯 فوائد TaskInfo المستخدمة:
-   * ✅ تمثيل دقيق للمهام الفردية في الحملة
-   * ✅ إدارة حالة المهام (pending, assigned, completed, etc.)
-   * ✅ ربط المهام بالمصورين والأولويات
-   * ✅ تتبع التقدم لكل مهمة على حدة
+   * POST /api/campaigns/:campaignId/tasks - إنشاء مهام للحملة
+   * يستخدم validateCampaignParams و validateCreateCampaignTasks middleware
    */
   async createCampaignTasks(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-      const tasksData = req.body as CreateTaskRequest[];
-      const userId = req.user?.uid as ID;
+      // البيانات متحققة مسبقاً من middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
+      const body = req.body as CreateCampaignTasksInput;
 
-      if (!campaignId) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة مطلوب'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      if (!tasksData || tasksData.length === 0) {
-        res.status(400).json({
-          success: false,
-          error: 'بيانات المهام مطلوبة'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // تحويل البيانات إلى TaskInfo format
-      const taskInfoData = tasksData.map(task => ({
+      // تحويل التواريخ في المهام
+      const tasksWithTimestamps = body.tasks.map(task => ({
         title: task.title,
         description: task.description,
-        status: 'pending' as TaskStatus,
+        status: task.status,
         priority: task.priority,
         due_date: Timestamp.fromDate(new Date(task.due_date)) as FirebaseTimestamp,
-        progress_percentage: 0
+        progress_percentage: task.progress_percentage
       }));
 
-      // إنشاء المهام باستخدام Service
-      const createdTasks: TaskInfo[] = await this.campaignService.createCampaignTasks(
+      const tasks = await this.campaignService.createCampaignTasks(
         campaignId,
-        taskInfoData
+        tasksWithTimestamps
       );
 
       res.status(201).json({
         success: true,
-        data: createdTasks,
-        message: `تم إنشاء ${createdTasks.length} مهمة بنجاح`
+        data: tasks,
+        message: 'تم إنشاء مهام الحملة بنجاح'
       } as ApiResponse<TaskInfo[]>);
 
     } catch (error) {
@@ -529,51 +558,27 @@ export class CampaignController {
   }
 
   /**
-   * PATCH /api/campaigns/:id/tasks/:taskTitle/assign - تخصيص مهمة لمصور
-   * ===============================================================
-   * 
-   * 🎯 فوائد TaskInfo المستخدمة:
-   * ✅ ربط المهمة بمصور محدد (assigned_photographer)
-   * ✅ تحديث حالة المهمة إلى 'assigned'
-   * ✅ إدارة دقيقة للتخصيصات
+   * POST /api/campaigns/:campaignId/tasks/:taskTitle/assign - تخصيص مهمة لمصور
+   * يستخدم validateCampaignParams و validateTaskParams و validateAssignTaskToPhotographer middleware
    */
   async assignTaskToPhotographer(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-      const taskTitle = req.params['taskTitle'];
-      const photographerId = req.body.photographer_id as ID;
-      
-      if (!taskTitle) {
-        res.status(400).json({
-          success: false,
-          error: 'عنوان المهمة مطلوب'
-        } as ApiResponse<never>);
-        return;
-      }
-      
-      const decodedTaskTitle = decodeURIComponent(taskTitle);
-      const userId = req.user?.uid as ID;
+      // البيانات متحققة مسبقاً من middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
+      const { taskTitle } = req.params;
+      const body = req.body as AssignTaskToPhotographerInput;
 
-      if (!campaignId || !photographerId) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة ومعرف المصور مطلوبان'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // تخصيص المهمة باستخدام Service
-      const assignedTask: TaskInfo = await this.campaignService.assignTaskToPhotographer(
+      const task = await this.campaignService.assignTaskToPhotographer(
         campaignId,
-        decodedTaskTitle,
-        photographerId,
-        userId
+        taskTitle!,
+        body.photographer_id,
+        body.assigned_by
       );
 
       res.status(200).json({
         success: true,
-        data: assignedTask,
-        message: 'تم تخصيص المهمة بنجاح'
+        data: task,
+        message: 'تم تخصيص المهمة للمصور بنجاح'
       } as ApiResponse<TaskInfo>);
 
     } catch (error) {
@@ -586,61 +591,28 @@ export class CampaignController {
   }
 
   /**
-   * PATCH /api/campaigns/:id/tasks/:taskTitle/status - تحديث حالة المهمة
-   * ==============================================================
-   * 
-   * 🎯 فوائد TaskInfo المستخدمة:
-   * ✅ تحديث حالة المهمة (pending, active, completed, cancelled)
-   * ✅ تتبع نسبة التقدم للمهمة
-   * ✅ ربط التحديث بالمستخدم المحدِث
+   * PATCH /api/campaigns/:campaignId/tasks/:taskTitle/status - تحديث حالة المهمة
+   * يستخدم validateCampaignParams و validateTaskParams و validateUpdateTaskStatus middleware
    */
   async updateTaskStatus(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-      const taskTitle = req.params['taskTitle'];
-      const body = req.body as UpdateTaskStatusRequest;
-      
-      if (!taskTitle) {
-        res.status(400).json({
-          success: false,
-          error: 'عنوان المهمة مطلوب'
-        } as ApiResponse<never>);
-        return;
-      }
-      
-      const decodedTaskTitle = decodeURIComponent(taskTitle);
-      const userId = req.user?.uid as ID;
+      // البيانات متحققة مسبقاً من middleware
+      const { campaignId }: CampaignParamsInput = req.params as any;
+      const { taskTitle } = req.params;
+      const body = req.body as UpdateTaskStatusInput;
 
-      if (!campaignId || !taskTitle) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة وعنوان المهمة مطلوبان'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // التحقق من صحة البيانات
-      if (!body.status || body.progress_percentage < 0 || body.progress_percentage > 100) {
-        res.status(400).json({
-          success: false,
-          error: 'حالة المهمة ونسبة التقدم مطلوبان (0-100)'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // تحديث حالة المهمة باستخدام Service
-      const updatedTask: TaskInfo = await this.campaignService.updateTaskStatus(
+      const task = await this.campaignService.updateTaskStatus(
         campaignId,
-        taskTitle,
+        taskTitle!,
         body.status,
-        body.progress_percentage,
-        userId
+        body.progress_percentage || 0,
+        body.updated_by
       );
 
       res.status(200).json({
         success: true,
-        data: updatedTask,
-        message: `تم تحديث حالة المهمة إلى ${body.status}`
+        data: task,
+        message: 'تم تحديث حالة المهمة بنجاح'
       } as ApiResponse<TaskInfo>);
 
     } catch (error) {
@@ -653,40 +625,26 @@ export class CampaignController {
   }
 
   /**
-   * GET /api/campaigns/:id/photographer/:photographerId/tasks - مهام المصور
-   * ==================================================================
-   * 
-   * 🎯 فوائد TaskInfo المستخدمة:
-   * ✅ عرض جميع مهام مصور محدد في حملة
-   * ✅ فلترة المهام حسب المصور المخصص
-   * ✅ معلومات تفصيلية عن كل مهمة (الحالة، التقدم، الموعد النهائي)
+   * GET /api/photographers/:photographerId/tasks - جلب مهام المصور
+   * يستخدم validatePhotographerParams middleware
    */
   async getPhotographerTasks(req: Request, res: Response): Promise<void> {
     try {
-      const campaignId = req.params['id'] as ID;
-      const photographerId = req.params['photographerId'] as ID;
+      // معرف المصور متحقق مسبقاً من validatePhotographerParams middleware
+      const { photographerId }: PhotographerParamsInput = req.params as any;
+      const { campaignId } = req.query;
 
-      if (!campaignId || !photographerId) {
-        res.status(400).json({
-          success: false,
-          error: 'معرف الحملة ومعرف المصور مطلوبان'
-        } as ApiResponse<never>);
-        return;
-      }
-
-      // جلب مهام المصور باستخدام Service
-      const photographerTasks: TaskInfo[] = await this.campaignService.getPhotographerTasks(
-        campaignId,
+      // getPhotographerTasks يتطلب campaignId أيضاً
+      const tasks = await this.campaignService.getPhotographerTasks(
+        campaignId as string || '',
         photographerId
       );
 
       res.status(200).json({
         success: true,
-        data: photographerTasks,
+        data: tasks,
         meta: {
-          total: photographerTasks.length,
-          photographer_id: photographerId,
-          campaign_id: campaignId
+          total: tasks.length
         }
       } as ApiResponse<TaskInfo[]>);
 
@@ -697,117 +655,5 @@ export class CampaignController {
         error: error instanceof Error ? error.message : 'خطأ في الخادم'
       } as ApiResponse<never>);
     }
-  }
-
-  // ======================================
-  // 🛠️ دوال مساعدة ومن validation
-  // ======================================
-
-  /**
-   * 🔍 التحقق من صحة طلب إنشاء الحملة
-   */
-  private validateCreateCampaignRequest(body: CreateCampaignRequest): string[] {
-    const errors: string[] = [];
-
-    if (!body.name?.trim()) {
-      errors.push('اسم الحملة مطلوب');
-    }
-
-    if (!body.description?.trim()) {
-      errors.push('وصف الحملة مطلوب');
-    }
-
-    if (!body.brand_id) {
-      errors.push('معرف البراند مطلوب');
-    }
-
-    if (!body.type) {
-      errors.push('نوع الحملة مطلوب');
-    }
-
-    if (!body.priority) {
-      errors.push('أولوية الحملة مطلوبة');
-    }
-
-    if (!body.start_date || !this.isValidDate(body.start_date)) {
-      errors.push('تاريخ البداية غير صالح');
-    }
-
-    if (!body.end_date || !this.isValidDate(body.end_date)) {
-      errors.push('تاريخ النهاية غير صالح');
-    }
-
-    if (!body.target_completion_date || !this.isValidDate(body.target_completion_date)) {
-      errors.push('تاريخ الإكمال المستهدف غير صالح');
-    }
-
-    if (body.start_date && body.end_date && new Date(body.start_date) >= new Date(body.end_date)) {
-      errors.push('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
-    }
-
-    if (!body.total_content_pieces || body.total_content_pieces <= 0) {
-      errors.push('عدد قطع المحتوى يجب أن يكون أكبر من صفر');
-    }
-
-    if (!body.budget || body.budget <= 0) {
-      errors.push('الميزانية يجب أن تكون أكبر من صفر');
-    }
-
-    if (!body.currency?.trim()) {
-      errors.push('العملة مطلوبة');
-    }
-
-    if (!body.content_requirements || body.content_requirements.length === 0) {
-      errors.push('متطلبات المحتوى مطلوبة');
-    }
-
-    if (!body.key_milestones || body.key_milestones.length === 0) {
-      errors.push('المراحل المهمة مطلوبة');
-    }
-
-    return errors;
-  }
-
-  /**
-   * 📅 التحقق من صحة التاريخ
-   */
-  private isValidDate(dateString: string): boolean {
-    const date = new Date(dateString);
-    return !isNaN(date.getTime());
-  }
-
-  /**
-   * 🔍 بناء فلاتر البحث من query parameters
-   */
-  private buildSearchFilters(query: CampaignSearchQuery) {
-    const filters: Record<string, any> = {};
-
-    if (query.name) filters['name'] = query.name;
-    if (query.brand_id) filters['brand_id'] = query.brand_id;
-    if (query.status) filters['status'] = query.status as CampaignStatus;
-    if (query.type) filters['type'] = query.type as CampaignType;
-    if (query.priority) filters['priority'] = query.priority as PriorityLevel;
-    if (query.assigned_photographer) filters['assigned_photographer'] = query.assigned_photographer;
-    if (query.created_by) filters['created_by'] = query.created_by;
-
-    // تحويل التواريخ
-    if (query.start_date_from && this.isValidDate(query.start_date_from)) {
-      filters['start_date_from'] = Timestamp.fromDate(new Date(query.start_date_from));
-    }
-    if (query.start_date_to && this.isValidDate(query.start_date_to)) {
-      filters['start_date_to'] = Timestamp.fromDate(new Date(query.start_date_to));
-    }
-
-    // تحويل الأرقام
-    if (query.budget_min) filters['budget_min'] = parseFloat(query.budget_min);
-    if (query.budget_max) filters['budget_max'] = parseFloat(query.budget_max);
-    if (query.progress_min) filters['progress_min'] = parseFloat(query.progress_min);
-    if (query.progress_max) filters['progress_max'] = parseFloat(query.progress_max);
-
-    // تحويل boolean values
-    if (query.is_on_schedule) filters['is_on_schedule'] = query.is_on_schedule === 'true';
-    if (query.enable_smart_assignment) filters['enable_smart_assignment'] = query.enable_smart_assignment === 'true';
-
-    return filters;
   }
 }

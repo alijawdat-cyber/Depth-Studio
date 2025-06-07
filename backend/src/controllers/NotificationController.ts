@@ -14,6 +14,7 @@
  * 3. Repository Types: options للبحث المتقدم بـ type safety
  * 4. Core Types: الأنواع الأساسية للنظام مع validation
  * 5. Firebase Types: تكامل آمن مع Firebase و timestamps
+ * 6. Validation: تحقق شامل من البيانات قبل المعالجة
  */
 
 import { Request, Response } from 'express';
@@ -28,6 +29,21 @@ import { NotificationType, PriorityLevel, UserRole } from '../../../types/src/co
 import { ID, FirebaseTimestamp } from '../../../types/src/core/base';
 import { FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
+
+// 🔒 إستيراد مصادقات الإشعارات
+import {
+  validateCreateNotification,
+  validateBulkNotification,
+  validateScheduleNotification,
+  validateMarkAsRead,
+  validateUpdateAction,
+  validateDeleteNotification,
+  validateNotificationIdParams,
+  validateUserIdParams,
+  validateSearchNotifications,
+  validateNotificationStats,
+  validatePaginatedNotifications
+} from '../validators/NotificationValidators';
 
 /**
  * 🔔 Notification Controller Class
@@ -47,9 +63,20 @@ export class NotificationController {
   /**
    * POST /api/notifications
    * إنشاء وإرسال إشعار جديد
+   * 🔒 Validation: validateCreateNotification middleware
+   * 
+   * فايدة validateCreateNotification:
+   * - التحقق من نوع الإشعار (system, campaign_update, task_assignment, etc.)
+   * - التحقق من مستوى الأولوية (low, medium, high, urgent)
+   * - التحقق من العنوان والرسالة (3-200 حرف للعنوان، 5-1000 للرسالة)
+   * - التحقق من معرف المستقبل ودوره
+   * - التحقق من الحقول الاختيارية (روابط، مرفقات، مواعيد)
    */
   async sendNotification(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateCreateNotification(req, res, () => {});
+
       logger.info('📤 POST /api/notifications - Send notification');
 
       const {
@@ -132,9 +159,20 @@ export class NotificationController {
   /**
    * POST /api/notifications/bulk
    * إرسال إشعارات جماعية
+   * 🔒 Validation: validateBulkNotification middleware
+   * 
+   * فايدة validateBulkNotification:
+   * - التحقق من بيانات الإشعار الأساسية (نوع، أولوية، عنوان، رسالة)
+   * - التحقق من وجود مستقبلين (إما دور أو قائمة معرفات)
+   * - التحقق من قائمة المعرفات (حد أدنى مستقبل واحد)
+   * - التحقق من صحة الدور المستقبل
+   * - التحقق من الحقول الاختيارية للإشعارات الجماعية
    */
   async sendBulkNotifications(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateBulkNotification(req, res, () => {});
+
       logger.info('📤 POST /api/notifications/bulk - Send bulk notifications');
 
       const {
@@ -228,9 +266,20 @@ export class NotificationController {
   /**
    * POST /api/notifications/schedule
    * جدولة إشعار للإرسال لاحقاً
+   * 🔒 Validation: validateScheduleNotification middleware
+   * 
+   * فايدة validateScheduleNotification:
+   * - التحقق من بيانات الإشعار الأساسية (نوع، أولوية، عنوان، رسالة)
+   * - التحقق من معرف المستقبل ودوره
+   * - التحقق من وقت الجدولة (scheduled_at)
+   * - التحقق من نوع التكرار (none, daily, weekly, monthly, yearly)
+   * - التحقق من عدد مرات التكرار (1-365)
    */
   async scheduleNotification(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateScheduleNotification(req, res, () => {});
+
       logger.info('⏰ POST /api/notifications/schedule - Schedule notification');
 
       const {
@@ -328,9 +377,21 @@ export class NotificationController {
   /**
    * PATCH /api/notifications/:id/read
    * تعليم إشعار كمقروء
+   * 🔒 Validation: validateNotificationIdParams + validateMarkAsRead middleware
+   * 
+   * فايدة validateNotificationIdParams:
+   * - التحقق من صحة معرف الإشعار في URL params
+   * 
+   * فايدة validateMarkAsRead:
+   * - التحقق من معرف المستخدم في body
+   * - ضمان أمان عملية تعليم القراءة
    */
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation functions للتحقق من البيانات
+      validateNotificationIdParams(req, res, () => {});
+      validateMarkAsRead(req, res, () => {});
+
       const notificationId = req.params['id'];
       const userId = req.body.user_id;
 
@@ -383,9 +444,17 @@ export class NotificationController {
   /**
    * PATCH /api/notifications/read-all
    * تعليم جميع إشعارات المستخدم كمقروءة
+   * 🔒 Validation: validateMarkAsRead middleware
+   * 
+   * فايدة validateMarkAsRead:
+   * - التحقق من معرف المستخدم في body
+   * - ضمان أمان عملية تعليم القراءة الجماعية
    */
   async markAllAsRead(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateMarkAsRead(req, res, () => {});
+
       const userId = req.body.user_id;
 
       logger.info('📖 PATCH /api/notifications/read-all - Mark all as read', { userId });
@@ -424,9 +493,21 @@ export class NotificationController {
   /**
    * PATCH /api/notifications/:id/action
    * تحديث حالة الإجراء المطلوب
+   * 🔒 Validation: validateNotificationIdParams + validateUpdateAction middleware
+   * 
+   * فايدة validateNotificationIdParams:
+   * - التحقق من صحة معرف الإشعار في URL params
+   * 
+   * فايدة validateUpdateAction:
+   * - التحقق من حالة الإكمال (completed) boolean مطلوب
+   * - التحقق من معرف المستخدم
    */
   async updateAction(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation functions للتحقق من البيانات
+      validateNotificationIdParams(req, res, () => {});
+      validateUpdateAction(req, res, () => {});
+
       const notificationId = req.params['id'];
       const { completed, user_id } = req.body;
 
@@ -498,9 +579,19 @@ export class NotificationController {
   /**
    * GET /api/notifications
    * جلب إشعارات المستخدم مع إمكانية البحث والفلترة
+   * 🔒 Validation: validateSearchNotifications middleware
+   * 
+   * فايدة validateSearchNotifications:
+   * - التحقق من معرف المستخدم مع Pagination
+   * - التحقق من فلاتر البحث (نوع، أولوية، عاجل، يتطلب إجراء)
+   * - التحقق من معرفات الحملات والمهام والبراندات
+   * - التحقق من معايير Pagination المتقدمة
    */
   async getNotifications(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateSearchNotifications(req, res, () => {});
+
       logger.info('🔍 GET /api/notifications - Get notifications');
 
       const {
@@ -583,6 +674,10 @@ export class NotificationController {
           queryOptions
         );
       }
+
+      // استخدام validatePaginatedNotifications للتحقق من معايير Pagination المحسنة
+      // فايدة: ضمان صحة معايير الترتيب والاتجاه مع معرف المستخدم
+      validatePaginatedNotifications(req, res, () => {});
 
       res.status(200).json({
         success: true,
@@ -728,9 +823,18 @@ export class NotificationController {
   /**
    * GET /api/notifications/stats
    * جلب إحصائيات الإشعارات العامة
+   * 🔒 Validation: validateNotificationStats middleware
+   * 
+   * فايدة validateNotificationStats:
+   * - التحقق من تاريخ البداية والنهاية (اختياري)
+   * - التحقق من معرف المستخدم (اختياري)
+   * - التحقق من معايير Pagination للإحصائيات
    */
   async getStats(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateNotificationStats(req, res, () => {});
+
       logger.info('📊 GET /api/notifications/stats - Get notification statistics');
 
       const stats = await this.notificationService.getNotificationStats();
@@ -758,9 +862,18 @@ export class NotificationController {
   /**
    * GET /api/notifications/user/:userId/activity
    * جلب إحصائيات نشاط المستخدم في الإشعارات
+   * 🔒 Validation: validateUserIdParams middleware
+   * 
+   * فايدة validateUserIdParams:
+   * - التحقق من صحة معرف المستخدم في URL params
+   * - ضمان أن المعرف يتبع تنسيق ID الصحيح
+   * - منع الهجمات عبر معرفات غير صحيحة
    */
   async getUserActivity(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateUserIdParams(req, res, () => {});
+
       const userId = req.params['userId'];
 
       logger.info('📊 GET /api/notifications/user/:userId/activity - Get user activity', { userId });
@@ -850,9 +963,21 @@ export class NotificationController {
   /**
    * DELETE /api/notifications/:id
    * حذف إشعار محدد
+   * 🔒 Validation: validateNotificationIdParams + validateDeleteNotification middleware
+   * 
+   * فايدة validateNotificationIdParams:
+   * - التحقق من صحة معرف الإشعار في URL params
+   * 
+   * فايدة validateDeleteNotification:
+   * - التحقق من معرف المستخدم في body
+   * - ضمان أمان عملية الحذف
    */
   async deleteNotification(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation functions للتحقق من البيانات
+      validateNotificationIdParams(req, res, () => {});
+      validateDeleteNotification(req, res, () => {});
+
       const notificationId = req.params['id'];
       const { user_id } = req.body;
 

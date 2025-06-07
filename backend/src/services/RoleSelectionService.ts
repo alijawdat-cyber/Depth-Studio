@@ -44,7 +44,7 @@ import {
   Industry,
   FirebaseTimestamp,
   NotificationType
-} from '@depth-studio/types';
+} from '../../../types/src';
 
 /**
  * 🎭 خدمة اختيار الأدوار الشاملة

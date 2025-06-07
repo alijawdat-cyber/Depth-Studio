@@ -298,7 +298,7 @@ export class ContentService {
         throw new Error('المعتمد غير موجود');
       }
 
-      if (!['super_admin', 'marketing_coordinator', 'brand_coordinator'].includes(approver.primary_role)) {
+      if (!approver.primary_role || !['super_admin', 'marketing_coordinator', 'brand_coordinator'].includes(approver.primary_role)) {
         throw new Error('لا تملك صلاحية اعتماد المحتوى');
       }
 
@@ -378,7 +378,7 @@ export class ContentService {
         throw new Error('المراجع غير موجود');
       }
 
-      if (!['super_admin', 'marketing_coordinator', 'brand_coordinator'].includes(rejector.primary_role)) {
+      if (!rejector.primary_role || !['super_admin', 'marketing_coordinator', 'brand_coordinator'].includes(rejector.primary_role)) {
         throw new Error('لا تملك صلاحية رفض المحتوى');
       }
 
@@ -459,7 +459,7 @@ export class ContentService {
         throw new Error('طالب التعديل غير موجود');
       }
 
-      if (!['super_admin', 'marketing_coordinator', 'brand_coordinator'].includes(requester.primary_role)) {
+      if (!requester.primary_role || !['super_admin', 'marketing_coordinator', 'brand_coordinator'].includes(requester.primary_role)) {
         throw new Error('لا تملك صلاحية طلب التعديل');
       }
 
@@ -1045,7 +1045,7 @@ export class ContentService {
           preferred_content_types: preferredContentTypes,
           most_active_hours: this.estimateActiveHours(user),
           device_preferences: ['متصفح ويب', 'هاتف محمول'], // بيانات تقديرية
-          language_preference: user.language
+          language_preference: 'ar' // افتراضي العربية
         },
         security_analysis: {
           account_verification: user.is_verified,
@@ -1103,7 +1103,7 @@ export class ContentService {
    */
   private estimateActiveHours(user: User): string[] {
     // تقدير بناءً على المنطقة الزمنية والملف الشخصي
-    const timezone = user.timezone;
+    const timezone = user.timezone || 'UTC+3'; // افتراضي بغداد
     
     if (timezone.includes('Asia/Baghdad') || timezone.includes('UTC+3')) {
       return ['09:00-12:00', '14:00-17:00', '19:00-22:00']; // أوقات العمل العراقية
@@ -1154,14 +1154,12 @@ export class ContentService {
       );
     }
 
-    // اقتراحات حسب اللغة
-    if (user.language === 'ar') {
-      suggestions.ui_preferences.push(
-        'واجهة باللغة العربية',
-        'ترتيب من اليمين لليسار',
-        'خطوط عربية محسنة'
-      );
-    }
+    // اقتراحات حسب اللغة (افتراضي العربية للمشروع العراقي)
+    suggestions.ui_preferences.push(
+      'واجهة باللغة العربية',
+      'ترتيب من اليمين لليسار',
+      'خطوط عربية محسنة'
+    );
 
     // اقتراحات حسب مستوى النشاط
     if (contents.length > 20) {
@@ -1412,7 +1410,7 @@ export class ContentService {
     }
 
     // إزالة التكرارات وإرجاع قائمة فريدة
-    return [...new Set(categories)];
+    return Array.from(new Set(categories));
   }
 
   // ======================================

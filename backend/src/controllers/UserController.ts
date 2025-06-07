@@ -9,11 +9,22 @@
 
 import { Request, Response } from "express";
 import { UserService } from "../services/UserService";
-import { UserRole, UserStatus, ID } from "@/types";
+import { UserRole, UserStatus } from "../../../types/src/core/enums";
+import { ID } from "../../../types/src/core/base";
 import { logger } from "firebase-functions";
+import {
+  CreateUserInput,
+  GetUserInput,
+  UpdateUserRoleBodyInput,
+  SearchUsersInput,
+  UserParamsInput
+} from "../validators/UserValidators";
 
 /**
  * 👥 تحكم المستخدمين
+ * 
+ * ملاحظة: جميع التحقق من البيانات يتم عبر middleware
+ * في routes، لذلك البيانات هنا مضمونة الصحة
  */
 export class UserController {
   private userService: UserService;
@@ -24,33 +35,24 @@ export class UserController {
 
   /**
    * 📝 إنشاء مستخدم جديد
+   * البيانات محققة عبر validateCreateUser middleware
    */
-  async createUser(req: Request, res: Response): Promise<void> {
+  async createUser(req: Request<{}, {}, CreateUserInput>, res: Response): Promise<void> {
     try {
       const { email, password, firstName, lastName, phone, primaryRole } = req.body;
-
-      // التحقق من البيانات المطلوبة
-      if (!email || !password || !firstName || !lastName || !primaryRole) {
-        res.status(400).json({
-          success: false,
-          message: "Missing required fields",
-          required: ["email", "password", "firstName", "lastName", "primaryRole"]
-        });
-        return;
-      }
 
       const result = await this.userService.createUser({
         email,
         password,
         firstName,
         lastName,
-        phone,
+        ...(phone && { phone }),
         primaryRole: primaryRole as UserRole
       });
 
       res.status(201).json({
         success: true,
-        message: "User created successfully",
+        message: "تم إنشاء المستخدم بنجاح",
         data: {
           user: result.user,
           firebaseUid: result.firebaseUser.uid
@@ -65,25 +67,18 @@ export class UserController {
       logger.error("❌ Error in createUser controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }
 
   /**
    * 🔍 البحث عن مستخدم
+   * البيانات محققة عبر validateGetUser middleware
    */
-  async getUser(req: Request, res: Response): Promise<void> {
+  async getUser(req: Request<{}, {}, {}, GetUserInput>, res: Response): Promise<void> {
     try {
       const { id, email, firebaseUid } = req.query;
-
-      if (!id && !email && !firebaseUid) {
-        res.status(400).json({
-          success: false,
-          message: "Please provide id, email, or firebaseUid"
-        });
-        return;
-      }
 
       const user = await this.userService.findUser({
         id: id as string,
@@ -94,7 +89,7 @@ export class UserController {
       if (!user) {
         res.status(404).json({
           success: false,
-          message: "User not found"
+          message: "المستخدم غير موجود"
         });
         return;
       }
@@ -107,32 +102,25 @@ export class UserController {
       logger.error("❌ Error in getUser controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }
 
   /**
    * ✅ الموافقة على مستخدم
+   * البيانات محققة عبر validateApproveUserParams و validateApproveUserBody middleware
    */
-  async approveUser(req: Request, res: Response): Promise<void> {
+  async approveUser(req: Request<UserParamsInput, {}, { approvedBy: string }>, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
       const { approvedBy } = req.body;
-
-      if (!approvedBy) {
-        res.status(400).json({
-          success: false,
-          message: "approvedBy is required"
-        });
-        return;
-      }
 
       const user = await this.userService.approveUser(userId as ID, approvedBy as ID);
 
       res.status(200).json({
         success: true,
-        message: "User approved successfully",
+        message: "تم الموافقة على المستخدم بنجاح",
         data: { user }
       });
 
@@ -141,26 +129,20 @@ export class UserController {
       logger.error("❌ Error in approveUser controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }
 
   /**
    * 🔑 تحديث دور المستخدم
+   * البيانات محققة عبر validateUpdateUserRoleParams و validateUpdateUserRoleBody middleware
+   * @param req Request contains UpdateUserRoleInput data split between params and body
    */
-  async updateUserRole(req: Request, res: Response): Promise<void> {
+  async updateUserRole(req: Request<UserParamsInput, {}, UpdateUserRoleBodyInput>, res: Response): Promise<void> {
     try {
       const { userId } = req.params;
       const { newRole, updatedBy } = req.body;
-
-      if (!newRole || !updatedBy) {
-        res.status(400).json({
-          success: false,
-          message: "newRole and updatedBy are required"
-        });
-        return;
-      }
 
       const user = await this.userService.updateUserRole(
         userId as ID,
@@ -170,7 +152,7 @@ export class UserController {
 
       res.status(200).json({
         success: true,
-        message: "User role updated successfully",
+        message: "تم تحديث دور المستخدم بنجاح",
         data: { user }
       });
 
@@ -179,24 +161,20 @@ export class UserController {
       logger.error("❌ Error in updateUserRole controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }
 
   /**
    * 🔍 البحث المتقدم في المستخدمين
+   * البيانات محققة عبر validateSearchUsers middleware
    */
   async searchUsers(req: Request, res: Response): Promise<void> {
     try {
-      const { 
-        searchTerm, 
-        role, 
-        status, 
-        isActive, 
-        page = "1", 
-        limit = "10" 
-      } = req.query;
+      // Type assertion لضمان استخدام SearchUsersInput structure
+      const query = req.query as unknown as SearchUsersInput;
+      const { searchTerm, role, status, isActive, page, limit, search } = query;
 
       const filters: {
         searchTerm?: string;
@@ -206,15 +184,17 @@ export class UserController {
         page?: number;
         limit?: number;
       } = {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string)
+        page: typeof page === 'number' ? page : parseInt((page as string) || "1"),
+        limit: typeof limit === 'number' ? limit : parseInt((limit as string) || "10")
       };
 
       if (searchTerm) filters.searchTerm = searchTerm as string;
+      if (search) filters.searchTerm = search as string; // دعم كلا المعاملين
       if (role) filters.role = role as UserRole;
       if (status) filters.status = status as UserStatus;
-      if (isActive === "true") filters.isActive = true;
-      if (isActive === "false") filters.isActive = false;
+      if (typeof isActive === 'boolean') filters.isActive = isActive;
+      else if (isActive === "true") filters.isActive = true;
+      else if (isActive === "false") filters.isActive = false;
 
       const result = await this.userService.searchUsers(filters);
 
@@ -228,7 +208,7 @@ export class UserController {
       logger.error("❌ Error in searchUsers controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }
@@ -250,13 +230,15 @@ export class UserController {
       logger.error("❌ Error in getUserStats controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }
 
   /**
    * 🔐 التحقق من صلاحية
+   * البيانات محققة عبر validateUserParams middleware
+   * permission يأتي من query params
    */
   async checkPermission(req: Request, res: Response): Promise<void> {
     try {
@@ -266,7 +248,7 @@ export class UserController {
       if (!permission) {
         res.status(400).json({
           success: false,
-          message: "permission parameter is required"
+          message: "معايير البحث مطلوبة"
         });
         return;
       }
@@ -288,7 +270,7 @@ export class UserController {
       logger.error("❌ Error in checkPermission controller", error);
       res.status(500).json({
         success: false,
-        message: error instanceof Error ? error.message : "Internal server error"
+        message: error instanceof Error ? error.message : "خطأ داخلي في الخادم"
       });
     }
   }

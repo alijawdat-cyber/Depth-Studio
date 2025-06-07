@@ -5,6 +5,10 @@
  * 📅 محدث: ديسمبر 2024
  * 👨‍💻 المطور: علي جودت
  * 🎯 الهدف: Controller شامل لإدارة المعدات مع 15 API endpoint
+ * 
+ * ✨ يستخدم EquipmentValidators للتحقق الاحترافي من البيانات
+ * 🔒 رسائل خطأ عربية وتحقق متقدم من الأنواع
+ * 🎯 15 middleware validator وتعريفات أنواع كاملة
  */
 
 import { Request, Response } from 'express';
@@ -17,19 +21,81 @@ import {
 } from '../services/EquipmentService';
 import { EquipmentSearchOptions } from '../repositories/EquipmentRepository';
 import { QueryOptions } from '../repositories/BaseRepository';
-import { EquipmentType, EquipmentCondition } from '../../../types/src/core/enums';
-import { ID } from '../../../types/src/core/base';
+import { EquipmentType, EquipmentCondition, ID, Equipment } from '../../../types/src';
 import { logger } from 'firebase-functions';
+
+// ======================================
+// 🎯 استيراد جميع المتحققات والأنواع من EquipmentValidators
+// ======================================
+import {
+  // المتحققات المحترفة
+  validateAddEquipment,
+  validateGetEquipment,
+  validateSearchEquipment,
+  validateEquipmentParams,
+  validateEquipmentIdParams,
+  validateAssignEquipment,
+  validateReturnEquipment,
+  validateScheduleMaintenance,
+  validateUpdateEquipmentCondition,
+  validateUpdateEquipment,
+  validateUsageReport,
+  validateMaintenanceNeeded,
+  validateExpiringWarranty,
+  validateCreateAssignmentRecord,
+  validateCreateMaintenanceRecord,
+  
+  // تعريفات الأنواع المحترفة
+  AddEquipmentInput,
+  GetEquipmentInput,
+  SearchEquipmentInput,
+  EquipmentParamsInput,
+  EquipmentIdParamsInput,
+  AssignEquipmentInput,
+  ReturnEquipmentInput,
+  ScheduleMaintenanceInput,
+  UpdateEquipmentConditionInput,
+  UpdateEquipmentInput,
+  UsageReportInput,
+  MaintenanceNeededInput,
+  ExpiringWarrantyInput,
+  CreateAssignmentRecordInput,
+  CreateMaintenanceRecordInput
+} from '../validators/EquipmentValidators';
 
 /**
  * 🛠️ Equipment Controller Class
+ * يستخدم جميع المتحققات المحترفة مع الأنواع الصحيحة
  */
 export class EquipmentController {
   private equipmentService: EquipmentService;
 
   constructor() {
     this.equipmentService = new EquipmentService();
-    logger.info('🛠️ EquipmentController initialized');
+    logger.info('🛠️ EquipmentController initialized with professional validators');
+  }
+
+  /**
+   * 📋 إرجاع جميع المتحققات للاستخدام في الـ router
+   */
+  static getValidators() {
+    return {
+      validateAddEquipment,
+      validateGetEquipment,
+      validateSearchEquipment,
+      validateEquipmentParams,
+      validateEquipmentIdParams,
+      validateAssignEquipment,
+      validateReturnEquipment,
+      validateScheduleMaintenance,
+      validateUpdateEquipmentCondition,
+      validateUpdateEquipment,
+      validateUsageReport,
+      validateMaintenanceNeeded,
+      validateExpiringWarranty,
+      validateCreateAssignmentRecord,
+      validateCreateMaintenanceRecord
+    };
   }
 
   // ======================================
@@ -38,29 +104,39 @@ export class EquipmentController {
 
   /**
    * POST /equipment - إضافة معدة جديدة
+   * يستخدم validateAddEquipment middleware
    */
   async addEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🆕 POST /equipment - Adding new equipment');
+      logger.info('🆕 POST /equipment - Adding new equipment with validation');
 
-      const equipmentData: CreateEquipmentRequest = req.body;
+      // البيانات محققة بواسطة validateAddEquipment middleware
+      const equipmentData: AddEquipmentInput = req.body;
 
-      // التحقق من وجود البيانات المطلوبة
-      if (!equipmentData.name || !equipmentData.type || !equipmentData.owner_id) {
-        res.status(400).json({
-          success: false,
-          message: 'البيانات الأساسية مطلوبة: الاسم، النوع، معرف المالك',
-          code: 'MISSING_REQUIRED_FIELDS'
-        });
-        return;
-      }
+      // تحويل البيانات للنوع المطلوب من الـ Service مع إضافة الخصائص المطلوبة
+      const createRequest: CreateEquipmentRequest = {
+        type: equipmentData.type,
+        name: equipmentData.name,
+        brand: equipmentData.brand,
+        model: equipmentData.model,
+        condition: equipmentData.condition,
+        description: equipmentData.description || '',
+        purchase_date: new Date(equipmentData.purchase_date) as any,
+        purchase_price: equipmentData.purchase_price,
+        location: equipmentData.location,
+        owner_id: (equipmentData.owner_id || '') as ID,
+        is_portable: equipmentData.is_portable || false,
+        ...(equipmentData.warranty_expiry && { 
+          warranty_expiry: new Date(equipmentData.warranty_expiry) as any 
+        })
+      };
 
-      const equipment = await this.equipmentService.addEquipment(equipmentData);
+      const equipment: Equipment = await this.equipmentService.addEquipment(createRequest);
 
       res.status(201).json({
         success: true,
         message: 'تم إضافة المعدة بنجاح',
-        data: equipment
+        data: equipment as Equipment
       });
 
       logger.info('✅ Equipment added successfully', { equipmentId: equipment.id });
@@ -77,26 +153,24 @@ export class EquipmentController {
 
   /**
    * POST /equipment/:id/assign - تخصيص معدة
+   * يستخدم validateEquipmentIdParams + validateAssignEquipment middleware
    */
   async assignEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('📋 POST /equipment/:id/assign - Assigning equipment');
+      logger.info('📋 POST /equipment/:id/assign - Assigning equipment with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
-      const assignmentData: Omit<AssignEquipmentRequest, 'equipment_id'> = req.body;
-
-      if (!assignmentData.user_id) {
-        res.status(400).json({
-          success: false,
-          message: 'معرف المستخدم مطلوب للتخصيص',
-          code: 'USER_ID_REQUIRED'
-        });
-        return;
-      }
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams مع Type Safety
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
+      const equipmentIdTyped: ID = equipmentId;
+      // بيانات التخصيص محققة بواسطة validateAssignEquipment
+      const assignmentData: AssignEquipmentInput = req.body;
+      const userIdTyped: ID = assignmentData.user_id;
 
       const assignmentRequest: AssignEquipmentRequest = {
-        equipment_id: equipmentId,
-        ...assignmentData
+        equipment_id: equipmentIdTyped,
+        user_id: userIdTyped,
+        reserved_until: assignmentData.reserved_until ? new Date(assignmentData.reserved_until) as any : undefined,
+        notes: assignmentData.notes || ''
       };
 
       const equipment = await this.equipmentService.assignEquipment(assignmentRequest);
@@ -107,7 +181,10 @@ export class EquipmentController {
         data: equipment
       });
 
-      logger.info('✅ Equipment assigned successfully', { equipmentId, userId: assignmentData.user_id });
+      logger.info('✅ Equipment assigned successfully', { 
+        equipmentId: equipmentIdTyped, 
+        userId: userIdTyped 
+      });
     } catch (error) {
       logger.error('❌ Error assigning equipment', { error, equipmentId: req.params['id'] });
       
@@ -121,27 +198,22 @@ export class EquipmentController {
 
   /**
    * POST /equipment/:id/return - إرجاع معدة
+   * يستخدم validateEquipmentIdParams + validateReturnEquipment middleware
    */
   async returnEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🔄 POST /equipment/:id/return - Returning equipment');
+      logger.info('🔄 POST /equipment/:id/return - Returning equipment with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
-      const { hours_used, notes } = req.body;
-
-      if (typeof hours_used !== 'number' || hours_used < 0) {
-        res.status(400).json({
-          success: false,
-          message: 'عدد ساعات الاستخدام مطلوب ويجب أن يكون رقم موجب',
-          code: 'INVALID_HOURS_USED'
-        });
-        return;
-      }
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams مع Type Safety
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
+      const equipmentIdTyped: ID = equipmentId;
+      // بيانات الإرجاع محققة بواسطة validateReturnEquipment
+      const returnData: ReturnEquipmentInput = req.body;
 
       const equipment = await this.equipmentService.returnEquipment(
-        equipmentId,
-        hours_used,
-        notes
+        equipmentIdTyped,
+        returnData.usage_hours || 0,
+        returnData.return_notes
       );
 
       res.status(200).json({
@@ -150,7 +222,11 @@ export class EquipmentController {
         data: equipment
       });
 
-      logger.info('✅ Equipment returned successfully', { equipmentId, hoursUsed: hours_used });
+      logger.info('✅ Equipment returned successfully', { 
+        equipmentId, 
+        hoursUsed: returnData.usage_hours,
+        condition: returnData.return_condition
+      });
     } catch (error) {
       logger.error('❌ Error returning equipment', { error, equipmentId: req.params['id'] });
       
@@ -164,26 +240,25 @@ export class EquipmentController {
 
   /**
    * POST /equipment/:id/maintenance - جدولة صيانة
+   * يستخدم validateEquipmentIdParams + validateScheduleMaintenance middleware
    */
   async scheduleMaintenance(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🔧 POST /equipment/:id/maintenance - Scheduling maintenance');
+      logger.info('🔧 POST /equipment/:id/maintenance - Scheduling maintenance with validation');
 
-            const equipmentId: ID = req.params['id'] as ID;
-      const maintenanceData: Omit<ScheduleMaintenanceRequest, 'equipment_id'> = req.body;
-
-      if (!maintenanceData.scheduled_date || !maintenanceData.description) {
-        res.status(400).json({
-          success: false,
-          message: 'تاريخ الصيانة ووصف الصيانة مطلوبان',
-          code: 'MAINTENANCE_DATA_REQUIRED'
-        });
-        return;
-      }
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
+      // بيانات الصيانة محققة بواسطة validateScheduleMaintenance
+      const maintenanceData: ScheduleMaintenanceInput = req.body;
 
       const maintenanceRequest: ScheduleMaintenanceRequest = {
         equipment_id: equipmentId,
-        ...maintenanceData
+        type: maintenanceData.maintenance_type === 'calibration' ? 'inspection' : maintenanceData.maintenance_type,
+        scheduled_date: new Date(maintenanceData.scheduled_date) as any,
+        description: maintenanceData.maintenance_notes || '',
+        priority: maintenanceData.priority,
+        estimated_duration: maintenanceData.estimated_duration_hours,
+        ...(maintenanceData.estimated_cost && { estimated_cost: maintenanceData.estimated_cost })
       };
 
       const equipment = await this.equipmentService.scheduleMaintenance(maintenanceRequest);
@@ -194,7 +269,11 @@ export class EquipmentController {
         data: equipment
       });
 
-      logger.info('✅ Maintenance scheduled successfully', { equipmentId });
+      logger.info('✅ Maintenance scheduled successfully', { 
+        equipmentId,
+        maintenanceType: maintenanceData.maintenance_type,
+        priority: maintenanceData.priority
+      });
     } catch (error) {
       logger.error('❌ Error scheduling maintenance', { error, equipmentId: req.params['id'] });
 
@@ -212,42 +291,55 @@ export class EquipmentController {
 
   /**
    * GET /equipment - جلب جميع المعدات مع البحث والفلترة
+   * يستخدم validateSearchEquipment middleware
    */
   async getAllEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('📖 GET /equipment - Getting all equipment with search/filter');
+      logger.info('📖 GET /equipment - Getting all equipment with professional search/filter');
 
-      // استخراج معايير البحث من query parameters
+      // معايير البحث محققة بواسطة validateSearchEquipment middleware
+      const searchCriteria: SearchEquipmentInput = req.query as any;
+
+      // تحويل معايير البحث إلى تنسيق EquipmentSearchOptions مع التعامل مع القيم الاختيارية
       const searchOptions: EquipmentSearchOptions = {};
-      const queryOptions: QueryOptions = {};
+      
+      if (searchCriteria.type) searchOptions.type = searchCriteria.type as EquipmentType;
+      if (searchCriteria.condition) searchOptions.condition = searchCriteria.condition as EquipmentCondition;
+      if (searchCriteria.is_available !== undefined) searchOptions.is_available = searchCriteria.is_available;
+      if (searchCriteria.owner_id) searchOptions.owner_id = searchCriteria.owner_id as ID;
+      if (searchCriteria.location) searchOptions.location = searchCriteria.location;
 
-      // معايير البحث مع TypeScript-safe access
-      if (req.query['type']) searchOptions.type = req.query['type'] as EquipmentType;
-      if (req.query['condition']) searchOptions.condition = req.query['condition'] as EquipmentCondition;
-      if (req.query['is_available']) searchOptions.is_available = req.query['is_available'] === 'true';
-      if (req.query['owner_id']) searchOptions.owner_id = req.query['owner_id'] as ID;
-      if (req.query['location']) searchOptions.location = req.query['location'] as string;
+      // خيارات الاستعلام مع استخدام page بدلاً من offset
+      const queryOptions: QueryOptions = {
+        limit: searchCriteria.limit
+      };
 
-      // خيارات الاستعلام مع TypeScript-safe access
-      if (req.query['limit']) queryOptions.limit = parseInt(req.query['limit'] as string);
-      if (req.query['offset']) queryOptions.offset = parseInt(req.query['offset'] as string);
-      if (req.query['order_by']) {
+      // إضافة ترتيب إذا كان متوفرًا - تحقق من وجود الخصائص في نوع البيانات الفعلي
+      if ('sort_by' in searchCriteria && searchCriteria.sort_by) {
         queryOptions.orderBy = [{
-          field: req.query['order_by'] as string,
-          direction: (req.query['order_direction'] as 'asc' | 'desc') || 'asc'
+          field: searchCriteria.sort_by as string,
+          direction: ('sort_direction' in searchCriteria && searchCriteria.sort_direction) ? 
+            searchCriteria.sort_direction as 'asc' | 'desc' : 'asc'
         }];
       }
 
-      const equipment = await this.equipmentService.searchEquipment(searchOptions, queryOptions);
+      const equipment: Equipment[] = await this.equipmentService.searchEquipment(searchOptions, queryOptions);
 
       res.status(200).json({
         success: true,
         message: 'تم جلب المعدات بنجاح',
-        data: equipment,
-        count: equipment.length
+        data: equipment as Equipment[],
+        count: equipment.length,
+        pagination: {
+          limit: searchCriteria.limit,
+          page: searchCriteria.page
+        }
       });
 
-      logger.info('✅ Equipment retrieved successfully', { count: equipment.length });
+      logger.info('✅ Equipment retrieved successfully', { 
+        count: equipment.length,
+        searchCriteria: Object.keys(searchOptions).filter(key => searchOptions[key as keyof EquipmentSearchOptions])
+      });
     } catch (error) {
       logger.error('❌ Error getting equipment', { error, query: req.query });
       
@@ -261,16 +353,18 @@ export class EquipmentController {
 
   /**
    * GET /equipment/:id - جلب معدة محددة
+   * يستخدم validateEquipmentIdParams middleware
    */
   async getEquipmentById(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('📖 GET /equipment/:id - Getting equipment by ID');
+      logger.info('📖 GET /equipment/:id - Getting equipment by ID with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
       
-      // استخدام البحث بالـ ID من خلال قاعدة البيانات مباشرة
-      const equipment = await this.equipmentService.searchEquipment({});
-      const foundEquipment = equipment.find(eq => eq.id === equipmentId);
+      // استخدام البحث بالـ ID من خلال قاعدة البيانات مباشرة مع Type Safety
+      const equipment: Equipment[] = await this.equipmentService.searchEquipment({});
+      const foundEquipment: Equipment | undefined = equipment.find(eq => eq.id === equipmentId);
 
       if (!foundEquipment) {
         res.status(404).json({
@@ -284,7 +378,7 @@ export class EquipmentController {
       res.status(200).json({
         success: true,
         message: 'تم جلب المعدة بنجاح',
-        data: foundEquipment
+        data: foundEquipment as Equipment
       });
 
       logger.info('✅ Equipment retrieved by ID', { equipmentId });
@@ -341,7 +435,8 @@ export class EquipmentController {
         success: true,
         message: `تم جلب معدات ${type} بنجاح`,
         data: equipment,
-        count: equipment.length
+        count: equipment.length,
+        type
       });
 
       logger.info('✅ Equipment by type retrieved', { type, count: equipment.length });
@@ -385,18 +480,31 @@ export class EquipmentController {
 
   /**
    * GET /equipment/:id/usage-report - تقرير استخدام معدة
+   * يستخدم validateEquipmentIdParams + validateUsageReport middleware
    */
   async getEquipmentUsageReport(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('📊 GET /equipment/:id/usage-report - Getting equipment usage report');
+      logger.info('📊 GET /equipment/:id/usage-report - Getting equipment usage report with validation');
 
-            const equipmentId: ID = req.params['id'] as ID;
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
+      // معايير التقرير محققة بواسطة validateUsageReport
+      const reportCriteria: UsageReportInput = req.query as any;
+
       const report: EquipmentUsageReport = await this.equipmentService.getEquipmentUsageReport(equipmentId);
 
       res.status(200).json({
         success: true,
         message: 'تم إنشاء تقرير الاستخدام بنجاح',
-        data: report
+        data: report,
+        period: {
+          start: reportCriteria.period_start,
+          end: reportCriteria.period_end
+        },
+        options: {
+          include_maintenance: reportCriteria.include_maintenance,
+          include_statistics: reportCriteria.include_statistics
+        }
       });
 
       logger.info('✅ Equipment usage report generated', { equipmentId });
@@ -413,10 +521,14 @@ export class EquipmentController {
 
   /**
    * GET /equipment/maintenance/needed - المعدات تحتاج صيانة
+   * يستخدم validateMaintenanceNeeded middleware
    */
   async getEquipmentNeedingMaintenance(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🔧 GET /equipment/maintenance/needed - Getting equipment needing maintenance');
+      logger.info('🔧 GET /equipment/maintenance/needed - Getting equipment needing maintenance with validation');
+
+      // معايير الصيانة محققة بواسطة validateMaintenanceNeeded
+      const maintenanceCriteria: MaintenanceNeededInput = req.query as any;
 
       const equipment = await this.equipmentService.getEquipmentNeedingMaintenance();
 
@@ -424,10 +536,19 @@ export class EquipmentController {
         success: true,
         message: 'تم جلب المعدات التي تحتاج صيانة بنجاح',
         data: equipment,
-        count: equipment.length
+        count: equipment.length,
+        criteria: {
+          priority_filter: maintenanceCriteria.priority_filter,
+          overdue_only: maintenanceCriteria.overdue_only,
+          condition_filter: maintenanceCriteria.condition_filter,
+          days_ahead: maintenanceCriteria.days_ahead
+        }
       });
 
-      logger.info('✅ Equipment needing maintenance retrieved', { count: equipment.length });
+      logger.info('✅ Equipment needing maintenance retrieved', { 
+        count: equipment.length,
+        criteria: maintenanceCriteria
+      });
     } catch (error) {
       logger.error('❌ Error getting equipment needing maintenance', { error });
       
@@ -441,12 +562,16 @@ export class EquipmentController {
 
   /**
    * GET /equipment/warranty/expiring - المعدات منتهية الضمان
+   * يستخدم validateExpiringWarranty middleware
    */
   async getEquipmentWithExpiringWarranty(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('⚠️ GET /equipment/warranty/expiring - Getting equipment with expiring warranty');
+      logger.info('⚠️ GET /equipment/warranty/expiring - Getting equipment with expiring warranty with validation');
 
-      const daysAhead: number = req.query['days'] ? parseInt(req.query['days'] as string) : 30;
+      // معايير الضمان محققة بواسطة validateExpiringWarranty
+      const warrantyCriteria: ExpiringWarrantyInput = req.query as any;
+      const daysAhead = warrantyCriteria.days_ahead || 90;
+
       const equipment = await this.equipmentService.getEquipmentWithExpiringWarranty(daysAhead);
 
       res.status(200).json({
@@ -454,10 +579,17 @@ export class EquipmentController {
         message: `تم جلب المعدات منتهية الضمان خلال ${daysAhead} يوم بنجاح`,
         data: equipment,
         count: equipment.length,
-        days_ahead: daysAhead
+        criteria: {
+          days_ahead: daysAhead,
+          expired_only: warrantyCriteria.expired_only
+        }
       });
 
-      logger.info('✅ Equipment with expiring warranty retrieved', { count: equipment.length, daysAhead });
+      logger.info('✅ Equipment with expiring warranty retrieved', { 
+        count: equipment.length, 
+        daysAhead,
+        expiredOnly: warrantyCriteria.expired_only
+      });
     } catch (error) {
       logger.error('❌ Error getting equipment with expiring warranty', { error });
       
@@ -475,27 +607,20 @@ export class EquipmentController {
 
   /**
    * PATCH /equipment/:id - تحديث معدة
+   * يستخدم validateEquipmentIdParams + validateUpdateEquipment middleware
    */
   async updateEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🔄 PATCH /equipment/:id - Updating equipment');
+      logger.info('🔄 PATCH /equipment/:id - Updating equipment with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
-      const updateData = req.body;
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
+      // بيانات التحديث محققة بواسطة validateUpdateEquipment
+      const updateData: UpdateEquipmentInput = req.body;
 
-      // التحقق من وجود بيانات للتحديث
-      if (!updateData || Object.keys(updateData).length === 0) {
-        res.status(400).json({
-          success: false,
-          message: 'بيانات التحديث مطلوبة',
-          code: 'NO_UPDATE_DATA'
-        });
-        return;
-      }
-
-      // تحديث المعدة - البحث بالـ ID
-      const allEquipment = await this.equipmentService.searchEquipment({});
-      const existingEquipment = allEquipment.find(eq => eq.id === equipmentId);
+      // تحديث المعدة - البحث بالـ ID مع Type Safety
+      const allEquipment: Equipment[] = await this.equipmentService.searchEquipment({});
+      const existingEquipment: Equipment | undefined = allEquipment.find(eq => eq.id === equipmentId);
       
       if (!existingEquipment) {
         res.status(404).json({
@@ -506,13 +631,23 @@ export class EquipmentController {
         return;
       }
 
+      // دمج البيانات المحدثة مع Type Safety
+      const updatedEquipment: Equipment = { 
+        ...existingEquipment, 
+        ...updateData,
+        updated_at: new Date().toISOString()
+      } as unknown as Equipment;
+
       res.status(200).json({
         success: true,
         message: 'تم تحديث المعدة بنجاح',
-        data: { ...existingEquipment, ...updateData }
+        data: updatedEquipment as Equipment
       });
 
-      logger.info('✅ Equipment updated successfully', { equipmentId });
+      logger.info('✅ Equipment updated successfully', { 
+        equipmentId,
+        updatedFields: Object.keys(updateData)
+      });
     } catch (error) {
       logger.error('❌ Error updating equipment', { error, equipmentId: req.params['id'] });
       
@@ -526,27 +661,21 @@ export class EquipmentController {
 
   /**
    * PATCH /equipment/:id/condition - تحديث حالة المعدة
+   * يستخدم validateEquipmentIdParams + validateUpdateEquipmentCondition middleware
    */
   async updateEquipmentCondition(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🔄 PATCH /equipment/:id/condition - Updating equipment condition');
+      logger.info('🔄 PATCH /equipment/:id/condition - Updating equipment condition with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
-      const { condition, notes } = req.body;
-
-      if (!condition) {
-        res.status(400).json({
-          success: false,
-          message: 'حالة المعدة الجديدة مطلوبة',
-          code: 'CONDITION_REQUIRED'
-        });
-        return;
-      }
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
+      // بيانات تحديث الحالة محققة بواسطة validateUpdateEquipmentCondition
+      const conditionData: UpdateEquipmentConditionInput = req.body;
 
       const equipment = await this.equipmentService.updateEquipmentCondition(
         equipmentId,
-        condition as EquipmentCondition,
-        notes
+        conditionData.condition as EquipmentCondition,
+        conditionData.condition_notes
       );
 
       res.status(200).json({
@@ -555,12 +684,17 @@ export class EquipmentController {
         data: equipment
       });
 
-      logger.info('✅ Equipment condition updated', { equipmentId, condition });
+      logger.info('✅ Equipment condition updated', { 
+        equipmentId, 
+        condition: conditionData.condition,
+        status: conditionData.status,
+        updatedBy: conditionData.updated_by
+      });
     } catch (error) {
       logger.error('❌ Error updating equipment condition', { 
         error, 
         equipmentId: req.params['id'], 
-        condition: req.body.condition 
+        conditionData: req.body
       });
       
       res.status(500).json({
@@ -577,12 +711,14 @@ export class EquipmentController {
 
   /**
    * DELETE /equipment/:id - حذف معدة (Soft Delete)
+   * يستخدم validateEquipmentIdParams middleware
    */
   async deleteEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🗑️ DELETE /equipment/:id - Deleting equipment (soft delete)');
+      logger.info('🗑️ DELETE /equipment/:id - Deleting equipment (soft delete) with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
 
       // التحقق من وجود المعدة
       const allEquipment = await this.equipmentService.searchEquipment({});
@@ -603,7 +739,11 @@ export class EquipmentController {
       res.status(200).json({
         success: true,
         message: 'تم حذف المعدة بنجاح',
-        data: { id: equipmentId, status: 'deleted' }
+        data: { 
+          id: equipmentId, 
+          status: 'deleted',
+          deleted_at: new Date().toISOString()
+        }
       });
 
       logger.info('✅ Equipment deleted (soft delete)', { equipmentId });
@@ -624,20 +764,23 @@ export class EquipmentController {
 
   /**
    * GET /equipment/:id/can-assign - التحقق من إمكانية التخصيص
+   * يستخدم validateEquipmentIdParams middleware
    */
   async canAssignEquipment(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('🔍 GET /equipment/:id/can-assign - Checking equipment assignment capability');
+      logger.info('🔍 GET /equipment/:id/can-assign - Checking equipment assignment capability with validation');
 
-      const equipmentId: ID = req.params['id'] as ID;
+      // معرف المعدة محقق بواسطة validateEquipmentIdParams
+      const { id: equipmentId }: EquipmentIdParamsInput = req.params as any;
       const canAssign = await this.equipmentService.canAssignEquipment(equipmentId);
 
       res.status(200).json({
         success: true,
         message: canAssign ? 'المعدة متاحة للتخصيص' : 'المعدة غير متاحة للتخصيص',
         data: { 
-          equipment_id: equipmentId,
-          can_assign: canAssign 
+          equipment_id: equipmentId as ID,
+          can_assign: canAssign,
+          checked_at: new Date().toISOString()
         }
       });
 

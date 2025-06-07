@@ -7,7 +7,9 @@
  * 🎯 الهدف: المنطق التجاري للمستخدمين بأنواع محكمة 100%
  */
 
-import { User, UserRole, UserStatus, ID, UserPermissions } from "@/types";
+import { User, UserPermissions } from "../../../types/src/users";
+import { UserRole, UserStatus } from "../../../types/src/core/enums";
+import { ID } from "../../../types/src/core/base";
 import { UserRepository } from "../repositories/UserRepository";
 import { logger } from "firebase-functions";
 import { auth } from "../config/firebase";
@@ -43,25 +45,48 @@ export class UserService {
         emailVerified: false
       });
 
-      // إنشاء مستخدم في Firestore
+      // إنشاء مستخدم في Firestore مع جميع الحقول المطلوبة
       const userCreateData = {
         email: userData.email,
         first_name: userData.firstName,
         last_name: userData.lastName,
+        full_name: `${userData.firstName} ${userData.lastName}`,
         display_name: `${userData.firstName} ${userData.lastName}`,
         primary_role: userData.primaryRole,
+        role: userData.primaryRole, // نفس primary_role
         status: "pending_approval" as const,
         is_verified: false,
         firebase_uid: firebaseUser.uid,
+        auth_methods: [],
         auth_providers: ["email" as const],
+        registration_method: "email" as const,
         timezone: "Asia/Baghdad",
-        language: "ar",
         is_online: false,
         is_active: true,
+        location: undefined,
+        profile_photo_url: undefined,
+        bio: undefined,
+        last_login: undefined,
+        last_seen: undefined,
+        phone_verified: false,
+        role_selected: false,
+        role_selection_history: [],
+        google_linked: false,
+        notification_preferences: {
+          email_notifications: true,
+          push_notifications: true,
+          sms_notifications: false,
+          marketing_emails: false
+        },
+        privacy_settings: {
+          profile_visibility: 'private',
+          show_online_status: false,
+          allow_contact: false
+        },
         ...(userData.phone && { phone: userData.phone })
       };
 
-      const newUser = await this.userRepository.create(userCreateData);
+      const newUser = await this.userRepository.create(userCreateData as any);
 
       logger.info("👥 User created successfully", { 
         userId: newUser.id, 
@@ -203,7 +228,9 @@ export class UserService {
       // حساب الإحصائيات
       for (const user of allUsers) {
         // حساب حسب الدور
-        stats.byRole[user.primary_role] = (stats.byRole[user.primary_role] || 0) + 1;
+        if (user.primary_role) {
+          stats.byRole[user.primary_role] = (stats.byRole[user.primary_role] || 0) + 1;
+        }
         
         // حساب حسب الحالة
         stats.byStatus[user.status] = (stats.byStatus[user.status] || 0) + 1;
@@ -272,7 +299,7 @@ export class UserService {
 
       // في التطبيق الحقيقي، هنا راح نجيب الصلاحيات من UserPermissionsRepository
       // للوقت الحالي، نرجع صلاحيات افتراضية حسب الدور
-      const hasPermission = this.getDefaultPermissionByRole(user.primary_role, permission);
+      const hasPermission = user.primary_role ? this.getDefaultPermissionByRole(user.primary_role, permission) : false;
       
       logger.info("✅ Permission checked", { userId, permission, hasPermission });
       return hasPermission;

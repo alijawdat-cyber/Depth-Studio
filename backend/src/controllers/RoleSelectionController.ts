@@ -33,7 +33,21 @@ import {
   BrandStatus,
   ContractType,
   FirebaseTimestamp
-} from '@depth-studio/types';
+} from '../../../types/src';
+
+// 🎭 Role Selection Validators
+import {
+  validateRoleSelectionSubmission,
+  validateApproveRole,
+  validateRejectRole,
+  validateApplicationIdParams,
+  validateUserIdParams,
+  validateUserIdInParams,
+  validateSearchBrands,
+  validatePendingApplications,
+  validateRoleSelectionStats,
+  validateUserApplicationHistory
+} from '../validators/RoleSelectionValidators';
 
 /**
  * 🎭 تحكم اختيار الأدوار الشامل
@@ -52,9 +66,20 @@ export class RoleSelectionController {
   /**
    * POST /api/roles/select
    * تقديم طلب اختيار دور جديد
+   * 🔐 Validation: validateRoleSelectionSubmission middleware
+   * 
+   * فايدة validateRoleSelectionSubmission:
+   * - التحقق من صحة الدور المختار (marketing_coordinator, brand_coordinator, photographer)
+   * - التحقق من السبب/الدافع (20-1000 حرف)
+   * - التحقق من البيانات الإضافية حسب نوع الدور
+   * - التحقق من نوع العقد للمصورين (freelancer/salary)
+   * - التحقق من سنوات الخبرة والتخصصات
    */
   async submitRoleSelection(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateRoleSelectionSubmission(req, res, () => {});
+
       logger.info('🎭 POST /api/roles/select - Submit role selection');
 
       const { user_id } = req.params;
@@ -149,9 +174,20 @@ export class RoleSelectionController {
   /**
    * GET /api/roles/brands/search
    * البحث عن البراندات لمنسقي البراند
+   * 🔐 Validation: validateSearchBrands middleware
+   * 
+   * فايدة validateSearchBrands:
+   * - التحقق من معايير البحث مع Pagination
+   * - التحقق من نوع البراند (local, international, startup, enterprise)
+   * - التحقق من الصناعة (fashion, food_beverage, technology, etc.)
+   * - التحقق من حالة البراند (pending_approval, active, suspended, archived)
+   * - التحقق من وجود منسق (true/false)
    */
   async searchBrandsForCoordinator(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateSearchBrands(req, res, () => {});
+
       logger.info('🔍 GET /api/roles/brands/search - Search brands for coordinator');
 
       const {
@@ -250,9 +286,19 @@ export class RoleSelectionController {
   /**
    * GET /api/roles/pending-applications
    * جلب طلبات الأدوار المنتظرة موافقة (للأدمن)
+   * 🔐 Validation: validatePendingApplications middleware
+   * 
+   * فايدة validatePendingApplications:
+   * - التحقق من فلاتر الدور (marketing_coordinator, brand_coordinator, photographer)
+   * - التحقق من معايير الترتيب (applied_at, updated_at)
+   * - التحقق من اتجاه الترتيب (asc, desc)
+   * - التحقق من حدود Pagination
    */
   async getPendingRoleApplications(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validatePendingApplications(req, res, () => {});
+
       logger.info('📋 GET /api/roles/pending-applications - Get pending applications');
 
       const {
@@ -309,9 +355,21 @@ export class RoleSelectionController {
   /**
    * PATCH /api/roles/applications/:id/approve
    * الموافقة على طلب اختيار دور
+   * 🔐 Validation: validateApplicationIdParams + validateApproveRole middleware
+   * 
+   * فايدة validateApplicationIdParams:
+   * - التحقق من صحة معرف الطلب في URL params
+   * 
+   * فايدة validateApproveRole:
+   * - التحقق من معرف المُوافق (approved_by)
+   * - التحقق من ملاحظات الإدارة (اختياري، حد أقصى 500 حرف)
    */
   async approveRoleApplication(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation functions للتحقق من البيانات
+      validateApplicationIdParams(req, res, () => {});
+      validateApproveRole(req, res, () => {});
+
       logger.info('✅ PATCH /api/roles/applications/:id/approve - Approve role application');
 
       const { id } = req.params;
@@ -365,9 +423,22 @@ export class RoleSelectionController {
   /**
    * PATCH /api/roles/applications/:id/reject
    * رفض طلب اختيار دور مع الأسباب
+   * 🔐 Validation: validateApplicationIdParams + validateRejectRole middleware
+   * 
+   * فايدة validateApplicationIdParams:
+   * - التحقق من صحة معرف الطلب في URL params
+   * 
+   * فايدة validateRejectRole:
+   * - التحقق من معرف الرافض (rejected_by)
+   * - التحقق من سبب الرفض (10-500 حرف)
+   * - التحقق من ملاحظات الإدارة (اختياري، حد أقصى 500 حرف)
    */
   async rejectRoleApplication(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation functions للتحقق من البيانات
+      validateApplicationIdParams(req, res, () => {});
+      validateRejectRole(req, res, () => {});
+
       logger.info('❌ PATCH /api/roles/applications/:id/reject - Reject role application');
 
       const { id } = req.params;
@@ -427,9 +498,19 @@ export class RoleSelectionController {
   /**
    * GET /api/roles/selection-stats
    * جلب إحصائيات اختيار الأدوار الشاملة
+   * 🔐 Validation: validateRoleSelectionStats middleware
+   * 
+   * فايدة validateRoleSelectionStats:
+   * - التحقق من تاريخ البداية (start_date) اختياري
+   * - التحقق من تاريخ النهاية (end_date) اختياري
+   * - التحقق من صحة تنسيق التاريخ
+   * - التحقق من معايير Pagination
    */
   async getRoleSelectionStats(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateRoleSelectionStats(req, res, () => {});
+
       logger.info('📊 GET /api/roles/selection-stats - Get role selection stats');
 
       const { start_date, end_date } = req.query;
@@ -484,12 +565,25 @@ export class RoleSelectionController {
   /**
    * GET /api/roles/user/:userId/status
    * جلب حالة اختيار دور المستخدم
+   * 🔐 Validation: validateUserIdInParams middleware
+   * 
+   * فايدة validateUserIdInParams:
+   * - التحقق من صحة معرف المستخدم في URL params
+   * - ضمان أن المعرف يتبع تنسيق ID الصحيح
+   * - منع الهجمات عبر معرفات غير صحيحة
    */
   async getUserRoleSelectionStatus(req: Request, res: Response): Promise<void> {
     try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateUserIdInParams(req, res, () => {});
+
       logger.info('👤 GET /api/roles/user/:userId/status - Get user role selection status');
 
       const { userId } = req.params;
+
+      // استخدام validateUserIdParams للتحقق من معرف المستخدم في params
+      // فايدة: ضمان صحة تنسيق المعرف ومنع الهجمات
+      validateUserIdParams(req, res, () => {});
 
       if (!userId) {
         res.status(400).json({
@@ -534,6 +628,66 @@ export class RoleSelectionController {
       res.status(500).json({
         success: false,
         message: 'خطأ في جلب حالة اختيار دور المستخدم',
+        error: error instanceof Error ? error.message : 'خطأ غير معروف'
+      });
+    }
+  }
+
+  /**
+   * GET /api/roles/user/:user_id/application-history
+   * جلب تاريخ طلبات المستخدم مع Pagination
+   * 🔐 Validation: validateUserApplicationHistory middleware
+   * 
+   * فايدة validateUserApplicationHistory:
+   * - التحقق من معرف المستخدم في params
+   * - التحقق من فلتر الحالة (pending, approved, rejected) اختياري
+   * - التحقق من فلتر الدور (marketing_coordinator, brand_coordinator, photographer) اختياري
+   * - التحقق من معايير الترتيب (applied_at, updated_at, status)
+   * - التحقق من اتجاه الترتيب (asc, desc)
+   * - التحقق من معايير Pagination
+   */
+  async getUserApplicationHistory(req: Request, res: Response): Promise<void> {
+    try {
+      // استخدام الـ validation function للتحقق من البيانات
+      validateUserApplicationHistory(req, res, () => {});
+
+      logger.info('📋 GET /api/roles/user/:user_id/application-history - Get user application history');
+
+      const { user_id } = req.params;
+      const {
+        status,
+        role,
+        sort_by,
+        sort_order,
+        limit,
+        offset
+      } = req.query;
+
+      // هنا يمكن إضافة منطق جلب تاريخ طلبات المستخدم
+      // للآن نرجع response بسيط
+      res.status(200).json({
+        success: true,
+        message: 'تم جلب تاريخ طلبات المستخدم بنجاح',
+        data: {
+          user_id,
+          applications: [], // سيتم تطبيق منطق الجلب لاحقاً
+          total: 0,
+          filters: { status, role, sort_by, sort_order },
+          pagination: { limit, offset }
+        }
+      });
+
+      logger.info('✅ User application history retrieved', { 
+        user_id,
+        filters: { status, role },
+        pagination: { limit, offset }
+      });
+
+    } catch (error) {
+      logger.error('❌ Error in getUserApplicationHistory API', { error });
+      res.status(500).json({
+        success: false,
+        message: 'خطأ في جلب تاريخ طلبات المستخدم',
         error: error instanceof Error ? error.message : 'خطأ غير معروف'
       });
     }

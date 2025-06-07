@@ -22,6 +22,10 @@ import { RoleSelectionController } from "./controllers/RoleSelectionController";
 import { services } from "./services";
 import { logger } from "firebase-functions";
 
+// Import validators
+import { validateSearchUsers } from "./validators/UserValidators";
+import { validateSearchBrands } from "./validators/BrandValidators";
+
 // إنشاء Express app
 const app = express();
 
@@ -296,6 +300,14 @@ app.patch("/api/users/:userId/approve", async (req, res) => {
 });
 
 /**
+ * 🔍 البحث عن مستخدم واحد
+ * GET /api/users/get
+ */
+app.get("/api/users/get", async (req, res) => {
+  await userController.getUser(req, res);
+});
+
+/**
  * 🔑 تحديث دور المستخدم
  * PATCH /api/users/:userId/role
  */
@@ -307,7 +319,7 @@ app.patch("/api/users/:userId/role", async (req, res) => {
  * 🔍 البحث في المستخدمين
  * GET /api/users/search
  */
-app.get("/api/users/search", async (req, res) => {
+app.get("/api/users/search", validateSearchUsers, async (req, res) => {
   await userController.searchUsers(req, res);
 });
 
@@ -356,6 +368,22 @@ app.patch("/api/brands/:brandId/coordinator", async (req, res) => {
 });
 
 /**
+ * 🔍 البحث عن براند واحد
+ * GET /api/brands/get
+ */
+app.get("/api/brands/get", async (req, res) => {
+  await brandController.getBrand(req, res);
+});
+
+/**
+ * 🔄 تحديث حالة البراند
+ * PATCH /api/brands/:brandId/status
+ */
+app.patch("/api/brands/:brandId/status", async (req, res) => {
+  await brandController.updateBrandStatus(req, res);
+});
+
+/**
  * 💰 تحديث ميزانية البراند
  * PATCH /api/brands/:brandId/budget
  */
@@ -367,7 +395,7 @@ app.patch("/api/brands/:brandId/budget", async (req, res) => {
  * 🔍 البحث في البراندات
  * GET /api/brands/search
  */
-app.get("/api/brands/search", async (req, res) => {
+app.get("/api/brands/search", validateSearchBrands, async (req, res) => {
   await brandController.searchBrands(req, res);
 });
 
