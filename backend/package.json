@@ -4,7 +4,7 @@
   "description": "🔥 Depth Studio Backend - Firebase Functions + TypeScript",
   "main": "lib/index.js",
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "scripts": {
     "build": "tsc",
@@ -19,6 +19,9 @@
     "test:upload": "npm run build && node lib/backend/src/test/testFileUpload.js",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "validate-env": "ts-node src/scripts/validate-env.ts",
+    "prestart": "npm run validate-env",
+    "predeploy": "npm run validate-env && npm run build",
     "clean": "rimraf lib",
     "dev": "npm run build:watch & npm run serve"
   },
@@ -34,25 +37,28 @@
   "license": "MIT",
   "dependencies": {
     "@depth-studio/types": "file:../types",
+    "@types/dotenv": "^6.1.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "firebase-admin": "^12.0.0",
-    "firebase-functions": "^4.8.0",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
     "lodash": "^4.17.21",
-    "zod": "^3.22.4"
+    "zod": "^3.25.56"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
     "@types/jest": "^29.5.11",
     "@types/lodash": "^4.14.202",
-    "@types/node": "^20.11.5",
+    "@types/node": "^20.19.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "dotenv": "^16.5.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
