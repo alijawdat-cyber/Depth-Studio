@@ -19,9 +19,20 @@ import { logger } from "firebase-functions";
 let app: App;
 
 if (getApps().length === 0) {
+  // محاولة استخدام Service Account Key إذا كان متوفر
+  let firebaseCredential;
+  try {
+    firebaseCredential = credential.cert("../types/serviceAccountKey.json");
+    logger.info("🔑 استخدام Service Account Key");
+  } catch (error) {
+    firebaseCredential = credential.applicationDefault();
+    logger.info("🔐 استخدام Application Default Credentials");
+  }
+
   app = initializeApp({
-    credential: credential.applicationDefault(),
+    credential: firebaseCredential,
     databaseURL: "https://depth-studio-default-rtdb.firebaseio.com/",
+    storageBucket: "depth-studio.firebasestorage.app"
   });
   logger.info("🔥 Firebase Admin initialized successfully");
 } else {

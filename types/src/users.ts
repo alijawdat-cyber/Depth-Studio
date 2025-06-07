@@ -10,40 +10,68 @@
 
 import { BaseEntity, ActivatableEntity, ContactInfo, FirebaseTimestamp, ID } from './core/base';
 import { UserRole, UserStatus, AuthProvider, ContractType, DayOfWeek, LocationType, VerificationStatus } from './core/enums';
+import { AuthMethod, RoleSelection } from './auth';
 
 // ======================================
 // 👤 المستخدم الأساسي (مبسط)
 // ======================================
 
-/** المستخدم - مبسط وفعال */
+/** المستخدم - مبسط وفعال مع دعم المصادقة المتعددة */
 export interface User extends ActivatableEntity {
   // معلومات أساسية
   email: string;
   phone?: string;
-  display_name: string;
-  first_name: string;
-  last_name: string;
+  full_name: string;        // اسم كامل موحد
+  display_name?: string;    // اسم العرض (اختياري)
+  first_name?: string;      // الاسم الأول (اختياري)
+  last_name?: string;       // الاسم الأخير (اختياري)
   profile_photo_url?: string;
   
   // الدور والحالة
-  primary_role: UserRole;
+  role: UserRole;           // الدور الحالي
+  primary_role?: UserRole;  // الدور الأساسي (للمحافظة على التوافق)
   status: UserStatus;
   is_verified: boolean;
   
+  // المصادقة المتعددة 🆕
+  auth_methods: AuthMethod[];
+  registration_method: AuthProvider;
+  phone_verified: boolean;
+  role_selected: boolean;
+  role_selection_history: RoleSelection[];
+  google_linked: boolean;
+  
+  // الصلاحيات
+  permissions: string[];
+  
+  // الإعدادات الشخصية
+  preferences: {
+    language: string;
+    notifications_enabled: boolean;
+    email_notifications: boolean;
+    sms_notifications: boolean;
+    theme: 'light' | 'dark';
+  };
+  
+  // الملف الشخصي
+  profile: {
+    bio: string;
+    avatar_url: string;
+    social_links: Record<string, string>;
+  };
+  
   // معلومات إضافية مهمة
-  bio?: string;
   location?: string;
-  timezone: string;
-  language: string;
+  timezone?: string;
   
   // Firebase
-  firebase_uid: string;
-  auth_providers: AuthProvider[];
+  firebase_uid?: string;    // للمحافظة على التوافق
+  auth_providers?: AuthProvider[]; // للمحافظة على التوافق
   
   // تتبع النشاط البسيط
   last_login?: FirebaseTimestamp;
   last_seen?: FirebaseTimestamp;
-  is_online: boolean;
+  is_online?: boolean;
 }
 
 // ======================================

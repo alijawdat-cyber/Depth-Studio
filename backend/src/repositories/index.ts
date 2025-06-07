@@ -22,11 +22,23 @@ export { CampaignRepository } from "./CampaignRepository";
 // 📁 Content Repository
 export { ContentRepository } from "./ContentRepository";
 
+// 💸 Payment Repository
+export { PaymentRepository, PaymentSearchOptions, PaymentStats, FinancialStats } from "./PaymentRepository";
+
+// 🛠️ Equipment Repository
+export { EquipmentRepository, EquipmentSearchOptions, EquipmentStats, EquipmentAssignment, EquipmentMaintenance } from "./EquipmentRepository";
+
+// 🔔 Notification Repository
+export { NotificationRepository, NotificationSearchOptions, NotificationStats, UserNotificationActivity } from "./NotificationRepository";
+
 // Import للاستخدام الداخلي
 import { UserRepository } from "./UserRepository";
 import { BrandRepository } from "./BrandRepository";
 import { CampaignRepository } from "./CampaignRepository";
 import { ContentRepository } from "./ContentRepository";
+import { PaymentRepository } from "./PaymentRepository";
+import { EquipmentRepository } from "./EquipmentRepository";
+import { NotificationRepository } from "./NotificationRepository";
 
 /**
  * 🏭 Repository Factory
@@ -37,6 +49,9 @@ class RepositoryFactory {
   private static brandRepository: BrandRepository | null = null;
   private static campaignRepository: CampaignRepository | null = null;
   private static contentRepository: ContentRepository | null = null;
+  private static paymentRepository: PaymentRepository | null = null;
+  private static equipmentRepository: EquipmentRepository | null = null;
+  private static notificationRepository: NotificationRepository | null = null;
 
   /**
    * 👥 الحصول على User Repository
@@ -79,6 +94,36 @@ class RepositoryFactory {
   }
 
   /**
+   * 💸 الحصول على Payment Repository
+   */
+  static getPaymentRepository(): PaymentRepository {
+    if (!this.paymentRepository) {
+      this.paymentRepository = new PaymentRepository();
+    }
+    return this.paymentRepository;
+  }
+
+  /**
+   * 🛠️ الحصول على Equipment Repository
+   */
+  static getEquipmentRepository(): EquipmentRepository {
+    if (!this.equipmentRepository) {
+      this.equipmentRepository = new EquipmentRepository();
+    }
+    return this.equipmentRepository;
+  }
+
+  /**
+   * 🔔 الحصول على Notification Repository
+   */
+  static getNotificationRepository(): NotificationRepository {
+    if (!this.notificationRepository) {
+      this.notificationRepository = new NotificationRepository();
+    }
+    return this.notificationRepository;
+  }
+
+  /**
    * 🧹 تنظيف جميع الـ instances (للاختبارات)
    */
   static clearInstances(): void {
@@ -86,6 +131,9 @@ class RepositoryFactory {
     this.brandRepository = null;
     this.campaignRepository = null;
     this.contentRepository = null;
+    this.paymentRepository = null;
+    this.equipmentRepository = null;
+    this.notificationRepository = null;
   }
 }
 
@@ -99,4 +147,7 @@ export const repositories = {
   brands: RepositoryFactory.getBrandRepository(),
   campaigns: RepositoryFactory.getCampaignRepository(),
   content: RepositoryFactory.getContentRepository(),
+  payments: RepositoryFactory.getPaymentRepository(),
+  equipment: RepositoryFactory.getEquipmentRepository(),
+  notifications: RepositoryFactory.getNotificationRepository(),
 } as const; 
