@@ -185,12 +185,12 @@ jobs:
         npm run --workspace=frontend build
         echo "✅ Frontend build and export completed"
 
-    # نشر إلى Firebase باستخدام Service Account
+    # نشر إلى Firebase باستخدام Firebase Token
     - name: 🚀 Deploy to Firebase
       env:
-        GOOGLE_APPLICATION_CREDENTIALS: ./backend/keys/serviceAccountKey.json
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
       run: |
-        firebase deploy --project ${{ env.FIREBASE_PROJECT_ID }}
+        firebase deploy --project ${{ env.FIREBASE_PROJECT_ID }} --token "$FIREBASE_TOKEN"
         echo "✅ Deployment completed successfully!"
 
     # تنظيف الملفات الحساسة
