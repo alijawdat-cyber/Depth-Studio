@@ -40,11 +40,9 @@ jobs:
 
     # إعداد Firebase Service Account Key
     - name: 🔑 Setup Firebase Service Account
-      env:
-        FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
       run: |
         mkdir -p backend/keys
-        echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > backend/keys/serviceAccountKey.json
+        echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' > backend/keys/serviceAccountKey.json
         echo "✅ Firebase Service Account Key created"
 
     # التحقق من متغيرات البيئة في Backend
@@ -151,11 +149,9 @@ jobs:
 
     # إعداد مفاتيح الأمان
     - name: 🔑 Setup Production Secrets
-      env:
-        FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
       run: |
         mkdir -p backend/keys
-        echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > backend/keys/serviceAccountKey.json
+        echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}' > backend/keys/serviceAccountKey.json
         echo "✅ Production secrets configured"
 
     # بناء Types أولاً
