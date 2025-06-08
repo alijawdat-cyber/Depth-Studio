@@ -154,6 +154,12 @@ jobs:
         echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}" > backend/keys/serviceAccountKey.json
         echo "✅ Production secrets configured"
 
+    # بناء Types أولاً
+    - name: 🏗️ Build Types
+      run: |
+        npm run --workspace=types build
+        echo "✅ Types workspace built successfully"
+
     # بناء Backend
     - name: 🔨 Build Backend
       env:
@@ -161,10 +167,11 @@ jobs:
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
       run: |
-        npm run --workspace=backend predeploy || npm run --workspace=backend build || echo "⚠️ Backend build completed with fallback"
+        npm run --workspace=backend build
+        echo "✅ Backend build completed"
 
-    # بناء Frontend
-    - name: 🔨 Build Frontend
+    # بناء وتصدير Frontend للـ static hosting
+    - name: 🔨 Build & Export Frontend
       env:
         NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
         NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
@@ -176,6 +183,7 @@ jobs:
         NEXT_PUBLIC_FIRESTORE_DATABASE_ID: depth-production
       run: |
         npm run --workspace=frontend build
+        echo "✅ Frontend build and export completed"
 
     # نشر إلى Firebase
     - name: 🚀 Deploy to Firebase
