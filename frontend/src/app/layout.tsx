@@ -4,8 +4,6 @@ import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { QueryProvider } from '@/providers/query-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
-import { ErrorBoundary } from '@/components/error-boundary'
-import { AuthInitializer } from '@/components/auth-initializer'
 
 // Arabic font - Cairo
 const cairo = Cairo({
@@ -35,16 +33,12 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} ${inter.variable}`}>
       <body className="font-arabic antialiased bg-gray-50 text-gray-900">
-        <ErrorBoundary>
-          <ThemeProvider>
-            <QueryProvider>
-              <AuthInitializer>
-                {children}
-                <Toaster />
-              </AuthInitializer>
-            </QueryProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
+        <ThemeProvider>
+          <QueryProvider>
+            {children}
+            <Toaster />
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
