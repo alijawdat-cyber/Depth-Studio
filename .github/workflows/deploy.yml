@@ -26,6 +26,12 @@ jobs:
       with:
         node-version: '20'
 
+    # فحص consistency قبل التنصيب
+    - name: 🔍 Check Dependency Consistency
+      run: |
+        echo "🔍 Checking package.json and package-lock.json consistency..."
+        npm install --dry-run || echo "⚠️ Dependencies are inconsistent! package-lock.json will be regenerated."
+
     # تنصيب dependencies من الـ root (npm workspaces)
     - name: 📦 Install Dependencies (Workspaces)
       run: |

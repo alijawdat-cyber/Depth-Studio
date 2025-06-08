@@ -26,6 +26,9 @@
     "backend",
     "types"
   ],
+  "overrides": {
+    "picomatch": "^4.0.2"
+  },
   "keywords": [
     "next.js",
     "react",
