@@ -4,28 +4,27 @@
   "description": "Depth Studio - نظام إدارة المحتوى بالذكاء الاصطناعي",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm start",
-    "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "dev": "concurrently \"npm run --workspace=frontend dev\" \"npm run --workspace=backend start\"",
+    "dev:frontend": "npm run --workspace=frontend dev",
+    "dev:backend": "npm run --workspace=backend start",
+    "build": "npm run --workspace=types build && npm run --workspace=backend build && npm run --workspace=frontend build",
+    "build:frontend": "npm run --workspace=frontend build",
+    "build:backend": "npm run --workspace=backend build",
+    "build:types": "npm run --workspace=types build",
+    "install:all": "npm ci",
     "firebase:serve": "firebase serve",
     "firebase:deploy": "firebase deploy",
-    "db:seed": "cd database && npm run seed",
-    "db:migrate": "cd database && npm run migrate",
-    "test": "npm run test:frontend && npm run test:backend",
-    "test:frontend": "cd frontend && npm run test",
-    "test:backend": "cd backend && npm run test",
-    "lint": "npm run lint:frontend && npm run lint:backend",
-    "lint:frontend": "cd frontend && npm run lint",
-    "lint:backend": "cd backend && npm run lint"
+    "test": "npm run --workspace=frontend test && npm run --workspace=backend test",
+    "test:frontend": "npm run --workspace=frontend test",
+    "test:backend": "npm run --workspace=backend test",
+    "lint": "npm run --workspace=frontend lint && npm run --workspace=backend lint",
+    "lint:frontend": "npm run --workspace=frontend lint",
+    "lint:backend": "npm run --workspace=backend lint"
   },
   "workspaces": [
     "frontend",
     "backend",
-    "shared"
+    "types"
   ],
   "keywords": [
     "next.js",
