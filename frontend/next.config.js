@@ -1,21 +1,30 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // تمكين Image Optimization لـ App Hosting
+  // ✅ تمكين standalone output للـ Firebase App Hosting
+  output: 'standalone',
+  // ✅ إزالة static export للحصول على SSR كامل
+  // output: 'export', - محذوف للحصول على React interactivity كامل
+  trailingSlash: true,
+  // distDir: 'out', - محذوف لاستخدام .next الافتراضي
+  
+  // تمكين Image Optimization مع SSR
   images: {
-    unoptimized: false, // ✅ تمكين Next.js Image Optimization
+    domains: ['firebasestorage.googleapis.com', 'lh3.googleusercontent.com'],
+    formats: ['image/webp', 'image/avif'],
   },
   
-  // تمكين Quality Checks للإنتاج
+  // إعدادات صارمة للإنتاج
   eslint: {
-    ignoreDuringBuilds: false, // ✅ تمكين ESLint للجودة
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: false, // ✅ تمكين TypeScript checks
+    ignoreBuildErrors: false,
   },
   
   // إعدادات تجريبية محسنة
   experimental: {
     missingSuspenseWithCSRBailout: false,
+    optimizePackageImports: ['@mui/material', '@mui/icons-material'],
   },
   
   // Environment Variables للـ Build والRuntime

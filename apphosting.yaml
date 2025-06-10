@@ -57,5 +57,5 @@ env:
 
 buildConfig:
   rootDirectory: /
-  buildCommand: cd frontend && npm install && npm run build
-  outputDirectory: frontend/.next 
+  buildCommand: cd frontend && NODE_ENV=production npm install && npm run build
+  outputDirectory: frontend/.next/standalone 
