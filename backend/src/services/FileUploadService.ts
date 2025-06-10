@@ -512,7 +512,7 @@ export class FileUploadService {
   private async getVideoInfo(filePath: string): Promise<{ duration?: number; width?: number; height?: number }> {
     return new Promise((resolve, reject) => {
       // تعيين مسار ffprobe لـ fluent-ffmpeg
-      ffmpeg.setFfprobePath(ffprobeStatic);
+      ffmpeg.setFfprobePath(ffprobeStatic.path);
       
       ffmpeg.ffprobe(filePath, (err, metadata) => {
         if (err) {

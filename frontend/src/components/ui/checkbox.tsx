@@ -14,6 +14,8 @@ export interface CheckboxOption {
 interface CheckboxProps {
   checked: boolean
   indeterminate?: boolean
+  // فدالة onChange: الباراميتر checked مستخدم في event handler
+  // eslint-disable-next-line no-unused-vars
   onChange: (checked: boolean) => void
   disabled?: boolean
   size?: 'sm' | 'md' | 'lg'
@@ -25,6 +27,8 @@ interface CheckboxProps {
 interface CheckboxGroupProps {
   options: CheckboxOption[]
   values: string[]
+  // فدالة onChange: الباراميتر values مستخدم في event handler للمجموعة
+  // eslint-disable-next-line no-unused-vars
   onChange: (values: string[]) => void
   orientation?: 'horizontal' | 'vertical'
   size?: 'sm' | 'md' | 'lg'

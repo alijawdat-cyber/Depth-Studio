@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import clsx from 'clsx'
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes, FaTimesCircle } from 'react-icons/fa'
 
@@ -56,6 +56,11 @@ export function Alert({
   const styles = variantStyles[variant]
   const IconComponent = styles.defaultIcon
 
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false)
+    onDismiss?.()
+  }, [onDismiss])
+
   useEffect(() => {
     if (autoHide && autoHideDuration > 0) {
       const timer = setTimeout(() => {
@@ -64,12 +69,7 @@ export function Alert({
 
       return () => clearTimeout(timer)
     }
-  }, [autoHide, autoHideDuration])
-
-  const handleDismiss = () => {
-    setIsVisible(false)
-    onDismiss?.()
-  }
+  }, [autoHide, autoHideDuration, handleDismiss])
 
   if (!isVisible) return null
 
@@ -150,6 +150,8 @@ export function InfoAlert(props: Omit<AlertProps, 'variant'>) {
 // مكون لعرض قائمة من التنبيهات
 interface AlertListProps {
   alerts: (AlertProps & { id: string })[]
+  // فدالة onDismiss: الباراميتر id مستخدم في dismiss callback
+  // eslint-disable-next-line no-unused-vars
   onDismiss?: (id: string) => void
   className?: string
 }

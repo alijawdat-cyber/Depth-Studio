@@ -8,6 +8,7 @@ export * from './content';
 export * from './payments';
 export * from './equipment';
 export * from './notifications';
+export * from './files';
 export * from './api';
 export declare const VERSION = "2.2.0";
 //# sourceMappingURL=index.d.ts.map

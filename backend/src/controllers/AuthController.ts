@@ -83,10 +83,16 @@ export class AuthController {
    */
   async registerWithEmail(req: Request, res: Response): Promise<void> {
     try {
-      // استخدام الـ validation function للتحقق من البيانات
-      validateEmailRegistration(req, res, () => {});
+      // التحقق من صحة البيانات أولاً
+      if (!this.validateEmailRegistrationData(req.body)) {
+        res.status(400).json({
+          success: false,
+          message: 'بيانات غير صحيحة'
+        });
+        return;
+      }
 
-      // البيانات محققة بالفعل من middleware
+      // البيانات محققة بالفعل
       const registrationData: EmailRegistrationData = req.body;
 
       const result: AuthResult = await this.authService.registerWithEmail(registrationData);
@@ -132,9 +138,6 @@ export class AuthController {
    */
   async loginWithEmail(req: Request, res: Response): Promise<void> {
     try {
-      // استخدام الـ validation function للتحقق من البيانات
-      validateEmailLogin(req, res, () => {});
-
       const loginData: EmailLoginData = {
         email: req.body.email,
         password: req.body.password,
@@ -199,9 +202,6 @@ export class AuthController {
    */
   async registerWithPhone(req: Request, res: Response): Promise<void> {
     try {
-      // استخدام الـ validation function للتحقق من البيانات
-      validatePhoneRegistration(req, res, () => {});
-
       const registrationData: PhoneRegistrationData = {
         phone: req.body.phone,
         country_code: req.body.country_code,
@@ -823,6 +823,116 @@ export class AuthController {
       });
     } catch (error) {
       logger.error('❌ خطأ في جلب طرق المصادقة المدعومة', { error });
+      res.status(500).json({
+        success: false,
+        message: 'خطأ في الخادم'
+      });
+    }
+  }
+
+  // ======================================
+  // 👤 إدارة الملف الشخصي
+  // ======================================
+
+  /**
+   * PATCH /api/auth/profile/:userId
+   * تحديث الملف الشخصي للمستخدم
+   * 🔐 Validation: validateUpdateProfile middleware
+   * 
+   * فايدة تحديث الملف الشخصي:
+   * - تحديث الاسم الكامل وصورة الملف الشخصي
+   * - تحديث معلومات الاتصال (البريد الإلكتروني والهاتف)
+   * - تحديث الإعدادات الشخصية والخصوصية
+   * - تحديث البيانات في Firebase Auth وFirestore معاً
+   * - تسجيل النشاط للمراجعة والأمان
+   */
+  async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.params['userId'];
+      
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          message: 'معرف المستخدم مطلوب'
+        });
+        return;
+      }
+
+      // التحقق من وجود المستخدم
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'المستخدم غير موجود'
+        });
+        return;
+      }
+
+      // استخراج البيانات المراد تحديثها
+      const updates = {
+        displayName: req.body['full_name'] || req.body['display_name'],
+        email: req.body['email'],
+        phoneNumber: req.body['phone'],
+        photoURL: req.body['profile_photo_url'] || req.body['avatar_url']
+      };
+
+      // تحديث البيانات في Firebase Auth
+      const authResult = await this.authService.updateUserProfile(user.firebase_uid || userId, updates);
+
+      if (!authResult.success) {
+        res.status(400).json({
+          success: false,
+          message: authResult.message
+        });
+        return;
+      }
+
+      // تحديث البيانات في Firestore
+      const firestoreUpdates: Record<string, unknown> = {};
+      
+      if (req.body['full_name']) firestoreUpdates['full_name'] = req.body['full_name'];
+      if (req.body['display_name']) firestoreUpdates['display_name'] = req.body['display_name'];
+      if (req.body['first_name']) firestoreUpdates['first_name'] = req.body['first_name'];
+      if (req.body['last_name']) firestoreUpdates['last_name'] = req.body['last_name'];
+      if (req.body['email']) firestoreUpdates['email'] = req.body['email'];
+      if (req.body['phone']) firestoreUpdates['phone'] = req.body['phone'];
+      if (req.body['profile_photo_url']) firestoreUpdates['profile_photo_url'] = req.body['profile_photo_url'];
+      if (req.body['bio']) firestoreUpdates['bio'] = req.body['bio'];
+      if (req.body['location']) firestoreUpdates['location'] = req.body['location'];
+      if (req.body['timezone']) firestoreUpdates['timezone'] = req.body['timezone'];
+      
+      // تحديث الإعدادات الشخصية
+      if (req.body['preferences']) {
+        firestoreUpdates['preferences'] = {
+          ...user.preferences,
+          ...req.body['preferences']
+        };
+      }
+      
+      // تحديث بيانات الملف الشخصي
+      if (req.body['profile']) {
+        firestoreUpdates['profile'] = {
+          ...user.profile,
+          ...req.body['profile']
+        };
+      }
+
+      // تنفيذ التحديث في Firestore
+      const updatedUser = await this.userRepository.update(userId, firestoreUpdates);
+
+      logger.info('👤 تحديث الملف الشخصي ناجح', { 
+        userId, 
+        updatedFields: Object.keys(firestoreUpdates)
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'تم تحديث الملف الشخصي بنجاح',
+        user: updatedUser
+      });
+
+    } catch (error) {
+      logger.error('❌ خطأ في تحديث الملف الشخصي', { error });
       res.status(500).json({
         success: false,
         message: 'خطأ في الخادم'

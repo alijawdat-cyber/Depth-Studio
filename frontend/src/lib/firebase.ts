@@ -8,7 +8,16 @@
  */
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { 
+  getAuth, 
+  Auth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult,
+  UserCredential,
+  connectAuthEmulator
+} from 'firebase/auth';
 import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, Functions, connectFunctionsEmulator } from 'firebase/functions';
@@ -49,6 +58,140 @@ if (getApps().length === 0) {
  * 🔐 Firebase Auth
  */
 export const auth: Auth = getAuth(app);
+
+// ======================================
+// 🌐 Google Authentication Provider
+// ======================================
+
+/**
+ * 🔑 Google Auth Provider مع إعدادات محسنة
+ */
+export const googleProvider = new GoogleAuthProvider();
+
+// إضافة النطاقات المطلوبة لجلب البيانات الأساسية
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
+
+// إعدادات إضافية للحصول على أفضل تجربة مستخدم
+googleProvider.setCustomParameters({
+  prompt: 'select_account', // يتيح للمستخدم اختيار الحساب
+});
+
+/**
+ * 🔗 تسجيل دخول بجوجل باستخدام Popup
+ * مناسب للديسكتوب ومعظم المتصفحات الحديثة
+ */
+export const signInWithGooglePopup = async (): Promise<UserCredential> => {
+  try {
+    console.log('🌐 بدء تسجيل الدخول بجوجل (Popup)...');
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log('✅ تسجيل الدخول بجوجل نجح (Popup)');
+    return result;
+  } catch (error) {
+    console.error('❌ خطأ في تسجيل الدخول بجوجل (Popup):', error);
+    throw error;
+  }
+};
+
+/**
+ * 🔄 تسجيل دخول بجوجل باستخدام Redirect
+ * مناسب للموبايل والمتصفحات التي لا تدعم Popup
+ */
+export const signInWithGoogleRedirect = async (): Promise<void> => {
+  try {
+    console.log('🌐 بدء تسجيل الدخول بجوجل (Redirect)...');
+    await signInWithRedirect(auth, googleProvider);
+    // ملاحظة: هذه الدالة لا ترجع نتيجة مباشرة
+    // يجب استخدام getGoogleRedirectResult() بعد العودة للصفحة
+  } catch (error) {
+    console.error('❌ خطأ في تسجيل الدخول بجوجل (Redirect):', error);
+    throw error;
+  }
+};
+
+/**
+ * 📥 جلب نتيجة تسجيل الدخول بعد Redirect
+ * يجب استدعاؤها عند تحميل الصفحة للتحقق من نتيجة Google Auth
+ */
+export const getGoogleRedirectResult = async (): Promise<UserCredential | null> => {
+  try {
+    console.log('🔍 فحص نتيجة تسجيل الدخول بجوجل (Redirect)...');
+    const result = await getRedirectResult(auth);
+    
+    if (result) {
+      console.log('✅ تم استلام نتيجة تسجيل الدخول بجوجل (Redirect)');
+      return result;
+    } else {
+      console.log('ℹ️ لا توجد نتيجة redirect معلقة');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ خطأ في جلب نتيجة Google Redirect:', error);
+    throw error;
+  }
+};
+
+/**
+ * 🔐 دالة تسجيل دخول ذكية تختار الطريقة الأنسب
+ * تستخدم Popup للديسكتوب و Redirect للموبايل
+ */
+export const signInWithGoogleSmart = async (): Promise<UserCredential | null> => {
+  // تحديد إذا كان الجهاز موبايل أو localhost (للتطوير)
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+  const isLocalhost = window.location.hostname === 'localhost';
+  
+  try {
+    if (isMobile || isLocalhost) {
+      // استخدام Redirect للموبايل والتطوير المحلي
+      await signInWithGoogleRedirect();
+      return null; // النتيجة ستأتي بعد العودة للصفحة
+    } else {
+      // استخدام Popup للديسكتوب في الإنتاج
+      return await signInWithGooglePopup();
+    }
+  } catch (error) {
+    console.error('❌ خطأ في تسجيل الدخول الذكي بجوجل:', error);
+    throw error;
+  }
+};
+
+/**
+ * 🛡️ استخراج token من نتيجة Google Auth
+ * يحول UserCredential إلى Google ID Token للإرسال للـ Backend
+ */
+export const extractGoogleToken = async (userCredential: UserCredential): Promise<string> => {
+  try {
+    const idToken = await userCredential.user.getIdToken();
+    console.log('🔑 تم استخراج Google ID Token بنجاح');
+    return idToken;
+  } catch (error) {
+    console.error('❌ خطأ في استخراج Google Token:', error);
+    throw error;
+  }
+};
+
+/**
+ * 👤 استخراج بيانات المستخدم من Google Auth Result
+ * يحول UserCredential إلى بيانات منظمة للاستخدام في Frontend
+ */
+export const extractGoogleUserInfo = (userCredential: UserCredential): GoogleUserInfo => {
+  const user = userCredential.user;
+  
+  return {
+    uid: user.uid,
+    email: user.email || '',
+    displayName: user.displayName || '',
+    photoURL: user.photoURL || '',
+    emailVerified: user.emailVerified,
+    phoneNumber: user.phoneNumber || '',
+    isNewUser: user.metadata.creationTime === user.metadata.lastSignInTime,
+    providerId: 'google.com',
+    creationTime: user.metadata.creationTime,
+    lastSignInTime: user.metadata.lastSignInTime,
+  };
+};
 
 /**
  * 🗄️ Firestore Database
@@ -135,11 +278,33 @@ if (typeof window !== 'undefined') {
 
 export { remoteConfig };
 
+// ======================================
+// 🔧 Google Auth Helper Types
+// ======================================
+
+/** نوع للمعلومات المستخرجة من Google Auth */
+export interface GoogleUserInfo {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+  emailVerified: boolean;
+  phoneNumber: string;
+  isNewUser: boolean;
+  providerId: string;
+  creationTime?: string;
+  lastSignInTime?: string;
+}
+
 /**
  * 🛠️ Emulator Connection (للتطوير المحلي فقط)
  */
 if (process.env.NEXT_PUBLIC_USE_EMULATOR === 'true' && typeof window !== 'undefined') {
   try {
+    // Auth Emulator
+    connectAuthEmulator(auth, 'http://localhost:9099');
+    console.log('🔐 Connected to Auth Emulator');
+    
     // Firestore Emulator
     connectFirestoreEmulator(db, 'localhost', 8080);
     console.log('🔥 Connected to Firestore Emulator');

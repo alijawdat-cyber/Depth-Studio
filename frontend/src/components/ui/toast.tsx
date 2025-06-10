@@ -13,6 +13,8 @@ export interface Toast {
 }
 
 interface ToastProps extends Toast {
+  // فدالة onClose: الباراميتر id مستخدم في close callback
+  // eslint-disable-next-line no-unused-vars
   onClose: (id: string) => void
 }
 

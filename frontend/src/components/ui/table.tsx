@@ -9,6 +9,8 @@ import { Button } from './button'
 export interface TableColumn<T extends Record<string, unknown> = Record<string, unknown>> {
   key: keyof T
   title: string
+  // فدالة render: جميع الباراميترات مستخدمة في callback functions من قبل المطورين
+  // eslint-disable-next-line no-unused-vars
   render?: (value: T[keyof T], row: T, index: number) => React.ReactNode
   sortable?: boolean
   searchable?: boolean
@@ -25,18 +27,26 @@ export interface TableProps<T extends Record<string, unknown> = Record<string, u
     page: number
     pageSize: number
     total: number
+    // فدوال pagination: جميع الباراميترات مستخدمة في event handlers
+    // eslint-disable-next-line no-unused-vars
     onPageChange: (page: number) => void
+    // eslint-disable-next-line no-unused-vars
     onPageSizeChange: (pageSize: number) => void
   }
   searchable?: boolean
   sortable?: boolean
   selectable?: boolean
   selectedRows?: string[]
+  // فدالة onSelectionChange: الباراميتر selectedIds مستخدم في selection callback
+  // eslint-disable-next-line no-unused-vars
   onSelectionChange?: (selectedIds: string[]) => void
   rowKey?: keyof T
+  // فدوال callback: جميع الباراميترات مستخدمة في event handlers
+  // eslint-disable-next-line no-unused-vars
   onRowClick?: (row: T, index: number) => void
   emptyMessage?: string
   className?: string
+  // eslint-disable-next-line no-unused-vars
   rowClassName?: (row: T, index: number) => string
 }
 

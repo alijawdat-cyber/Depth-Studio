@@ -1,0 +1,45 @@
+# Firebase App Hosting Configuration
+# Depth Studio Frontend Deployment Settings
+
+# Build settings
+runConfig:
+  minInstances: 0
+  maxInstances: 100
+  concurrency: 1000
+  
+env:
+  # Firebase Configuration
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: projects/depth-production/secrets/firebase-api-key
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN  
+    value: "depth-production.firebaseapp.com"
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "depth-production"
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "depth-production.appspot.com"
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: projects/depth-production/secrets/firebase-sender-id
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: projects/depth-production/secrets/firebase-app-id
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    secret: projects/depth-production/secrets/firebase-measurement-id
+  
+  # Application Configuration
+  - variable: NEXT_PUBLIC_API_URL
+    value: "https://us-central1-depth-production.cloudfunctions.net/api"
+  - variable: NEXT_PUBLIC_APP_ENV
+    value: "production"
+  - variable: NEXT_PUBLIC_ENABLE_LOGGING
+    value: "true"
+  - variable: NEXT_PUBLIC_FIRESTORE_DATABASE_ID
+    value: "depth-production"
+  - variable: NEXT_PUBLIC_USE_EMULATOR
+    value: "false"
+    
+  # Google OAuth
+  - variable: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    secret: projects/depth-production/secrets/google-client-id
+    
+  # FCM Notification
+  - variable: NEXT_PUBLIC_FCM_VAPID_KEY
+    secret: projects/depth-production/secrets/fcm-vapid-key 

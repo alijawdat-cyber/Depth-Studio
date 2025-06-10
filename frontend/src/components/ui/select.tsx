@@ -16,6 +16,8 @@ interface SelectProps {
   placeholder?: string
   disabled?: boolean
   error?: string
+  // فدالة onChange: الباراميتر value مستخدم في selection handler
+  // eslint-disable-next-line no-unused-vars
   onChange: (value: string) => void
   className?: string
 }

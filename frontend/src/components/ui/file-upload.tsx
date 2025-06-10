@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useCallback } from 'react'
+import Image from 'next/image'
 import clsx from 'clsx'
 import { FaCloudUploadAlt, FaImage, FaFilePdf, FaFileWord, FaFileExcel, FaFile, FaTimes, FaEye } from 'react-icons/fa'
 
@@ -17,6 +18,8 @@ interface FileUploadProps {
   multiple?: boolean
   maxSize?: number // بالميجابايت
   maxFiles?: number
+  // فدالة onFilesChange: الباراميتر files مستخدم في upload callback
+  // eslint-disable-next-line no-unused-vars
   onFilesChange: (files: UploadedFile[]) => void
   disabled?: boolean
   error?: string
@@ -190,9 +193,11 @@ export function FileUpload({
           onDrop={handleDrop}
         >
           {uploadedFiles.length > 0 && uploadedFiles[0].preview ? (
-            <img 
+            <Image 
               src={uploadedFiles[0].preview} 
               alt="Avatar" 
+              width={96}
+              height={96}
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
@@ -317,9 +322,11 @@ export function FileUpload({
               <div key={file.id} className="flex items-center p-3 bg-gray-50 rounded-lg">
                 <div className="flex-shrink-0">
                   {file.preview ? (
-                    <img 
+                    <Image 
                       src={file.preview} 
                       alt={file.file.name}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded object-cover"
                     />
                   ) : (

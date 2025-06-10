@@ -12,7 +12,6 @@ import {
   getBoolean, 
   getNumber, 
   getString, 
-  getValue,
   getAll
 } from 'firebase/remote-config';
 import { remoteConfig } from './firebase';
@@ -71,7 +70,35 @@ export interface RemoteConfigValues {
 class RemoteConfigService {
   private isEnabled: boolean = false;
   private isInitialized: boolean = false;
-  private configCache: Partial<RemoteConfigValues> = {};
+  private configCache: RemoteConfigValues = {
+    maintenance_mode: false,
+    app_version_required: '1.0.0',
+    force_update: false,
+    max_upload_size_mb: 10,
+    allowed_file_types: 'jpg,jpeg,png,webp,gif,mp4,mov',
+    enable_video_upload: true,
+    max_video_duration_minutes: 5,
+    featured_photographers_limit: 6,
+    campaigns_per_page: 12,
+    enable_dark_mode: false,
+    show_beta_features: false,
+    api_rate_limit: 100,
+    enable_offline_mode: false,
+    cache_duration_hours: 24,
+    max_login_attempts: 5,
+    session_timeout_minutes: 60,
+    require_2fa: false,
+    enable_push_notifications: true,
+    notification_types: 'campaign,payment,message',
+    quiet_hours_start: '22:00',
+    quiet_hours_end: '08:00',
+    enable_new_dashboard: false,
+    enable_ai_suggestions: false,
+    beta_user_percentage: 10,
+    payment_methods: 'bank_transfer,wallet',
+    minimum_payout_amount: 50,
+    payment_processing_days: 7
+  };
   private lastFetchTime: number = 0;
   private readonly CACHE_DURATION = 60 * 60 * 1000; // ساعة واحدة
 
@@ -116,15 +143,17 @@ class RemoteConfigService {
     try {
       const allValues = getAll(remoteConfig);
       
-             Object.entries(allValues).forEach(([key, configValue]) => {
+             Object.entries(allValues).forEach(([configKey, configValue]) => {
          const value = configValue.asString();
+         const typedKey = configKey as keyof RemoteConfigValues;
          
          try {
            // محاولة parse كـ JSON أولاً
-           this.configCache[key as keyof RemoteConfigValues] = JSON.parse(value);
+           const parsedValue = JSON.parse(value);
+           (this.configCache as unknown as Record<string, unknown>)[typedKey] = parsedValue;
          } catch {
            // إذا فشل، استخدم القيمة كما هي
-           this.configCache[key as keyof RemoteConfigValues] = value as any;
+           (this.configCache as unknown as Record<string, unknown>)[typedKey] = value;
          }
        });
       
@@ -333,9 +362,16 @@ class RemoteConfigService {
   }
 
   /**
-   * 🛠️ Helper methods
+   * 🛠️ Helper methods - TypeScript overloads للـ type safety
+   * جميع الباراميترات مستخدمة في overload pattern للـ type inference
    */
-  private getDefaultValue(key: keyof RemoteConfigValues, type: 'string' | 'number' | 'boolean'): any {
+  // eslint-disable-next-line no-unused-vars
+  private getDefaultValue(key: keyof RemoteConfigValues, type: 'string'): string;
+  // eslint-disable-next-line no-unused-vars
+  private getDefaultValue(key: keyof RemoteConfigValues, type: 'number'): number;
+  // eslint-disable-next-line no-unused-vars
+  private getDefaultValue(key: keyof RemoteConfigValues, type: 'boolean'): boolean;
+  private getDefaultValue(key: keyof RemoteConfigValues, type: 'string' | 'number' | 'boolean'): string | number | boolean {
     const defaults = this.configCache;
     const value = defaults[key];
     

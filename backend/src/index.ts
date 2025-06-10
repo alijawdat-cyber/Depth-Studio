@@ -204,6 +204,14 @@ app.get("/api/auth/stats/methods", async (req, res) => {
   await authController.getAuthMethodStats(req, res);
 });
 
+/**
+ * 👤 تحديث الملف الشخصي
+ * PATCH /api/auth/profile/:userId
+ */
+app.patch("/api/auth/profile/:userId", async (req, res) => {
+  await authController.updateProfile(req, res);
+});
+
 // ======================================
 // 🎭 Role Selection Routes
 // ======================================

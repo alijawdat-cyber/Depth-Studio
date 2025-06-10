@@ -6,6 +6,8 @@ import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaClock } from 'react-ico
 
 interface DatePickerProps {
   value?: Date
+  // فدالة onChange: الباراميتر date مستخدم في date selection handler
+  // eslint-disable-next-line no-unused-vars
   onChange: (date: Date | null) => void
   placeholder?: string
   disabled?: boolean

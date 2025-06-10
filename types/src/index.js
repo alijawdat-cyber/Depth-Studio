@@ -25,6 +25,7 @@ __exportStar(require("./content"), exports);
 __exportStar(require("./payments"), exports);
 __exportStar(require("./equipment"), exports);
 __exportStar(require("./notifications"), exports);
+__exportStar(require("./files"), exports);
 __exportStar(require("./api"), exports);
 exports.VERSION = '2.2.0';
 //# sourceMappingURL=index.js.map

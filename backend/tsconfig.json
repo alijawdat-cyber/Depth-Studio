@@ -24,7 +24,7 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
-      "@/types": ["../types/src"]
+      "@depth-studio/types": ["../types/src"]
     },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -36,8 +36,7 @@
   },
   "include": [
     "src/**/*",
-    "../types/src/**/*",
-    "types/**/*"
+    "../types/src/**/*"
   ],
   "exclude": [
     "node_modules",

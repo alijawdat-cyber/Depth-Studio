@@ -14,6 +14,8 @@ interface RadioGroupProps {
   name: string
   options: RadioOption[]
   value?: string
+  // فدالة onChange: الباراميتر value مستخدم في event handler
+  // eslint-disable-next-line no-unused-vars
   onChange: (value: string) => void
   orientation?: 'horizontal' | 'vertical'
   size?: 'sm' | 'md' | 'lg'
@@ -25,6 +27,8 @@ interface RadioProps {
   name: string
   value: string
   checked: boolean
+  // فدالة onChange: الباراميتر value مستخدم في event handler للـ radio individual
+  // eslint-disable-next-line no-unused-vars
   onChange: (value: string) => void
   disabled?: boolean
   size?: 'sm' | 'md' | 'lg'

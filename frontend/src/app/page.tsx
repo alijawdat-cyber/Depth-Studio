@@ -18,13 +18,13 @@ export default function HomePage() {
         </div>
         
         <div className="space-y-4">
-          <Link href="/login" className="block">
+          <Link href="/auth/login" className="block">
             <Button className="w-full" variant="primary">
               تسجيل الدخول
             </Button>
           </Link>
           
-          <Link href="/register" className="block">
+          <Link href="/auth/register" className="block">
             <Button className="w-full" variant="secondary">
               إنشاء حساب جديد
             </Button>

@@ -12,11 +12,20 @@ import { performance as firebasePerformance } from './firebase';
 import { analyticsService } from './analytics';
 
 /**
+ * 🧠 Memory Performance Interface
+ */
+interface HeapInfo { 
+  usedJSHeapSize: number; 
+  totalJSHeapSize: number; 
+  jsHeapSizeLimit: number; 
+}
+
+/**
  * ⚡ Performance Service Class
  */
 class PerformanceService {
   private isEnabled: boolean = false;
-  private activeTraces: Map<string, any> = new Map();
+  private activeTraces: Map<string, ReturnType<typeof trace>> = new Map();
 
   constructor() {
     if (firebasePerformance && typeof window !== 'undefined') {
@@ -114,7 +123,7 @@ class PerformanceService {
    */
   private trackComponentPerformance(): void {
     // React DevTools integration (إذا كان متوفر)
-    if (typeof window !== 'undefined' && (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+    if (typeof window !== 'undefined' && (window as unknown as { __REACT_DEVTOOLS_GLOBAL_HOOK__?: unknown }).__REACT_DEVTOOLS_GLOBAL_HOOK__) {
       console.log('🧩 React DevTools detected - Component performance tracking enabled');
     }
   }
@@ -289,7 +298,7 @@ class PerformanceService {
   /**
    * 📊 الحصول على إحصائيات الأداء
    */
-  getPerformanceStats(): Record<string, any> {
+  getPerformanceStats(): Record<string, unknown> {
     if (typeof window === 'undefined') return {};
 
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -300,11 +309,14 @@ class PerformanceService {
       first_paint: performance.getEntriesByName('first-paint')[0]?.startTime || 0,
       first_contentful_paint: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
       active_traces: this.activeTraces.size,
-      memory_usage: (performance as any).memory ? {
-        used: (performance as any).memory.usedJSHeapSize,
-        total: (performance as any).memory.totalJSHeapSize,
-        limit: (performance as any).memory.jsHeapSizeLimit
-      } : null
+      memory_usage: (() => {
+        const perfMem = (performance as Performance & { memory?: HeapInfo }).memory;
+        return perfMem ? {
+          used: perfMem.usedJSHeapSize,
+          total: perfMem.totalJSHeapSize,
+          limit: perfMem.jsHeapSizeLimit
+        } : null;
+      })()
     };
   }
 

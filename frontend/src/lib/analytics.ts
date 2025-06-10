@@ -131,7 +131,7 @@ class AnalyticsService {
   /**
    * 👤 تعيين معرف المستخدم
    */
-  setUser(userId: string, properties?: Record<string, any>): void {
+  setUser(userId: string, properties?: Record<string, unknown>): void {
     if (!this.isEnabled || !analytics) return;
 
     try {
@@ -190,11 +190,11 @@ class AnalyticsService {
   /**
    * 💰 تتبع الدفعات
    */
-  trackPayment(stage: 'initiated' | 'completed', data: any): void {
+  trackPayment(stage: 'initiated' | 'completed', data: DepthStudioEvent['payment_initiated'] | DepthStudioEvent['payment_completed']): void {
     if (stage === 'initiated') {
-      this.trackEvent('payment_initiated', data);
+      this.trackEvent('payment_initiated', data as DepthStudioEvent['payment_initiated']);
     } else {
-      this.trackEvent('payment_completed', data);
+      this.trackEvent('payment_completed', data as DepthStudioEvent['payment_completed']);
     }
   }
 
@@ -212,39 +212,39 @@ class AnalyticsService {
   /**
    * 🎨 تتبع المحتوى
    */
-  trackContentAction(action: 'upload' | 'approve' | 'download', data: any): void {
+  trackContentAction(action: 'upload' | 'approve' | 'download', data: DepthStudioEvent['content_upload'] | DepthStudioEvent['content_approve'] | DepthStudioEvent['content_download']): void {
     if (action === 'upload') {
-      this.trackEvent('content_upload', data);
+      this.trackEvent('content_upload', data as DepthStudioEvent['content_upload']);
     } else if (action === 'approve') {
-      this.trackEvent('content_approve', data);
+      this.trackEvent('content_approve', data as DepthStudioEvent['content_approve']);
     } else if (action === 'download') {
-      this.trackEvent('content_download', data);
+      this.trackEvent('content_download', data as DepthStudioEvent['content_download']);
     }
   }
 
   /**
    * 🏢 تتبع الحملات
    */
-  trackCampaignAction(action: 'view' | 'apply' | 'complete', data: any): void {
+  trackCampaignAction(action: 'view' | 'apply' | 'complete', data: DepthStudioEvent['campaign_view'] | DepthStudioEvent['campaign_apply'] | DepthStudioEvent['campaign_complete']): void {
     if (action === 'view') {
-      this.trackEvent('campaign_view', data);
+      this.trackEvent('campaign_view', data as DepthStudioEvent['campaign_view']);
     } else if (action === 'apply') {
-      this.trackEvent('campaign_apply', data);
+      this.trackEvent('campaign_apply', data as DepthStudioEvent['campaign_apply']);
     } else if (action === 'complete') {
-      this.trackEvent('campaign_complete', data);
+      this.trackEvent('campaign_complete', data as DepthStudioEvent['campaign_complete']);
     }
   }
 
   /**
    * 🔐 تتبع المصادقة
    */
-  trackAuth(action: 'login' | 'register' | 'logout', data: any): void {
+  trackAuth(action: 'login' | 'register' | 'logout', data: DepthStudioEvent['user_login'] | DepthStudioEvent['user_register'] | DepthStudioEvent['user_logout']): void {
     if (action === 'login') {
-      this.trackEvent('user_login', data);
+      this.trackEvent('user_login', data as DepthStudioEvent['user_login']);
     } else if (action === 'register') {
-      this.trackEvent('user_register', data);
+      this.trackEvent('user_register', data as DepthStudioEvent['user_register']);
     } else if (action === 'logout') {
-      this.trackEvent('user_logout', data);
+      this.trackEvent('user_logout', data as DepthStudioEvent['user_logout']);
     }
   }
 
@@ -267,10 +267,10 @@ export const analyticsService = new AnalyticsService();
 export const trackPageView = (pageName: string, pageTitle?: string) => 
   analyticsService.trackPageView(pageName, pageTitle);
 
-export const trackUserAction = (action: string, data: any) => 
-  analyticsService.trackEvent(action as any, data);
+export const trackUserAction = <T extends keyof DepthStudioEvent>(action: T, data: DepthStudioEvent[T]) => 
+  analyticsService.trackEvent(action, data);
 
-export const setAnalyticsUser = (userId: string, properties?: Record<string, any>) => 
+export const setAnalyticsUser = (userId: string, properties?: Record<string, unknown>) => 
   analyticsService.setUser(userId, properties);
 
 export default analyticsService; 

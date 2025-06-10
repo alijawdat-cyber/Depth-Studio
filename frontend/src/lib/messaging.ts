@@ -14,7 +14,7 @@
  * - Topic subscriptions
  */
 
-import { getMessaging, getToken, onMessage, MessagePayload } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, MessagePayload, Messaging } from 'firebase/messaging';
 import { auth, db } from './firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -46,7 +46,7 @@ interface TokenInfo {
  * 📱 Depth Studio Messaging Service
  */
 class DepthStudioMessagingService {
-  private messaging: any = null;
+  private messaging: Messaging | null = null;
   private currentToken: string | null = null;
   private isSupported: boolean = false;
   private config: NotificationConfig;
@@ -183,20 +183,21 @@ class DepthStudioMessagingService {
   /**
    * الاستماع للرسائل الواردة (Foreground)
    */
-  onMessageReceived(callback: (payload: MessagePayload) => void): () => void {
+  // eslint-disable-next-line no-unused-vars
+  onMessageReceived(callback: (messagePayload: MessagePayload) => void): () => void {
     if (!this.isSupported || !this.messaging) {
       return () => {}; // Empty unsubscribe function
     }
 
     try {
-      const unsubscribe = onMessage(this.messaging, (payload) => {
-        console.log('📱 Foreground message received:', payload);
+      const unsubscribe = onMessage(this.messaging, (messagePayload) => {
+        console.log('📱 Foreground message received:', messagePayload);
         
         // عرض الإشعار
-        this.showNotification(payload);
+        this.showNotification(messagePayload);
         
         // استدعاء callback المخصص
-        callback(payload);
+        callback(messagePayload);
       });
 
       console.log('👂 FCM message listener set up');

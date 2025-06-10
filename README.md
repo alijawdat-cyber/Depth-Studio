@@ -150,6 +150,12 @@ npm run lint                 # فحص جودة الكود
 - **GitHub Actions** للـ CI/CD
 - **ESLint + Prettier** لجودة الكود
 
+## 📋 التوجيهات والخطط
+
+- 🌐 **Front-End Roadmap**: [Frontend TODO.md](./frontend/TODO.md)
+- 🗄️ **Back-End Development**: [Backend Progress](./backend/TODO.md)
+- 📚 **API Documentation**: [API Endpoints Guide](./API_ENDPOINTS_GUIDE.md)
+
 ## 📱 API Reference
 
 ### 🔑 Authentication
