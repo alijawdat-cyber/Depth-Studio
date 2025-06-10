@@ -9,25 +9,39 @@ runConfig:
   concurrency: 1000
   
 env:
-  # Firebase Configuration
+  # Firebase Configuration - استخدام القيم المباشرة
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    secret: FIREBASE_API_KEY
+    value: AIzaSyDHg1-mxejIMPycZJQeE0sZJmWxsimaMFI
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: depth-studio.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    value: https://depth-studio-default-rtdb.firebaseio.com
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: depth-studio
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: depth-studio.appspot.com
+    value: depth-studio.firebasestorage.app
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    secret: FIREBASE_MESSAGING_SENDER_ID
+    value: "584154257700"
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    secret: FIREBASE_APP_ID
+    value: 1:584154257700:web:b570a34dc3854662c3fbb1
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-    secret: FIREBASE_MEASUREMENT_ID
+    value: G-RY2WLQCK1T
   
-  # Application Configuration
+  # Google OAuth
+  - variable: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    value: 584154257700-d6vp6d876am0c0loapthj64o4riii616.apps.googleusercontent.com
+    
+  # FCM Notification
+  - variable: NEXT_PUBLIC_FCM_VAPID_KEY
+    value: BOvPwykYYlnNPddjFxvBVb5sv5VEYGgzMNkbuupSYRVUubcZVHy_--Rm479cbqyTo5vkYxgv9R3rENhknUfJWDg
+  
+  # Application Configuration - للإنتاج
   - variable: NEXT_PUBLIC_API_URL
-    value: https://depth-studio.web.app/api
+    value: https://us-central1-depth-studio.cloudfunctions.net/api
+  - variable: NEXT_PUBLIC_BACKEND_URL
+    value: https://us-central1-depth-studio.cloudfunctions.net/api
+  - variable: NEXT_PUBLIC_FUNCTIONS_URL
+    value: https://us-central1-depth-studio.cloudfunctions.net/api
   - variable: NEXT_PUBLIC_APP_ENV
     value: production
   - variable: NEXT_PUBLIC_ENABLE_LOGGING
@@ -36,14 +50,10 @@ env:
     value: depth-production
   - variable: NEXT_PUBLIC_USE_EMULATOR
     value: "false"
-    
-  # Google OAuth
-  - variable: NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    secret: GOOGLE_CLIENT_ID
-    
-  # FCM Notification
-  - variable: NEXT_PUBLIC_FCM_VAPID_KEY
-    secret: FCM_VAPID_KEY
+  - variable: NEXT_PUBLIC_ENABLE_APP_CHECK
+    value: "true"
+  - variable: NEXT_PUBLIC_APP_CHECK_DEBUG_TOKEN
+    value: "false"
 
 buildConfig:
   rootDirectory: /
