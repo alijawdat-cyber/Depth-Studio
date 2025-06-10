@@ -3,6 +3,7 @@
 
 # Build settings
 runConfig:
+  runtime: nodejs18
   minInstances: 0
   maxInstances: 100
   concurrency: 1000
@@ -10,36 +11,41 @@ runConfig:
 env:
   # Firebase Configuration
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    secret: projects/depth-production/secrets/firebase-api-key
-  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN  
-    value: "depth-production.firebaseapp.com"
+    secret: FIREBASE_API_KEY
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: depth-studio.firebaseapp.com
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "depth-production"
+    value: depth-studio
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: "depth-production.appspot.com"
+    value: depth-studio.appspot.com
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    secret: projects/depth-production/secrets/firebase-sender-id
+    secret: FIREBASE_MESSAGING_SENDER_ID
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    secret: projects/depth-production/secrets/firebase-app-id
+    secret: FIREBASE_APP_ID
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-    secret: projects/depth-production/secrets/firebase-measurement-id
+    secret: FIREBASE_MEASUREMENT_ID
   
   # Application Configuration
   - variable: NEXT_PUBLIC_API_URL
-    value: "https://us-central1-depth-production.cloudfunctions.net/api"
+    value: https://depth-studio.web.app/api
   - variable: NEXT_PUBLIC_APP_ENV
-    value: "production"
+    value: production
   - variable: NEXT_PUBLIC_ENABLE_LOGGING
     value: "true"
   - variable: NEXT_PUBLIC_FIRESTORE_DATABASE_ID
-    value: "depth-production"
+    value: depth-production
   - variable: NEXT_PUBLIC_USE_EMULATOR
     value: "false"
     
   # Google OAuth
   - variable: NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    secret: projects/depth-production/secrets/google-client-id
+    secret: GOOGLE_CLIENT_ID
     
   # FCM Notification
   - variable: NEXT_PUBLIC_FCM_VAPID_KEY
-    secret: projects/depth-production/secrets/fcm-vapid-key 
+    secret: FCM_VAPID_KEY
+
+buildConfig:
+  rootDirectory: /
+  buildCommand: cd frontend && npm install && npm run build
+  outputDirectory: frontend/.next 
