@@ -59,26 +59,55 @@ jobs:
             types/package-lock.json
 
       # ======================================
-      # 📦 Install Dependencies
+      # 📦 Install Dependencies & Build Types
       # ======================================
-      - name: 📦 Install Dependencies
+      - name: 📦 Install All Dependencies
         run: |
-          echo "🔧 Installing root dependencies..."
+          echo "🔧 Installing all workspace dependencies..."
           npm ci
-          
-          echo "🔧 Installing types dependencies..."
-          npm ci --workspace=types
-          
-          echo "🔧 Installing frontend dependencies..."
-          npm ci --workspace=frontend
+          echo "✅ All dependencies installed"
 
       # ======================================
-      # 🏗️ Build Types Package
+      # 🏗️ Build Types Package First
       # ======================================
       - name: 🏗️ Build Shared Types
         run: |
           echo "🔨 Building shared types package..."
           npm run --workspace=types build
+          
+          # Verify build output
+          echo "📦 Verifying types build:"
+          ls -la types/dist/
+          echo "📋 Types package structure:"
+          find types -name "*.js" -o -name "*.d.ts" | head -10
+          echo "✅ Types package built successfully"
+
+      # ======================================
+      # 🔍 Debug Workspace Dependencies  
+      # ======================================
+      - name: 🔍 Debug Dependencies
+        run: |
+          echo "🔍 Debugging workspace dependencies..."
+          
+          echo "📋 Workspace info:"
+          npm ls --workspace=frontend --depth=0 || true
+          
+          echo "📁 Frontend node_modules check:"
+          ls -la frontend/node_modules/ | grep depth || echo "❌ No @depth-studio found in frontend/node_modules"
+          
+          echo "📁 Root node_modules check:"  
+          ls -la node_modules/ | grep depth || echo "❌ No @depth-studio found in root/node_modules"
+          
+          echo "🔗 Manual symlink verification:"
+          if [ -L "frontend/node_modules/@depth-studio/types" ]; then
+            echo "✅ Symlink exists"
+            ls -la frontend/node_modules/@depth-studio/types
+          else
+            echo "⚠️ Creating manual symlink..."
+            mkdir -p frontend/node_modules/@depth-studio
+            ln -sf ../../../types frontend/node_modules/@depth-studio/types
+            echo "✅ Manual symlink created"
+          fi
 
       # ======================================
       # 🧪 Run Tests
