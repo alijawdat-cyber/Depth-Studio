@@ -20,6 +20,7 @@ const nextjsServer = next({
   conf: {
     distDir: nextjsDistDir,
   },
+  customServer: true,
 });
 
 const nextjsHandle = nextjsServer.getRequestHandler();

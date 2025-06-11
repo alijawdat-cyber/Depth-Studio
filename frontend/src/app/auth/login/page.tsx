@@ -1,5 +1,8 @@
 "use client";
 
+// منع pre-rendering لصفحات المصادقة التي تحتاج environment variables
+export const dynamic = 'force-dynamic';
+
 /**
  * 🔐 صفحة تسجيل الدخول - Depth Studio Frontend
  * ===============================================
