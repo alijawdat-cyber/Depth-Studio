@@ -1,30 +1,24 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/auth.store';
+import { UserRole, User } from '@depth-studio/types';
+import { Permission } from '@/security/frontend-permission-manager';
+import { createAuthGuard, RouteProtectionOptions, ProtectionCheckResult } from '@/security/frontend-auth-guard';
 
 // ======================================
 // 📦 استيراد نظام الحماية المتقدم
 // ======================================
 
-import { 
-  RouteProtectionOptions, 
-  ProtectionCheckResult,
-  createAuthGuard 
-} from '@/security/frontend-auth-guard';
 // 🔧 createAuthGuard: إنشاء instance من نظام الحماية المتقدم
 // 📋 الفائدة: حماية شاملة مع تكامل Backend AuthenticationMiddleware
 // 🎯 المميزات: Role-based + Permission-based + Session management
-
-import { Permission } from '@/security/frontend-permission-manager';
-// 🔧 Permission: أنواع الصلاحيات المحددة مثل 'users:manage', 'content:approve'
 
 // ======================================
 // 🏷️ أنواع البيانات
 // ======================================
 
-import { UserRole, User } from '@depth-studio/types';
 // 🔧 UserRole: أدوار المستخدمين للتحقق من الصلاحيات
 // 🔧 User: نوع المستخدم للتحقق من البيانات
 
@@ -101,7 +95,7 @@ export default function AuthWrapper({
   // 🔐 إدارة حالة المصادقة
   // ======================================
   
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   
   // ======================================
@@ -178,7 +172,6 @@ export default function AuthWrapper({
     checkAccess();
   }, [
     user, 
-    isAuthenticated, 
     isLoading, 
     requireAuth,
     allowedRoles,

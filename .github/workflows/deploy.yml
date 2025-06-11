@@ -124,7 +124,7 @@ jobs:
       - name: 🔍 Lint Frontend Code
         run: |
           echo "🔍 Linting frontend code..."
-          npm run --workspace=frontend lint
+          npm run --workspace=frontend lint -- --fix --max-warnings 100
         continue-on-error: true
 
       # ======================================
@@ -146,6 +146,10 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_FCM_VAPID_KEY: ${{ secrets.NEXT_PUBLIC_FCM_VAPID_KEY }}
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_FIRESTORE_DATABASE_ID: depth-production
+          NEXT_PUBLIC_APP_ENV: production
+          NEXT_PUBLIC_USE_EMULATOR: false
+          NEXT_PUBLIC_ENABLE_LOGGING: false
           
           # Build Environment
           NODE_ENV: production
@@ -168,10 +172,17 @@ jobs:
           # Create hosting directory
           mkdir -p ./hosting
           
-          # Copy standalone output
+          # Copy standalone output (correct structure)
           if [ -d "frontend/.next/standalone" ]; then
             echo "📁 Copying standalone output..."
-            cp -r frontend/.next/standalone/* ./hosting/
+            # Next.js standalone structure: frontend/.next/standalone/frontend/
+            cp -r frontend/.next/standalone/frontend/* ./hosting/
+            
+            # Copy node_modules for runtime dependencies
+            if [ -d "frontend/.next/standalone/node_modules" ]; then
+              echo "📦 Copying runtime dependencies..."
+              cp -r frontend/.next/standalone/node_modules ./hosting/
+            fi
           else
             echo "❌ Standalone output not found!"
             exit 1
@@ -270,6 +281,7 @@ jobs:
       - name: 🔥 Deploy to Firebase Hosting & Functions
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_PROJECT_ID: depth-studio
         run: |
           echo "🚀 Deploying to Firebase Hosting & Functions..."
           

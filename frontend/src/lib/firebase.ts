@@ -335,4 +335,63 @@ export {
  */
 export const isEmulatorMode = () => process.env.NEXT_PUBLIC_USE_EMULATOR === 'true';
 export const isDevelopment = () => process.env.NEXT_PUBLIC_APP_ENV === 'development';
-export const isProduction = () => process.env.NEXT_PUBLIC_APP_ENV === 'production'; 
+export const isProduction = () => process.env.NEXT_PUBLIC_APP_ENV === 'production';
+
+// ======================================
+// 🌍 Environment Variables Export
+// ======================================
+// 📝 تصدير متغيرات البيئة للتوافقية مع next.config.js و GitHub Actions
+
+/**
+ * 🔐 Google OAuth Configuration
+ */
+export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "584154257700-d6vp6d8376am0c0loapthjb4o4rilil6.apps.googleusercontent.com";
+
+/**
+ * 🌐 API Configuration 
+ */
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://us-central1-depth-studio.cloudfunctions.net/api";
+
+/**
+ * 🏗️ Application Environment
+ */
+export const APP_ENV = process.env.NEXT_PUBLIC_APP_ENV || "development";
+
+/**
+ * 🧪 Emulator Settings
+ */
+export const USE_EMULATOR = process.env.NEXT_PUBLIC_USE_EMULATOR === 'true';
+
+/**
+ * 📊 Logging Configuration
+ */
+export const ENABLE_LOGGING = process.env.NEXT_PUBLIC_ENABLE_LOGGING === 'true' || isDevelopment();
+
+/**
+ * 🗄️ Database Configuration
+ */
+export const FIRESTORE_DATABASE_ID = process.env.NEXT_PUBLIC_FIRESTORE_DATABASE_ID || "depth-production";
+
+// ======================================
+// 📝 Configuration Summary
+// ======================================
+export const firebaseEnvConfig = {
+  // Firebase Core
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, 
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  
+  // Additional Config
+  fcmVapidKey: process.env.NEXT_PUBLIC_FCM_VAPID_KEY,
+  googleClientId: GOOGLE_CLIENT_ID,
+  apiUrl: API_URL,
+  appEnv: APP_ENV,
+  firestoreDatabase: FIRESTORE_DATABASE_ID,
+  useEmulator: USE_EMULATOR,
+  enableLogging: ENABLE_LOGGING
+} as const; 
