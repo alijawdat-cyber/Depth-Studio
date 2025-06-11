@@ -56,5 +56,25 @@ env:
     value: "false"
 
 buildConfig:
-  buildCommand: cd frontend && npm install && npm run build && mkdir -p .next/standalone/.next/server && cp -r .next/standalone/frontend/.next/server/* .next/standalone/.next/server/
+  # 🔥 حل نهائي متكامل للـ monorepo structure
+  # الخطوة 1: بناء التطبيق من frontend directory
+  # الخطوة 2: إعادة تنظيم المسارات لتوافق Firebase App Hosting
+  # الخطوة 3: نسخ ملفات middleware للمكان المتوقع
+  buildCommand: |
+    echo "🚀 Starting Depth Studio build process..."
+    cd frontend
+    echo "📦 Installing dependencies..."
+    npm install
+    echo "🏗️ Building Next.js application..."
+    npm run build
+    echo "📁 Organizing standalone structure for Firebase App Hosting..."
+    # إنشاء مجلد .next/server في المكان المتوقع
+    mkdir -p .next/standalone/.next/server
+    # نسخ جميع ملفات server من المكان الفعلي للمكان المتوقع
+    cp -r .next/standalone/frontend/.next/server/* .next/standalone/.next/server/
+    # التأكد من وجود middleware-manifest.json
+    ls -la .next/standalone/.next/server/middleware-manifest.json
+    echo "✅ Build completed successfully!"
+  
+  # 🎯 outputDirectory يشير للمكان الصحيح بعد إعادة التنظيم
   outputDirectory: frontend/.next/standalone 

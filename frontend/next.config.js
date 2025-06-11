@@ -25,6 +25,8 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
+    // 🔥 إضافة مهمة: حل مشاكل monorepo مع standalone
+    outputFileTracingRoot: require('path').join(__dirname, '../'),
   },
   
   // 🔥 إصلاح Firebase Auth prerender errors
