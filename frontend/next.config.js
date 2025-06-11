@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ⚠️ تعليق standalone output مؤقتاً لحل مشكلة Firebase App Hosting
-  // output: 'standalone',
+  // ✅ تفعيل standalone output للـ Firebase App Hosting
+  output: 'standalone',
   // ✅ إزالة static export للحصول على SSR كامل
   // output: 'export', - محذوف للحصول على React interactivity كامل
   trailingSlash: false,

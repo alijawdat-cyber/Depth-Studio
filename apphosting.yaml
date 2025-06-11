@@ -57,5 +57,5 @@ env:
 
 buildConfig:
   rootDirectory: frontend
-  buildCommand: NODE_ENV=production npm install && npm run build
-  outputDirectory: .next 
+  buildCommand: npm install && npm run build && mkdir -p .next/standalone/.next/server && cp -r .next/standalone/frontend/.next/server/* .next/standalone/.next/server/
+  outputDirectory: .next/standalone 
