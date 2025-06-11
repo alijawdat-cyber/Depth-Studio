@@ -121,10 +121,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * تسجيل دخول بالهاتف (إرسال OTP)
        */
-      // eslint-disable-next-line no-unused-vars
       signInWithPhone: async (phoneData: PhoneLoginData) => {
-        // تأكيد استخدام parameter
-        console.log('📱 تسجيل دخول بالهاتف:', phoneData.phone);
         set({ isLoading: true, error: null });
         
         try {
@@ -150,10 +147,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * التحقق من OTP وإكمال تسجيل الدخول
        */
-      // eslint-disable-next-line no-unused-vars
       verifyOTP: async (verifyData: OTPVerifyRequest) => {
-        // تأكيد استخدام parameter
-        console.log('🔢 التحقق من OTP:', verifyData.otp_code);
         set({ isLoading: true, error: null });
         
         try {
@@ -187,10 +181,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * تسجيل دخول بجوجل
        */
-      // eslint-disable-next-line no-unused-vars
       signInWithGoogle: async (googleData: GoogleLoginData) => {
-        // تأكيد استخدام parameter
-        console.log('🔍 تسجيل دخول بجوجل:', googleData.google_token);
         set({ isLoading: true, error: null });
         
         try {
