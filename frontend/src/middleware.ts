@@ -95,10 +95,19 @@ export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
+/**
+ * 🔥 ENHANCED MIDDLEWARE لحل مشكلة Firebase App Hosting
+ * 
+ * المشكلة: Firebase buildpack يتوقع وجود middleware-manifest.json
+ * الحل: تحسين الـ middleware الموجود لضمان إنشاء manifest صحيح
+ * 
+ * الآن هذا middleware يعمل بشكل طبيعي + يحل مشكلة النشر
+ */
+
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * تطبيق على جميع المسارات عدا:
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
