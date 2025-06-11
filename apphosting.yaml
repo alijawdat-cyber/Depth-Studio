@@ -95,6 +95,20 @@ buildConfig:
       cp -r .next/standalone/frontend/.next/server/* .next/standalone/.next/server/
     fi
     
+    # Step 5-B: 🔥 PATCH V7 - Move middleware-manifest.json to where Firebase expects it
+    if [ -f ".next/standalone/.next/middleware-manifest.json" ] && \
+       [ ! -f ".next/standalone/.next/server/middleware-manifest.json" ]; then
+      echo "Moving middleware-manifest.json into server/ directory..."
+      mv .next/standalone/.next/middleware-manifest.json \
+         .next/standalone/.next/server/middleware-manifest.json
+    fi
+    
+    # Create empty manifest if doesn't exist at all (fallback safety)
+    if [ ! -f ".next/standalone/.next/server/middleware-manifest.json" ]; then
+      echo "Creating fallback middleware-manifest.json..."
+      echo "{}" > .next/standalone/.next/server/middleware-manifest.json
+    fi
+    
     # Step 6: Move the main server.js to the root where Firebase expects it
     if [ -f ".next/standalone/frontend/server.js" ]; then
       echo "Moving main server.js to root..."
