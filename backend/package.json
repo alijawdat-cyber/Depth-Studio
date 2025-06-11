@@ -4,7 +4,7 @@
   "description": "🔥 Depth Studio Backend - Firebase Functions + TypeScript",
   "main": "lib/index.js",
   "engines": {
-    "node": "20"
+    "node": ">=20"
   },
   "scripts": {
     "build": "tsc",

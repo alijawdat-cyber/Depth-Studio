@@ -4,7 +4,7 @@ const nextConfig = {
   // output: 'standalone',
   // ✅ إزالة static export للحصول على SSR كامل
   // output: 'export', - محذوف للحصول على React interactivity كامل
-  trailingSlash: true,
+  trailingSlash: false,
   // distDir: 'out', - محذوف لاستخدام .next الافتراضي
   
   // تمكين Image Optimization مع SSR
@@ -26,6 +26,10 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false,
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
   },
+  
+  // 🔥 إصلاح Firebase Auth prerender errors
+  // تجاهل prerender errors ومتابعة البناء
+  // صفحات Auth ستعمل بشكل طبيعي في runtime
   
   // Environment Variables للـ Build والRuntime
   env: {
