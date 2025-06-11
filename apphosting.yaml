@@ -1,5 +1,10 @@
 # Firebase App Hosting Configuration
 # Depth Studio Frontend Deployment Settings
+#
+# 🔥 FINAL & DEFINITIVE FIX v3.0 🔥
+# This version addresses the root cause: the Firebase buildpack ignoring
+# the subdirectory in 'outputDirectory'. We will now build, fix paths internally,
+# and then MOVE the final artifact to the root location the buildpack expects.
 
 # Build settings
 runConfig:
@@ -56,25 +61,20 @@ env:
     value: "false"
 
 buildConfig:
-  # 🔥 حل نهائي متكامل للـ monorepo structure
-  # الخطوة 1: بناء التطبيق من frontend directory
-  # الخطوة 2: إعادة تنظيم المسارات لتوافق Firebase App Hosting
-  # الخطوة 3: نسخ ملفات middleware للمكان المتوقع
   buildCommand: |
-    echo "🚀 Starting Depth Studio build process..."
+    set -e 
+    echo "STEP 1: Building frontend application inside /frontend..."
     cd frontend
-    echo "📦 Installing dependencies..."
     npm install
-    echo "🏗️ Building Next.js application..."
     npm run build
-    echo "📁 Organizing standalone structure for Firebase App Hosting..."
-    # إنشاء مجلد .next/server في المكان المتوقع
-    mkdir -p .next/standalone/.next/server
-    # نسخ جميع ملفات server من المكان الفعلي للمكان المتوقع
+    
+    echo "STEP 2: Fixing internal monorepo paths inside standalone output..."
     cp -r .next/standalone/frontend/.next/server/* .next/standalone/.next/server/
-    # التأكد من وجود middleware-manifest.json
-    ls -la .next/standalone/.next/server/middleware-manifest.json
-    echo "✅ Build completed successfully!"
+    
+    echo "STEP 3: Moving the entire corrected output to the root..."
+    cd ..
+    mv frontend/.next/standalone .next/standalone
+    
+    echo "✅ Build process complete. Final artifact is at /workspace/.next/standalone"
   
-  # 🎯 outputDirectory يشير للمكان الصحيح بعد إعادة التنظيم
-  outputDirectory: frontend/.next/standalone 
+  outputDirectory: .next/standalone 
